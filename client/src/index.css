@@ -1,0 +1,155 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(240, 10%, 3.9%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 3.9%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 10%, 3.9%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(240, 3.7%, 15.9%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(240, 3.7%, 15.9%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 4.9%, 83.9%);
+  --radius: 0.5rem;
+
+  /* Cosmic Eclipse Theme Colors */
+  --deep-night: hsl(262, 45%, 13%);
+  --lunar-glass: hsl(229, 31%, 17%);
+  --lunar-mist: hsl(236, 100%, 71%);
+  --manifest-blue: hsl(215, 100%, 37%);
+  --eclipse-glow: hsl(185, 100%, 62%);
+  --remax-red: hsl(350, 84%, 56%);
+  --gold-manifest: hsl(41, 100%, 50%);
+  --moon-white: hsl(0, 0%, 100%);
+  --success-green: hsl(149, 87%, 47%);
+  --soft-gray: hsl(226, 63%, 69%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased text-foreground;
+    background: linear-gradient(135deg, hsl(var(--deep-night)) 0%, hsl(var(--lunar-glass)) 100%);
+    background-size: 400% 400%;
+    animation: cosmic-gradient 15s ease infinite;
+    min-height: 100vh;
+  }
+
+  @keyframes cosmic-gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+  }
+
+  @keyframes glow {
+    from { box-shadow: 0 0 20px rgba(111, 114, 255, 0.3); }
+    to { box-shadow: 0 0 30px rgba(62, 243, 255, 0.6); }
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+}
+
+@layer components {
+  .glassmorphism {
+    background: rgba(35, 41, 67, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .hover-glow:hover {
+    box-shadow: 0 0 25px rgba(62, 243, 255, 0.5);
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+  }
+
+  .manifest-glow:hover {
+    box-shadow: 0 0 25px rgba(255, 179, 0, 0.5);
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+  }
+
+  .remax-glow:hover {
+    box-shadow: 0 0 25px rgba(238, 39, 55, 0.5);
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+  }
+
+  .lunar-shadow {
+    box-shadow: 0 0 20px rgba(111, 114, 255, 0.3);
+  }
+
+  .eclipse-shadow {
+    box-shadow: 0 0 25px rgba(62, 243, 255, 0.4);
+  }
+
+  .manifest-shadow {
+    box-shadow: 0 0 30px rgba(255, 179, 0, 0.3);
+  }
+
+  .remax-shadow {
+    box-shadow: 0 0 20px rgba(238, 39, 55, 0.3);
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  .animate-twinkle {
+    animation: twinkle 4s infinite;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    animation: twinkle 4s infinite;
+  }
+
+  .nav-item.active {
+    background: rgba(111, 114, 255, 0.2);
+    border-left: 4px solid hsl(var(--remax-red));
+    border-radius: 0 8px 8px 0;
+  }
+
+  .cosmic-gradient {
+    background: linear-gradient(135deg, hsl(var(--deep-night)) 0%, hsl(var(--lunar-glass)) 100%);
+  }
+}
