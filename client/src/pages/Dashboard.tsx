@@ -15,24 +15,26 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen">
-      {/* Header with scroll-triggered animations */}
-      <div className="p-8 border-b border-white/10 relative overflow-hidden bg-black/20">
-        {/* Floating cosmic elements */}
-        <div className="absolute top-4 right-4 w-16 h-16 bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full blur-xl opacity-10" />
+      {/* Header with enhanced aesthetics */}
+      <div className="p-8 border-b border-white/10 relative overflow-hidden bg-gradient-to-br from-black/40 via-black/20 to-transparent backdrop-blur-sm">
+        {/* Enhanced floating cosmic elements */}
+        <div className="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full blur-xl opacity-20 animate-pulse" />
+        <div className="absolute top-8 right-8 w-12 h-12 bg-gradient-to-br from-[hsl(var(--remax-red))] to-[hsl(var(--gold-manifest))] rounded-full blur-lg opacity-15 animate-float" />
+        <div className="absolute bottom-4 left-8 w-16 h-16 bg-gradient-to-br from-[hsl(var(--manifest-blue))] to-[hsl(var(--eclipse-glow))] rounded-full blur-2xl opacity-10" />
         
         <div className="flex items-center justify-between relative z-10">
           <div className={`transition-all duration-1000 ${isVisible ? 'animate-text-reveal' : 'opacity-0'}`}>
-            <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-white via-[hsl(var(--eclipse-glow))] to-white bg-clip-text text-transparent mb-3 drop-shadow-2xl">
               Good Morning, Levan!
             </h1>
-            <p className="text-gray-200 text-lg drop-shadow-md">
+            <p className="text-gray-300 text-xl drop-shadow-lg">
               Your AI phone agents are performing exceptionally. Here's today's activity:
             </p>
           </div>
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full flex items-center justify-center eclipse-shadow animate-pulse-slow hover:scale-105 transition-transform duration-200 cursor-pointer">
-                🤖
+              <div className="w-14 h-14 bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full flex items-center justify-center eclipse-shadow animate-pulse-slow hover:scale-110 transition-all duration-300 cursor-pointer border border-white/20">
+                <span className="text-2xl">🤖</span>
               </div>
               <div className="absolute -top-1 -right-1 w-4 h-4 bg-[hsl(var(--remax-red))] rounded-full animate-pulse micro-interaction" />
             </div>
@@ -47,9 +49,10 @@ export default function Dashboard() {
       {/* Cosmic Stats with enhanced animations */}
       <div className="p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Today's Leads - Enhanced with micro-interactions */}
-          <GlassmorphicCard className={`hover-glow micro-interaction relative overflow-hidden transition-all duration-700 ${statsAnimation ? 'animate-text-reveal' : 'opacity-0 translate-y-4'}`}>
-            <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--manifest-blue))]/10 to-[hsl(var(--eclipse-glow))]/5 animate-aurora" />
+          {/* Today's Leads - Enhanced aesthetics */}
+          <GlassmorphicCard className={`hover-glow relative overflow-hidden transition-all duration-700 border border-[hsl(var(--manifest-blue))]/30 hover:border-[hsl(var(--manifest-blue))]/50 ${statsAnimation ? 'animate-text-reveal' : 'opacity-0 translate-y-4'}`}>
+            <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--manifest-blue))]/15 to-[hsl(var(--eclipse-glow))]/8 animate-aurora" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[hsl(var(--manifest-blue))] to-transparent opacity-60" />
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-[hsl(var(--manifest-blue))] to-[hsl(var(--eclipse-glow))] rounded-full flex items-center justify-center eclipse-shadow hover:scale-110 transition-transform duration-300">
@@ -67,9 +70,10 @@ export default function Dashboard() {
             </div>
           </GlassmorphicCard>
 
-          {/* Callbacks Due - Enhanced urgency animations */}
-          <GlassmorphicCard className={`hover-glow micro-interaction relative overflow-hidden transition-all duration-700 delay-150 ${statsAnimation ? 'animate-text-reveal' : 'opacity-0 translate-y-4'}`}>
-            <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--remax-red))]/10 to-[hsl(var(--gold-manifest))]/5 animate-pulse" />
+          {/* Callbacks Due - Enhanced urgency aesthetics */}
+          <GlassmorphicCard className={`hover-glow relative overflow-hidden transition-all duration-700 delay-150 border border-[hsl(var(--remax-red))]/30 hover:border-[hsl(var(--remax-red))]/50 ${statsAnimation ? 'animate-text-reveal' : 'opacity-0 translate-y-4'}`}>
+            <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--remax-red))]/15 to-[hsl(var(--gold-manifest))]/8 animate-pulse" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[hsl(var(--remax-red))] to-transparent opacity-60" />
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-[hsl(var(--remax-red))] to-[hsl(var(--gold-manifest))] rounded-full flex items-center justify-center remax-shadow animate-pulse hover:scale-110 transition-transform duration-300">
@@ -88,8 +92,9 @@ export default function Dashboard() {
           </GlassmorphicCard>
 
           {/* Conversion Rate - Success celebration */}
-          <GlassmorphicCard className={`manifest-glow micro-interaction relative overflow-hidden transition-all duration-700 delay-300 ${statsAnimation ? 'animate-text-reveal' : 'opacity-0 translate-y-4'}`}>
-            <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--gold-manifest))]/10 to-[hsl(var(--success-green))]/5 animate-morphing-gradient" />
+          <GlassmorphicCard className={`manifest-glow relative overflow-hidden transition-all duration-700 delay-300 border border-[hsl(var(--gold-manifest))]/30 hover:border-[hsl(var(--gold-manifest))]/50 ${statsAnimation ? 'animate-text-reveal' : 'opacity-0 translate-y-4'}`}>
+            <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--gold-manifest))]/15 to-[hsl(var(--success-green))]/8 animate-morphing-gradient" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[hsl(var(--gold-manifest))] to-transparent opacity-60" />
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-[hsl(var(--gold-manifest))] to-[hsl(var(--success-green))] rounded-full flex items-center justify-center manifest-shadow hover:scale-110 transition-transform duration-300 animate-float">
@@ -108,8 +113,9 @@ export default function Dashboard() {
           </GlassmorphicCard>
 
           {/* AI Performance - System efficiency */}
-          <GlassmorphicCard className={`hover-glow micro-interaction relative overflow-hidden transition-all duration-700 delay-500 ${statsAnimation ? 'animate-text-reveal' : 'opacity-0 translate-y-4'}`}>
-            <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--lunar-mist))]/10 to-[hsl(var(--eclipse-glow))]/5 animate-aurora" />
+          <GlassmorphicCard className={`hover-glow relative overflow-hidden transition-all duration-700 delay-500 border border-[hsl(var(--eclipse-glow))]/30 hover:border-[hsl(var(--eclipse-glow))]/50 ${statsAnimation ? 'animate-text-reveal' : 'opacity-0 translate-y-4'}`}>
+            <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--lunar-mist))]/15 to-[hsl(var(--eclipse-glow))]/8 animate-aurora" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[hsl(var(--eclipse-glow))] to-transparent opacity-60" />
             <div className="absolute top-2 right-2 w-8 h-8 bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full blur-sm animate-pulse opacity-50" />
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-4">
@@ -133,7 +139,7 @@ export default function Dashboard() {
         {/* Recent Activity & AI Insights */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Recent Activity */}
-          <GlassmorphicCard>
+          <GlassmorphicCard className="border border-white/10 hover:border-white/20 transition-colors duration-300">
             <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
               <History className="w-5 h-5 mr-3 text-[hsl(var(--eclipse-glow))]" />
               Recent Activity
@@ -144,8 +150,8 @@ export default function Dashboard() {
                   <span className="text-white text-sm">✓</span>
                 </div>
                 <div className="flex-1">
-                  <p className="text-white font-medium">Manifested appointment with Amy Smith</p>
-                  <p className="text-[hsl(var(--soft-gray))] text-sm">2 minutes ago</p>
+                  <p className="text-white font-medium">Scheduled appointment with Amy Smith</p>
+                  <p className="text-gray-400 text-sm">2 minutes ago</p>
                 </div>
               </div>
               <div className="flex items-center space-x-4 p-3 hover:bg-[hsl(var(--lunar-mist))]/10 rounded-lg transition-colors">
@@ -154,7 +160,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex-1">
                   <p className="text-white font-medium">Call completed with John Doe</p>
-                  <p className="text-[hsl(var(--soft-gray))] text-sm">15 minutes ago</p>
+                  <p className="text-gray-400 text-sm">15 minutes ago</p>
                 </div>
               </div>
               <div className="flex items-center space-x-4 p-3 hover:bg-[hsl(var(--lunar-mist))]/10 rounded-lg transition-colors">
@@ -162,15 +168,15 @@ export default function Dashboard() {
                   <Star className="w-4 h-4 text-white" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-white font-medium">New lead aligned from Zillow</p>
-                  <p className="text-[hsl(var(--soft-gray))] text-sm">1 hour ago</p>
+                  <p className="text-white font-medium">New lead from AI phone campaign</p>
+                  <p className="text-gray-400 text-sm">1 hour ago</p>
                 </div>
               </div>
             </div>
           </GlassmorphicCard>
 
-          {/* AI Cosmic Insights */}
-          <GlassmorphicCard>
+          {/* AI Performance Insights */}
+          <GlassmorphicCard className="border border-white/10 hover:border-white/20 transition-colors duration-300">
             <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
               <Sparkles className="w-5 h-5 mr-3 text-[hsl(var(--gold-manifest))]" />
               AI Performance Insights
