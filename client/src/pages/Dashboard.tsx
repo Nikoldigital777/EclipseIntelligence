@@ -16,7 +16,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen">
       {/* Header with enhanced aesthetics */}
-      <div className="p-8 border-b border-white/10 relative overflow-hidden bg-gradient-to-br from-black/40 via-black/20 to-transparent backdrop-blur-sm">
+      <div className="p-8 border-b border-white/10 relative overflow-hidden bg-gradient-to-br from-black/60 via-black/40 to-black/20 backdrop-blur-sm">
         {/* Enhanced floating cosmic elements */}
         <div className="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full blur-xl opacity-20 animate-pulse" />
         <div className="absolute top-8 right-8 w-12 h-12 bg-gradient-to-br from-[hsl(var(--remax-red))] to-[hsl(var(--gold-manifest))] rounded-full blur-lg opacity-15 animate-float" />
@@ -24,10 +24,10 @@ export default function Dashboard() {
         
         <div className="flex items-center justify-between relative z-10">
           <div className={`transition-all duration-1000 ${isVisible ? 'animate-text-reveal' : 'opacity-0'}`}>
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-white via-[hsl(var(--eclipse-glow))] to-white bg-clip-text text-transparent mb-3 drop-shadow-2xl">
+            <h1 className="text-5xl font-bold text-white mb-3 drop-shadow-2xl [text-shadow:_2px_2px_8px_rgb(0_0_0_/_50%)]">
               Good Morning, Levan!
             </h1>
-            <p className="text-gray-300 text-xl drop-shadow-lg">
+            <p className="text-white text-xl drop-shadow-lg [text-shadow:_1px_1px_4px_rgb(0_0_0_/_50%)]">
               Your AI phone agents are performing exceptionally. Here's today's activity:
             </p>
           </div>
