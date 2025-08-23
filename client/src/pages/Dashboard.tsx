@@ -27,7 +27,7 @@ export default function Dashboard() {
             <h1 className="text-5xl font-bold text-white mb-3 drop-shadow-2xl [text-shadow:_2px_2px_8px_rgb(0_0_0_/_50%)]">
               Good Morning, Levan!
             </h1>
-            <p className="text-white text-xl drop-shadow-lg [text-shadow:_1px_1px_4px_rgb(0_0_0_/_50%)]">
+            <p className="text-gray-200 text-xl drop-shadow-lg [text-shadow:_1px_1px_4px_rgb(0_0_0_/_50%)]">
               Your AI phone agents are performing exceptionally. Here's today's activity:
             </p>
           </div>
@@ -60,7 +60,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-3xl font-bold text-white animate-pulse-slow">12</p>
-                  <p className="text-gray-300 text-sm">Today's Leads</p>
+                  <p className="text-gray-200 text-sm">Today's Leads</p>
                 </div>
               </div>
               <div className="w-full bg-[hsl(var(--deep-night))]/50 rounded-full h-3 relative overflow-hidden">
@@ -81,7 +81,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-3xl font-bold text-white animate-pulse">5</p>
-                  <p className="text-gray-300 text-sm">Callbacks Due</p>
+                  <p className="text-gray-200 text-sm">Callbacks Due</p>
                 </div>
               </div>
               <div className="w-full bg-[hsl(var(--deep-night))]/50 rounded-full h-3 relative overflow-hidden">
@@ -102,7 +102,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-3xl font-bold text-white bg-gradient-to-r from-[hsl(var(--gold-manifest))] to-[hsl(var(--success-green))] bg-clip-text">78%</p>
-                  <p className="text-gray-300 text-sm">Conversion Rate</p>
+                  <p className="text-gray-200 text-sm">Conversion Rate</p>
                 </div>
               </div>
               <div className="w-full bg-[hsl(var(--deep-night))]/50 rounded-full h-3 relative overflow-hidden">
@@ -124,7 +124,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-3xl font-bold text-white animate-glow bg-gradient-to-r from-[hsl(var(--lunar-mist))] to-[hsl(var(--eclipse-glow))] bg-clip-text">92%</p>
-                  <p className="text-gray-300 text-sm">AI Performance</p>
+                  <p className="text-gray-200 text-sm">AI Performance</p>
                 </div>
               </div>
               <div className="w-full bg-[hsl(var(--deep-night))]/50 rounded-full h-3 relative overflow-hidden">
@@ -151,7 +151,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex-1">
                   <p className="text-white font-medium">Scheduled appointment with Amy Smith</p>
-                  <p className="text-gray-400 text-sm">2 minutes ago</p>
+                  <p className="text-gray-300 text-sm">2 minutes ago</p>
                 </div>
               </div>
               <div className="flex items-center space-x-4 p-3 hover:bg-[hsl(var(--lunar-mist))]/10 rounded-lg transition-colors">
@@ -160,7 +160,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex-1">
                   <p className="text-white font-medium">Call completed with John Doe</p>
-                  <p className="text-gray-400 text-sm">15 minutes ago</p>
+                  <p className="text-gray-300 text-sm">15 minutes ago</p>
                 </div>
               </div>
               <div className="flex items-center space-x-4 p-3 hover:bg-[hsl(var(--lunar-mist))]/10 rounded-lg transition-colors">
@@ -169,7 +169,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex-1">
                   <p className="text-white font-medium">New lead from AI phone campaign</p>
-                  <p className="text-gray-400 text-sm">1 hour ago</p>
+                  <p className="text-gray-300 text-sm">1 hour ago</p>
                 </div>
               </div>
             </div>
