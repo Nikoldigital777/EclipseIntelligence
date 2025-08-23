@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useState } from "react";
 import StarField from "./components/StarField";
 import Sidebar from "./components/Sidebar";
+import CustomCursor from "./components/CustomCursor";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Leads from "./pages/Leads";
@@ -27,6 +28,7 @@ function Router() {
   return (
     <div className="flex min-h-screen relative">
       <StarField />
+      <CustomCursor />
       <Sidebar />
       <div className="flex-1 ml-64 relative z-10">
         <Switch>

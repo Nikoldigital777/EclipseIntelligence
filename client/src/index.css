@@ -75,19 +75,96 @@
     0%, 100% { opacity: 1; }
     50% { opacity: 0.7; }
   }
+
+  @keyframes morphing-gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  @keyframes card-hover-lift {
+    0% { transform: translateY(0) scale(1); }
+    100% { transform: translateY(-8px) scale(1.02); }
+  }
+
+  @keyframes text-reveal {
+    0% { 
+      opacity: 0;
+      transform: translateY(20px);
+      filter: blur(4px);
+    }
+    100% { 
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+  }
+
+  @keyframes scroll-parallax {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-50px); }
+  }
+
+  @keyframes aurora {
+    0%, 100% { 
+      background-position: 0% 50%;
+      opacity: 0.3;
+    }
+    50% { 
+      background-position: 100% 50%;
+      opacity: 0.6;
+    }
+  }
+
+  @keyframes shooting-star {
+    0% {
+      transform: translateX(-100px) translateY(-100px);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(100vw) translateY(100vh);
+      opacity: 0;
+    }
+  }
 }
 
 @layer components {
   .glassmorphism {
-    background: rgba(35, 41, 67, 0.8);
-    backdrop-filter: blur(10px);
+    background: rgba(35, 41, 67, 0.75);
+    backdrop-filter: blur(16px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 
+      0 8px 32px 0 rgba(31, 38, 135, 0.37),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .glassmorphism-intense {
+    background: rgba(35, 41, 67, 0.4);
+    backdrop-filter: blur(24px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 
+      0 12px 40px 0 rgba(31, 38, 135, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
   }
 
   .hover-glow:hover {
-    box-shadow: 0 0 25px rgba(62, 243, 255, 0.5);
-    transform: translateY(-2px);
-    transition: all 0.3s ease;
+    box-shadow: 
+      0 0 25px rgba(62, 243, 255, 0.5),
+      0 0 50px rgba(62, 243, 255, 0.2),
+      0 20px 40px rgba(0, 0, 0, 0.3);
+    transform: translateY(-8px) scale(1.02);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .hover-glow {
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
 
   .manifest-glow:hover {
@@ -132,6 +209,52 @@
 
   .animate-pulse-slow {
     animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-morphing-gradient {
+    background: linear-gradient(-45deg, 
+      hsl(var(--eclipse-glow)), 
+      hsl(var(--lunar-mist)), 
+      hsl(var(--manifest-blue)), 
+      hsl(var(--gold-manifest)));
+    background-size: 400% 400%;
+    animation: morphing-gradient 8s ease infinite;
+  }
+
+  .animate-card-hover-lift:hover {
+    animation: card-hover-lift 0.3s ease forwards;
+  }
+
+  .animate-text-reveal {
+    animation: text-reveal 0.8s ease forwards;
+  }
+
+  .animate-aurora {
+    background: linear-gradient(-45deg, 
+      rgba(62, 243, 255, 0.1), 
+      rgba(111, 114, 255, 0.2), 
+      rgba(238, 39, 55, 0.1), 
+      rgba(255, 179, 0, 0.2));
+    background-size: 400% 400%;
+    animation: aurora 12s ease infinite;
+  }
+
+  .scroll-parallax {
+    will-change: transform;
+  }
+
+  .micro-interaction {
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .micro-interaction:hover {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+  }
+
+  .micro-interaction:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
   }
 
   .star {
