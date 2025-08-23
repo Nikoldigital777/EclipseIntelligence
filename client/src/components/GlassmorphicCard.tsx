@@ -67,12 +67,12 @@ export default function GlassmorphicCard({
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
     
-    const rotateX = (mousePosition.y - centerY) / centerY * -10;
-    const rotateY = (mousePosition.x - centerX) / centerX * 10;
+    const rotateX = (mousePosition.y - centerY) / centerY * -3;
+    const rotateY = (mousePosition.x - centerX) / centerX * 3;
 
     return {
-      transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`,
-      transition: isHovered ? 'none' : 'transform 0.5s ease-out',
+      transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.01, 1.01, 1.01)`,
+      transition: isHovered ? 'none' : 'transform 0.3s ease-out',
     };
   };
 
@@ -87,7 +87,7 @@ export default function GlassmorphicCard({
     const glowY = (mousePosition.y / rect.height) * 100;
 
     return {
-      background: `radial-gradient(circle at ${glowX}% ${glowY}%, rgba(62, 243, 255, 0.1), transparent 50%)`,
+      background: `radial-gradient(circle at ${glowX}% ${glowY}%, rgba(62, 243, 255, 0.05), transparent 60%)`,
     };
   };
 

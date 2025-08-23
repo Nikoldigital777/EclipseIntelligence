@@ -58,7 +58,7 @@
 
   @keyframes float {
     0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
+    50% { transform: translateY(-5px); }
   }
 
   @keyframes glow {
@@ -67,8 +67,8 @@
   }
 
   @keyframes twinkle {
-    0%, 100% { opacity: 0.3; }
-    50% { opacity: 1; }
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 0.8; }
   }
 
   @keyframes pulse-slow {
@@ -90,13 +90,11 @@
   @keyframes text-reveal {
     0% { 
       opacity: 0;
-      transform: translateY(20px);
-      filter: blur(4px);
+      transform: translateY(8px);
     }
     100% { 
       opacity: 1;
       transform: translateY(0);
-      filter: blur(0);
     }
   }
 
@@ -108,11 +106,11 @@
   @keyframes aurora {
     0%, 100% { 
       background-position: 0% 50%;
-      opacity: 0.3;
+      opacity: 0.1;
     }
     50% { 
       background-position: 100% 50%;
-      opacity: 0.6;
+      opacity: 0.2;
     }
   }
 
@@ -248,8 +246,8 @@
   }
 
   .micro-interaction:hover {
-    transform: scale(1.05);
-    filter: brightness(1.1);
+    transform: scale(1.02);
+    filter: brightness(1.05);
   }
 
   .micro-interaction:active {

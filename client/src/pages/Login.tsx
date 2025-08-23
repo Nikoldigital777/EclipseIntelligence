@@ -20,10 +20,10 @@ export default function Login({ onLogin }: LoginProps) {
   const [logoAnimation, setLogoAnimation] = useState(false);
 
   useEffect(() => {
-    // Staggered entrance animations
-    setTimeout(() => setIsVisible(true), 200);
-    setTimeout(() => setLogoAnimation(true), 600);
-    setTimeout(() => setFormAnimation(true), 1000);
+    // Subtle staggered entrance animations
+    setTimeout(() => setIsVisible(true), 100);
+    setTimeout(() => setLogoAnimation(true), 300);
+    setTimeout(() => setFormAnimation(true), 500);
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -54,14 +54,14 @@ export default function Login({ onLogin }: LoginProps) {
       </div>
 
       <GlassmorphicCard 
-        className={`w-full max-w-md relative z-10 transition-all duration-1000 ${isVisible ? 'animate-text-reveal' : 'opacity-0 scale-95 translate-y-8'}`}
+        className={`w-full max-w-md relative z-10 transition-all duration-500 ${isVisible ? 'animate-text-reveal' : 'opacity-0 scale-98 translate-y-4'}`}
         intense={true}
         tiltEffect={true}
       >
         <div className="text-center mb-6">
-          <div className={`flex items-center justify-center mb-6 transition-all duration-1000 delay-200 ${logoAnimation ? 'animate-text-reveal' : 'opacity-0 scale-0'}`}>
+          <div className={`flex items-center justify-center mb-6 transition-all duration-400 delay-100 ${logoAnimation ? 'animate-text-reveal' : 'opacity-0 scale-95'}`}>
             <div className="relative">
-              <div className="w-20 h-20 bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full flex items-center justify-center eclipse-shadow animate-pulse-slow hover:scale-110 transition-transform duration-300 cursor-pointer micro-interaction">
+              <div className="w-20 h-20 bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full flex items-center justify-center eclipse-shadow animate-pulse-slow hover:scale-105 transition-transform duration-200 cursor-pointer">
                 <span className="text-3xl animate-float">🌙</span>
               </div>
               {/* Floating sparkles around logo */}
@@ -70,15 +70,15 @@ export default function Login({ onLogin }: LoginProps) {
               <div className="absolute top-1/2 -right-4 w-1.5 h-1.5 bg-[hsl(var(--lunar-mist))] rounded-full animate-twinkle" style={{animationDelay: '2s'}}></div>
             </div>
           </div>
-          <h1 className={`text-3xl font-bold text-white mb-3 bg-gradient-to-r from-white via-[hsl(var(--eclipse-glow))] to-white bg-clip-text transition-all duration-1000 delay-400 ${logoAnimation ? 'animate-text-reveal' : 'opacity-0'}`}>
+          <h1 className={`text-3xl font-bold text-white mb-3 bg-gradient-to-r from-white via-[hsl(var(--eclipse-glow))] to-white bg-clip-text transition-all duration-400 delay-200 ${logoAnimation ? 'animate-text-reveal' : 'opacity-0'}`}>
             RE/MAX Eclipse Dashboard
           </h1>
-          <p className={`text-[hsl(var(--soft-gray))] text-lg transition-all duration-1000 delay-600 ${logoAnimation ? 'animate-text-reveal' : 'opacity-0'}`}>
+          <p className={`text-[hsl(var(--soft-gray))] text-lg transition-all duration-400 delay-300 ${logoAnimation ? 'animate-text-reveal' : 'opacity-0'}`}>
             Welcome back, Levan. Ready to manifest results?
           </p>
         </div>
         
-        <form onSubmit={handleLogin} className={`space-y-6 transition-all duration-1000 delay-800 ${formAnimation ? 'animate-text-reveal' : 'opacity-0'}`}>
+        <form onSubmit={handleLogin} className={`space-y-6 transition-all duration-400 delay-400 ${formAnimation ? 'animate-text-reveal' : 'opacity-0'}`}>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-white font-medium">Email Address</Label>
@@ -87,7 +87,7 @@ export default function Login({ onLogin }: LoginProps) {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white placeholder:text-[hsl(var(--soft-gray))] focus:ring-2 focus:ring-[hsl(var(--eclipse-glow))] focus:border-transparent focus:scale-105 transition-all duration-300 micro-interaction h-12"
+                className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white placeholder:text-[hsl(var(--soft-gray))] focus:ring-2 focus:ring-[hsl(var(--eclipse-glow))] focus:border-transparent focus:scale-102 transition-all duration-200 h-12"
                 placeholder="levan@remaxeclipse.com"
                 required
               />
@@ -100,7 +100,7 @@ export default function Login({ onLogin }: LoginProps) {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white placeholder:text-[hsl(var(--soft-gray))] focus:ring-2 focus:ring-[hsl(var(--eclipse-glow))] focus:border-transparent focus:scale-105 transition-all duration-300 micro-interaction h-12"
+                className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white placeholder:text-[hsl(var(--soft-gray))] focus:ring-2 focus:ring-[hsl(var(--eclipse-glow))] focus:border-transparent focus:scale-102 transition-all duration-200 h-12"
                 placeholder="Enter your cosmic key"
                 required
               />
@@ -110,7 +110,7 @@ export default function Login({ onLogin }: LoginProps) {
           <CosmicButton 
             variant="remax" 
             size="lg" 
-            className="w-full h-14 text-lg font-semibold micro-interaction hover:scale-105"
+            className="w-full h-14 text-lg font-semibold hover:scale-102 transition-transform duration-200"
             onClick={handleLogin}
           >
             <span className="flex items-center space-x-2">
@@ -123,7 +123,7 @@ export default function Login({ onLogin }: LoginProps) {
             <Button 
               type="button" 
               variant="link" 
-              className="text-[hsl(var(--eclipse-glow))] hover:text-white hover:scale-105 transition-all duration-300 micro-interaction"
+              className="text-[hsl(var(--eclipse-glow))] hover:text-white hover:scale-102 transition-all duration-200"
             >
               <span className="flex items-center space-x-2">
                 <span>Use Magic Link</span>
@@ -136,7 +136,7 @@ export default function Login({ onLogin }: LoginProps) {
               <Button 
                 type="button" 
                 variant="link" 
-                className="text-[hsl(var(--eclipse-glow))] hover:text-white p-0 ml-1 micro-interaction"
+                className="text-[hsl(var(--eclipse-glow))] hover:text-white p-0 ml-1 hover:scale-102 transition-all duration-200"
               >
                 Contact Support
               </Button>
@@ -146,8 +146,8 @@ export default function Login({ onLogin }: LoginProps) {
       </GlassmorphicCard>
 
       {/* Enhanced footer with animated tagline */}
-      <div className={`absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center text-[hsl(var(--soft-gray))] z-10 transition-all duration-1000 delay-1200 ${formAnimation ? 'animate-text-reveal' : 'opacity-0'}`}>
-        <p className="text-sm flex items-center space-x-2 hover:text-[hsl(var(--eclipse-glow))] transition-colors duration-300 cursor-default">
+      <div className={`absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center text-[hsl(var(--soft-gray))] z-10 transition-all duration-400 delay-500 ${formAnimation ? 'animate-text-reveal' : 'opacity-0'}`}>
+        <p className="text-sm flex items-center space-x-2 hover:text-[hsl(var(--eclipse-glow))] transition-colors duration-200 cursor-default">
           <span>✨</span>
           <span>Manifesting magic, one call at a time</span>
           <span>✨</span>

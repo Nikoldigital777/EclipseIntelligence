@@ -75,21 +75,21 @@ export default function Leads() {
               index === 1 ? 'animate-text-reveal' : 
               'animate-text-reveal'
             }`}
-            style={{ animationDelay: `${index * 200}ms` }}
+            style={{ animationDelay: `${index * 100}ms` }}
             tiltEffect={true}
             intense={lead.borderColor === 'red'}
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center micro-interaction ${
-                  lead.borderColor === 'red' ? 'bg-gradient-to-br from-[hsl(var(--remax-red))] to-[hsl(var(--gold-manifest))] remax-shadow animate-pulse' :
+                  lead.borderColor === 'red' ? 'bg-gradient-to-br from-[hsl(var(--remax-red))] to-[hsl(var(--gold-manifest))] remax-shadow animate-pulse-slow' :
                   lead.borderColor === 'blue' ? 'bg-gradient-to-br from-[hsl(var(--manifest-blue))] to-[hsl(var(--eclipse-glow))] lunar-shadow' :
                   'bg-gradient-to-br from-[hsl(var(--gold-manifest))] to-[hsl(var(--success-green))] manifest-shadow animate-float'
                 }`}>
                   <span className="text-white font-semibold">{lead.avatar}</span>
                 </div>
                 <div>
-                  <h3 className="text-white font-semibold hover:text-[hsl(var(--eclipse-glow))] transition-colors duration-300 cursor-pointer">{lead.name}</h3>
+                  <h3 className="text-white font-semibold hover:text-[hsl(var(--eclipse-glow))] transition-colors duration-200 cursor-pointer">{lead.name}</h3>
                   <Badge 
                     variant="outline"
                     className={`micro-interaction ${
@@ -102,7 +102,7 @@ export default function Leads() {
                   </Badge>
                 </div>
               </div>
-              <div className="text-2xl hover:scale-125 transition-transform duration-300 cursor-pointer">{lead.sentiment}</div>
+              <div className="text-2xl hover:scale-110 transition-transform duration-200 cursor-pointer">{lead.sentiment}</div>
             </div>
             <p className="text-[hsl(var(--soft-gray))] text-sm mb-4 leading-relaxed">{lead.description}</p>
             <div className="flex items-center space-x-2">
@@ -131,13 +131,13 @@ export default function Leads() {
       >
         <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--eclipse-glow))]/5 via-[hsl(var(--lunar-mist))]/10 to-[hsl(var(--eclipse-glow))]/5 animate-morphing-gradient" />
         <div className="relative z-10 flex items-center space-x-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full flex items-center justify-center eclipse-shadow animate-pulse hover:scale-110 transition-transform duration-300 cursor-pointer">
+          <div className="w-12 h-12 bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full flex items-center justify-center eclipse-shadow animate-pulse-slow hover:scale-105 transition-transform duration-200 cursor-pointer">
             <Sparkles className="w-6 h-6 text-white animate-twinkle" />
           </div>
           <div className="flex-1">
             <h4 className="text-white font-semibold flex items-center space-x-2">
               <span>Cosmic Suggestion</span>
-              <div className="w-2 h-2 bg-[hsl(var(--eclipse-glow))] rounded-full animate-pulse" />
+              <div className="w-2 h-2 bg-[hsl(var(--eclipse-glow))] rounded-full animate-pulse-slow" />
             </h4>
             <p className="text-[hsl(var(--soft-gray))] leading-relaxed">
               Amy Smith is in high alignment - call now for maximum manifestation energy!
