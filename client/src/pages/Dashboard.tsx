@@ -18,28 +18,27 @@ export default function Dashboard() {
       {/* Header with scroll-triggered animations */}
       <div className="p-8 border-b border-white/10 relative overflow-hidden">
         {/* Floating cosmic elements */}
-        <div className="absolute top-4 right-4 w-32 h-32 animate-morphing-gradient rounded-full blur-3xl opacity-20 animate-float" />
-        <div className="absolute bottom-4 left-4 w-24 h-24 bg-gradient-to-br from-[hsl(var(--remax-red))] to-[hsl(var(--gold-manifest))] rounded-full blur-2xl opacity-30 animate-pulse-slow" />
+        <div className="absolute top-4 right-4 w-16 h-16 bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full blur-xl opacity-10" />
         
         <div className="flex items-center justify-between relative z-10">
           <div className={`transition-all duration-1000 ${isVisible ? 'animate-text-reveal' : 'opacity-0'}`}>
-            <h1 className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-white via-[hsl(var(--eclipse-glow))] to-white bg-clip-text">
+            <h1 className="text-4xl font-bold text-white mb-2">
               Good Morning, Levan!
             </h1>
-            <p className="text-[hsl(var(--soft-gray))] text-lg">
-              Your moon is in REMAX rising. Here's what's manifesting today:
+            <p className="text-white text-lg">
+              Your AI phone agents are performing exceptionally. Here's today's activity:
             </p>
           </div>
           <div className="flex items-center space-x-4">
             <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full flex items-center justify-center eclipse-shadow animate-pulse-slow hover:scale-110 transition-transform duration-300 cursor-pointer">
-                🌙
+              <div className="w-12 h-12 bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full flex items-center justify-center eclipse-shadow animate-pulse-slow hover:scale-105 transition-transform duration-200 cursor-pointer">
+                🤖
               </div>
               <div className="absolute -top-1 -right-1 w-4 h-4 bg-[hsl(var(--remax-red))] rounded-full animate-pulse micro-interaction" />
             </div>
-            <CosmicButton variant="remax" className="flex items-center space-x-2 micro-interaction">
+            <CosmicButton variant="remax" className="flex items-center space-x-2">
               <Plus className="w-4 h-4" />
-              <span>New Lead</span>
+              <span>Add Contact</span>
             </CosmicButton>
           </div>
         </div>
@@ -58,7 +57,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-3xl font-bold text-white animate-pulse-slow">12</p>
-                  <p className="text-[hsl(var(--soft-gray))] text-sm">Today's Leads</p>
+                  <p className="text-white text-sm">Today's Leads</p>
                 </div>
               </div>
               <div className="w-full bg-[hsl(var(--deep-night))]/50 rounded-full h-3 relative overflow-hidden">
@@ -78,7 +77,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-3xl font-bold text-white animate-pulse">5</p>
-                  <p className="text-[hsl(var(--soft-gray))] text-sm">Callbacks Due</p>
+                  <p className="text-white text-sm">Callbacks Due</p>
                 </div>
               </div>
               <div className="w-full bg-[hsl(var(--deep-night))]/50 rounded-full h-3 relative overflow-hidden">
@@ -98,7 +97,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-3xl font-bold text-white bg-gradient-to-r from-[hsl(var(--gold-manifest))] to-[hsl(var(--success-green))] bg-clip-text">78%</p>
-                  <p className="text-[hsl(var(--soft-gray))] text-sm">Conversion Rate</p>
+                  <p className="text-white text-sm">Conversion Rate</p>
                 </div>
               </div>
               <div className="w-full bg-[hsl(var(--deep-night))]/50 rounded-full h-3 relative overflow-hidden">
@@ -108,7 +107,7 @@ export default function Dashboard() {
             </div>
           </GlassmorphicCard>
 
-          {/* Manifestation Energy - Peak cosmic power */}
+          {/* AI Performance - System efficiency */}
           <GlassmorphicCard className={`hover-glow micro-interaction relative overflow-hidden transition-all duration-700 delay-500 ${statsAnimation ? 'animate-text-reveal' : 'opacity-0 translate-y-4'}`}>
             <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--lunar-mist))]/10 to-[hsl(var(--eclipse-glow))]/5 animate-aurora" />
             <div className="absolute top-2 right-2 w-8 h-8 bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full blur-sm animate-pulse opacity-50" />
@@ -119,7 +118,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-3xl font-bold text-white animate-glow bg-gradient-to-r from-[hsl(var(--lunar-mist))] to-[hsl(var(--eclipse-glow))] bg-clip-text">92%</p>
-                  <p className="text-[hsl(var(--soft-gray))] text-sm">Cosmic Alignment</p>
+                  <p className="text-white text-sm">AI Performance</p>
                 </div>
               </div>
               <div className="w-full bg-[hsl(var(--deep-night))]/50 rounded-full h-3 relative overflow-hidden">
@@ -174,7 +173,7 @@ export default function Dashboard() {
           <GlassmorphicCard>
             <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
               <Sparkles className="w-5 h-5 mr-3 text-[hsl(var(--gold-manifest))]" />
-              Cosmic AI Insights
+              AI Performance Insights
             </h3>
             <div className="space-y-4">
               <div className="bg-gradient-to-r from-[hsl(var(--eclipse-glow))]/20 to-[hsl(var(--lunar-mist))]/20 rounded-lg p-4 border border-[hsl(var(--eclipse-glow))]/30">
@@ -183,9 +182,9 @@ export default function Dashboard() {
                     <Lightbulb className="w-4 h-4 text-white" />
                   </div>
                   <div>
-                    <p className="text-white font-medium mb-1">Manifestation Tip</p>
-                    <p className="text-[hsl(var(--soft-gray))] text-sm">
-                      Call new leads within 15 minutes for cosmic alignment. Your conversion rate increases by 47% during lunar hours.
+                    <p className="text-white font-medium mb-1">AI Agent Tip</p>
+                    <p className="text-white text-sm">
+                      Call new leads within 15 minutes for optimal results. Your conversion rate increases by 47% with immediate follow-up.
                     </p>
                   </div>
                 </div>
@@ -196,9 +195,9 @@ export default function Dashboard() {
                     <Crown className="w-4 h-4 text-white" />
                   </div>
                   <div>
-                    <p className="text-white font-medium mb-1">Abundance Alert</p>
-                    <p className="text-[hsl(var(--soft-gray))] text-sm">
-                      3 high-value leads are in perfect alignment right now. The universe is ready to deliver!
+                    <p className="text-white font-medium mb-1">Priority Alert</p>
+                    <p className="text-white text-sm">
+                      3 high-value leads are ready for immediate contact. AI analysis shows optimal conversion timing!
                     </p>
                   </div>
                 </div>

@@ -19,7 +19,7 @@ import Settings from "./pages/Settings";
 import NotFound from "@/pages/not-found";
 
 function Router() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
 
   if (!isAuthenticated) {
     return <Login onLogin={() => setIsAuthenticated(true)} />;

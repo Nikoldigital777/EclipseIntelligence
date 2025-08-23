@@ -194,7 +194,7 @@
   }
 
   .animate-float {
-    animation: float 6s ease-in-out infinite;
+    animation: float 8s ease-in-out infinite;
   }
 
   .animate-glow {
@@ -202,7 +202,7 @@
   }
 
   .animate-twinkle {
-    animation: twinkle 4s infinite;
+    animation: twinkle 6s infinite;
   }
 
   .animate-pulse-slow {
@@ -215,8 +215,8 @@
       hsl(var(--lunar-mist)), 
       hsl(var(--manifest-blue)), 
       hsl(var(--gold-manifest)));
-    background-size: 400% 400%;
-    animation: morphing-gradient 8s ease infinite;
+    background-size: 200% 200%;
+    animation: morphing-gradient 12s ease infinite;
   }
 
   .animate-card-hover-lift:hover {
@@ -229,12 +229,12 @@
 
   .animate-aurora {
     background: linear-gradient(-45deg, 
-      rgba(62, 243, 255, 0.1), 
-      rgba(111, 114, 255, 0.2), 
-      rgba(238, 39, 55, 0.1), 
-      rgba(255, 179, 0, 0.2));
-    background-size: 400% 400%;
-    animation: aurora 12s ease infinite;
+      rgba(62, 243, 255, 0.05), 
+      rgba(111, 114, 255, 0.1), 
+      rgba(238, 39, 55, 0.05), 
+      rgba(255, 179, 0, 0.1));
+    background-size: 200% 200%;
+    animation: aurora 15s ease infinite;
   }
 
   .scroll-parallax {

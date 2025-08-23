@@ -37,8 +37,10 @@ export default function CustomCursor() {
     document.addEventListener('mouseover', handleMouseEnter);
     document.addEventListener('mouseout', handleMouseLeave);
 
-    // Hide default cursor
-    document.body.style.cursor = 'none';
+    // Hide default cursor only on larger screens
+    if (window.innerWidth > 768) {
+      document.body.style.cursor = 'none';
+    }
 
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
@@ -87,36 +89,17 @@ export default function CustomCursor() {
     };
   };
 
+  // Only show custom cursor on desktop
+  if (window.innerWidth <= 768) {
+    return null;
+  }
+
   return (
     <>
       {/* Main cursor */}
       <div
-        className="fixed w-6 h-6 rounded-full pointer-events-none z-[9999] transition-all duration-150 ease-out mix-blend-difference"
+        className="fixed w-4 h-4 rounded-full pointer-events-none z-[9999] transition-all duration-100 ease-out"
         style={getCursorStyles()}
-      />
-      
-      {/* Cursor trail */}
-      <div
-        className="fixed w-3 h-3 rounded-full pointer-events-none z-[9998] transition-all duration-300 ease-out opacity-30"
-        style={{
-          ...getTrailStyles(),
-          background: cursorVariant === 'hover' 
-            ? 'hsl(var(--eclipse-glow))' 
-            : cursorVariant === 'click'
-            ? 'hsl(var(--remax-red))'
-            : 'rgba(255, 255, 255, 0.5)',
-        }}
-      />
-      
-      {/* Outer ring */}
-      <div
-        className="fixed w-8 h-8 rounded-full border border-white/20 pointer-events-none z-[9997] transition-all duration-500 ease-out"
-        style={{
-          left: mousePosition.x - 16,
-          top: mousePosition.y - 16,
-          transform: isHovering ? 'scale(2)' : 'scale(1)',
-          opacity: isHovering ? 0.8 : 0.3,
-        }}
       />
     </>
   );

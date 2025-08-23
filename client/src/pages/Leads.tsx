@@ -104,7 +104,7 @@ export default function Leads() {
               </div>
               <div className="text-2xl hover:scale-110 transition-transform duration-200 cursor-pointer">{lead.sentiment}</div>
             </div>
-            <p className="text-[hsl(var(--soft-gray))] text-sm mb-4 leading-relaxed">{lead.description}</p>
+            <p className="text-white text-sm mb-4 leading-relaxed">{lead.description}</p>
             <div className="flex items-center space-x-2">
               <CosmicButton variant="primary" size="sm" className="flex items-center space-x-1 micro-interaction">
                 <Phone className="w-4 h-4" />
@@ -136,15 +136,15 @@ export default function Leads() {
           </div>
           <div className="flex-1">
             <h4 className="text-white font-semibold flex items-center space-x-2">
-              <span>Cosmic Suggestion</span>
+              <span>AI Recommendation</span>
               <div className="w-2 h-2 bg-[hsl(var(--eclipse-glow))] rounded-full animate-pulse-slow" />
             </h4>
-            <p className="text-[hsl(var(--soft-gray))] leading-relaxed">
-              Amy Smith is in high alignment - call now for maximum manifestation energy!
+            <p className="text-white leading-relaxed">
+              Amy Smith shows strong interest - high priority for immediate follow-up call!
             </p>
           </div>
           <CosmicButton variant="eclipse" size="sm" className="micro-interaction">
-            Act Now
+            Call Now
           </CosmicButton>
         </div>
       </GlassmorphicCard>
