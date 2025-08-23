@@ -8,15 +8,18 @@ import { Input } from "@/components/ui/input";
 export default function Settings() {
   return (
     <div className="min-h-screen p-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Settings</h1>
-        <p className="text-[hsl(var(--soft-gray))]">Alignment - Configure your cosmic preferences</p>
+      {/* Header with enhanced aesthetics */}
+      <div className="p-6 mb-8 border-b border-white/10 relative overflow-hidden bg-gradient-to-br from-black/40 via-black/20 to-transparent backdrop-blur-sm rounded-lg">
+        <div className="absolute top-4 right-4 w-16 h-16 bg-gradient-to-br from-[hsl(var(--gold-manifest))] to-[hsl(var(--remax-red))] rounded-full blur-xl opacity-20 animate-pulse" />
+        <div className="relative z-10">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-[hsl(var(--gold-manifest))] to-white bg-clip-text text-transparent mb-3 drop-shadow-2xl">Settings</h1>
+          <p className="text-gray-300 text-lg drop-shadow-md">Configure your AI dashboard preferences and account</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Profile Settings */}
-        <GlassmorphicCard>
+        <GlassmorphicCard className="border border-white/10 hover:border-white/20 transition-colors duration-300">
           <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
             <User className="w-5 h-5 mr-3 text-[hsl(var(--eclipse-glow))]" />
             Profile
@@ -65,7 +68,7 @@ export default function Settings() {
         </GlassmorphicCard>
 
         {/* Notifications */}
-        <GlassmorphicCard>
+        <GlassmorphicCard className="border border-white/10 hover:border-white/20 transition-colors duration-300">
           <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
             <Bell className="w-5 h-5 mr-3 text-[hsl(var(--gold-manifest))]" />
             Notifications

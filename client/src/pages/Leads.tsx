@@ -37,19 +37,22 @@ const leads = [
 export default function Leads() {
   return (
     <div className="min-h-screen p-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Leads Inbox</h1>
-          <p className="text-[hsl(var(--soft-gray))]">These opportunities are aligning for you...</p>
-        </div>
-        <div className="relative">
-          <Input
-            type="text"
-            placeholder="Search leads..."
-            className="bg-[hsl(var(--lunar-glass))] border-[hsl(var(--lunar-mist))]/30 rounded-full pl-10 pr-4 py-3 text-white placeholder:text-[hsl(var(--soft-gray))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--eclipse-glow))] w-80"
-          />
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[hsl(var(--eclipse-glow))] w-4 h-4" />
+      {/* Header with enhanced aesthetics */}
+      <div className="p-6 mb-8 border-b border-white/10 relative overflow-hidden bg-gradient-to-br from-black/40 via-black/20 to-transparent backdrop-blur-sm rounded-lg">
+        <div className="absolute top-4 right-4 w-16 h-16 bg-gradient-to-br from-[hsl(var(--manifest-blue))] to-[hsl(var(--eclipse-glow))] rounded-full blur-xl opacity-20 animate-pulse" />
+        <div className="flex items-center justify-between relative z-10">
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-[hsl(var(--manifest-blue))] to-white bg-clip-text text-transparent mb-3 drop-shadow-2xl">Leads Inbox</h1>
+            <p className="text-gray-300 text-lg drop-shadow-md">High-priority prospects identified by AI analysis</p>
+          </div>
+          <div className="relative">
+            <Input
+              type="text"
+              placeholder="Search leads..."
+              className="bg-[hsl(var(--lunar-glass))] border-[hsl(var(--lunar-mist))]/30 rounded-full pl-10 pr-4 py-3 text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--eclipse-glow))] w-80 hover:border-[hsl(var(--eclipse-glow))]/50 transition-colors"
+            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[hsl(var(--eclipse-glow))] w-4 h-4" />
+          </div>
         </div>
       </div>
 
@@ -70,7 +73,7 @@ export default function Leads() {
           <GlassmorphicCard 
             key={lead.id} 
             borderColor={lead.borderColor} 
-            className={`hover-glow micro-interaction transition-all duration-500 ${
+            className={`hover-glow relative overflow-hidden border border-white/20 hover:border-[hsl(var(--eclipse-glow))]/50 transition-all duration-500 ${
               index === 0 ? 'animate-text-reveal' : 
               index === 1 ? 'animate-text-reveal' : 
               'animate-text-reveal'
