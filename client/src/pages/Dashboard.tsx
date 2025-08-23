@@ -16,16 +16,16 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen">
       {/* Header with scroll-triggered animations */}
-      <div className="p-8 border-b border-white/10 relative overflow-hidden">
+      <div className="p-8 border-b border-white/10 relative overflow-hidden bg-black/20">
         {/* Floating cosmic elements */}
         <div className="absolute top-4 right-4 w-16 h-16 bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full blur-xl opacity-10" />
         
         <div className="flex items-center justify-between relative z-10">
           <div className={`transition-all duration-1000 ${isVisible ? 'animate-text-reveal' : 'opacity-0'}`}>
-            <h1 className="text-4xl font-bold text-white mb-2">
+            <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
               Good Morning, Levan!
             </h1>
-            <p className="text-white text-lg">
+            <p className="text-gray-200 text-lg drop-shadow-md">
               Your AI phone agents are performing exceptionally. Here's today's activity:
             </p>
           </div>
@@ -57,7 +57,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-3xl font-bold text-white animate-pulse-slow">12</p>
-                  <p className="text-white text-sm">Today's Leads</p>
+                  <p className="text-gray-300 text-sm">Today's Leads</p>
                 </div>
               </div>
               <div className="w-full bg-[hsl(var(--deep-night))]/50 rounded-full h-3 relative overflow-hidden">
@@ -77,7 +77,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-3xl font-bold text-white animate-pulse">5</p>
-                  <p className="text-white text-sm">Callbacks Due</p>
+                  <p className="text-gray-300 text-sm">Callbacks Due</p>
                 </div>
               </div>
               <div className="w-full bg-[hsl(var(--deep-night))]/50 rounded-full h-3 relative overflow-hidden">
@@ -97,7 +97,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-3xl font-bold text-white bg-gradient-to-r from-[hsl(var(--gold-manifest))] to-[hsl(var(--success-green))] bg-clip-text">78%</p>
-                  <p className="text-white text-sm">Conversion Rate</p>
+                  <p className="text-gray-300 text-sm">Conversion Rate</p>
                 </div>
               </div>
               <div className="w-full bg-[hsl(var(--deep-night))]/50 rounded-full h-3 relative overflow-hidden">
@@ -118,7 +118,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-3xl font-bold text-white animate-glow bg-gradient-to-r from-[hsl(var(--lunar-mist))] to-[hsl(var(--eclipse-glow))] bg-clip-text">92%</p>
-                  <p className="text-white text-sm">AI Performance</p>
+                  <p className="text-gray-300 text-sm">AI Performance</p>
                 </div>
               </div>
               <div className="w-full bg-[hsl(var(--deep-night))]/50 rounded-full h-3 relative overflow-hidden">

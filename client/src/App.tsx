@@ -28,7 +28,6 @@ function Router() {
   return (
     <div className="flex min-h-screen relative">
       <StarField />
-      <CustomCursor />
       <Sidebar />
       <div className="flex-1 ml-64 relative z-10">
         <Switch>

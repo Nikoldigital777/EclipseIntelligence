@@ -47,7 +47,6 @@ export default function Login({ onLogin }: LoginProps) {
       </div>
       
       <StarField />
-      <CustomCursor />
       
       {/* Floating cosmic elements */}
       <div className={`absolute top-20 left-1/2 transform -translate-x-1/2 w-24 h-24 opacity-30 transition-all duration-1000 ${isVisible ? 'animate-float' : 'opacity-0 scale-0'}`}>
