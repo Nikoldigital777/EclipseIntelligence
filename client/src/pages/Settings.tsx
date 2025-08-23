@@ -8,12 +8,44 @@ import { Input } from "@/components/ui/input";
 export default function Settings() {
   return (
     <div className="min-h-screen p-8">
-      {/* Header with enhanced aesthetics */}
-      <div className="p-6 mb-8 border-b border-white/10 relative overflow-hidden bg-gradient-to-br from-black/40 via-black/20 to-transparent backdrop-blur-sm rounded-lg">
-        <div className="absolute top-4 right-4 w-16 h-16 bg-gradient-to-br from-[hsl(var(--gold-manifest))] to-[hsl(var(--remax-red))] rounded-full blur-xl opacity-20 animate-pulse" />
+      {/* Header with stunning design background */}
+      <div className="p-8 border-b border-white/10 relative overflow-hidden bg-gradient-to-br from-black/70 via-black/50 to-black/30 backdrop-blur-sm rounded-lg">
+        {/* Abstract geometric background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_25%_25%,hsl(var(--gold-manifest))_0%,transparent_50%)]"></div>
+          <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_75%_25%,hsl(var(--remax-red))_0%,transparent_50%)]"></div>
+          <div className="absolute bottom-0 left-0 w-full h-full bg-[radial-gradient(circle_at_25%_75%,hsl(var(--eclipse-glow))_0%,transparent_50%)]"></div>
+        </div>
+        
+        {/* Animated mesh background */}
+        <div className="absolute inset-0 opacity-5">
+          <svg className="w-full h-full" viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="grad-settings" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style={{stopColor: 'hsl(var(--gold-manifest))', stopOpacity: 0.3}} />
+                <stop offset="50%" style={{stopColor: 'hsl(var(--remax-red))', stopOpacity: 0.2}} />
+                <stop offset="100%" style={{stopColor: 'hsl(var(--eclipse-glow))', stopOpacity: 0.3}} />
+              </linearGradient>
+            </defs>
+            <path d="M0,100 Q100,50 200,100 T400,100 L400,200 L0,200 Z" fill="url(#grad-settings)" className="animate-pulse" />
+            <path d="M0,150 Q150,120 300,150 T400,150 L400,200 L0,200 Z" fill="url(#grad-settings)" opacity="0.5" className="animate-pulse" style={{animationDelay: '1s'}} />
+          </svg>
+        </div>
+        
+        {/* Enhanced floating cosmic elements */}
+        <div className="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-[hsl(var(--gold-manifest))] to-[hsl(var(--remax-red))] rounded-full blur-xl opacity-20 animate-pulse" />
+        <div className="absolute top-8 right-8 w-12 h-12 bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full blur-lg opacity-15 animate-float" />
+        <div className="absolute bottom-4 left-8 w-16 h-16 bg-gradient-to-br from-[hsl(var(--remax-red))] to-[hsl(var(--manifest-blue))] rounded-full blur-2xl opacity-10" />
+        
+        {/* Subtle grid pattern */}
+        <div className="absolute inset-0 opacity-5" style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)`,
+          backgroundSize: '20px 20px'
+        }}></div>
+        
         <div className="relative z-10">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-[hsl(var(--gold-manifest))] to-white bg-clip-text text-transparent mb-3 drop-shadow-2xl">Settings</h1>
-          <p className="text-gray-300 text-lg drop-shadow-md">Configure your AI dashboard preferences and account</p>
+          <h1 className="text-5xl font-bold text-white mb-3 drop-shadow-2xl [text-shadow:_2px_2px_8px_rgb(0_0_0_/_50%)]">Settings</h1>
+          <p className="text-gray-200 text-xl drop-shadow-lg [text-shadow:_1px_1px_4px_rgb(0_0_0_/_50%)]">Configure your AI dashboard preferences and account</p>
         </div>
       </div>
 
