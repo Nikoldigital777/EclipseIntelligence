@@ -36,21 +36,30 @@ export default function Login({ onLogin }: LoginProps) {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Cosmic Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--deep-night))] via-[hsl(var(--lunar-glass))] to-[hsl(var(--deep-night))]"></div>
+      
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_50%,hsl(var(--eclipse-glow))_0%,transparent_50%)]"></div>
+        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_20%,hsl(var(--remax-red))_0%,transparent_50%)]"></div>
+        <div className="absolute bottom-0 left-0 w-full h-full bg-[radial-gradient(circle_at_40%_80%,hsl(var(--lunar-mist))_0%,transparent_50%)]"></div>
+      </div>
+      
       <StarField />
       <CustomCursor />
       
-      {/* Enhanced floating cosmic elements */}
-      <div className={`absolute top-20 left-1/2 transform -translate-x-1/2 w-32 h-32 opacity-20 transition-all duration-1000 ${isVisible ? 'animate-float' : 'opacity-0 scale-0'}`}>
-        <div className="w-full h-full bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full eclipse-shadow animate-morphing-gradient"></div>
+      {/* Floating cosmic elements */}
+      <div className={`absolute top-20 left-1/2 transform -translate-x-1/2 w-24 h-24 opacity-30 transition-all duration-1000 ${isVisible ? 'animate-float' : 'opacity-0 scale-0'}`}>
+        <div className="w-full h-full bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full blur-sm"></div>
       </div>
       
-      {/* Additional floating particles */}
-      <div className={`absolute top-1/4 right-1/4 w-16 h-16 opacity-10 transition-all duration-1500 delay-300 ${isVisible ? 'animate-float' : 'opacity-0 translate-y-10'}`}>
-        <div className="w-full h-full bg-gradient-to-br from-[hsl(var(--remax-red))] to-[hsl(var(--gold-manifest))] rounded-full blur-xl animate-pulse-slow"></div>
+      <div className={`absolute top-1/4 right-1/4 w-12 h-12 opacity-20 transition-all duration-1500 delay-300 ${isVisible ? 'animate-float' : 'opacity-0 translate-y-10'}`}>
+        <div className="w-full h-full bg-gradient-to-br from-[hsl(var(--remax-red))] to-[hsl(var(--gold-manifest))] rounded-full blur-lg"></div>
       </div>
       
-      <div className={`absolute bottom-1/4 left-1/4 w-20 h-20 opacity-15 transition-all duration-2000 delay-500 ${isVisible ? 'animate-float' : 'opacity-0 -translate-y-10'}`}>
-        <div className="w-full h-full bg-gradient-to-br from-[hsl(var(--lunar-mist))] to-[hsl(var(--eclipse-glow))] rounded-full blur-2xl animate-aurora"></div>
+      <div className={`absolute bottom-1/4 left-1/4 w-16 h-16 opacity-25 transition-all duration-2000 delay-500 ${isVisible ? 'animate-float' : 'opacity-0 -translate-y-10'}`}>
+        <div className="w-full h-full bg-gradient-to-br from-[hsl(var(--lunar-mist))] to-[hsl(var(--eclipse-glow))] rounded-full blur-xl"></div>
       </div>
 
       <GlassmorphicCard 
@@ -144,7 +153,7 @@ export default function Login({ onLogin }: LoginProps) {
       </GlassmorphicCard>
 
       {/* Enhanced footer with animated tagline */}
-      <div className={`absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center text-[hsl(var(--soft-gray))] z-10 transition-all duration-400 delay-500 ${formAnimation ? 'animate-text-reveal' : 'opacity-0'}`}>
+      <div className={`absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center z-10 transition-all duration-400 delay-500 ${formAnimation ? 'animate-text-reveal' : 'opacity-0'}`}>
         <p className="text-white text-sm flex items-center space-x-2 hover:text-[hsl(var(--eclipse-glow))] transition-colors duration-200 cursor-default">
           <span>🤖</span>
           <span>AI-powered conversations, exceptional results</span>
