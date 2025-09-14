@@ -16,14 +16,10 @@ export default function Login({ onLogin }: LoginProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isVisible, setIsVisible] = useState(false);
-  const [formAnimation, setFormAnimation] = useState(false);
-  const [logoAnimation, setLogoAnimation] = useState(false);
 
   useEffect(() => {
-    // Subtle staggered entrance animations
-    setTimeout(() => setIsVisible(true), 100);
-    setTimeout(() => setLogoAnimation(true), 300);
-    setTimeout(() => setFormAnimation(true), 500);
+    // Smooth entrance animation
+    setIsVisible(true);
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -62,12 +58,12 @@ export default function Login({ onLogin }: LoginProps) {
       </div>
 
       <GlassmorphicCard 
-        className={`w-full max-w-md relative z-10 transition-all duration-500 ${isVisible ? 'animate-text-reveal' : 'opacity-0 scale-98 translate-y-4'}`}
+        className={`w-full max-w-md relative z-10 transition-all duration-600 ease-out ${isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-98'}`}
         intense={true}
         tiltEffect={true}
       >
         <div className="text-center mb-6">
-          <div className={`flex items-center justify-center mb-6 transition-all duration-400 delay-100 ${logoAnimation ? 'animate-text-reveal' : 'opacity-0 scale-95'}`}>
+          <div className={`flex items-center justify-center mb-6 transition-all duration-700 ease-out delay-100 ${isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-1 scale-98'}`}>
             <div className="relative">
               <div className="w-20 h-20 bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full flex items-center justify-center eclipse-shadow animate-pulse-slow hover:scale-105 transition-transform duration-200 cursor-pointer">
                 <span className="text-3xl animate-float">🌙</span>
@@ -78,15 +74,15 @@ export default function Login({ onLogin }: LoginProps) {
               <div className="absolute top-1/2 -right-4 w-1.5 h-1.5 bg-[hsl(var(--lunar-mist))] rounded-full animate-twinkle" style={{animationDelay: '2s'}}></div>
             </div>
           </div>
-          <h1 className={`text-3xl font-bold text-white mb-3 bg-gradient-to-r from-white via-[hsl(var(--eclipse-glow))] to-white bg-clip-text transition-all duration-400 delay-200 ${logoAnimation ? 'animate-text-reveal' : 'opacity-0'}`}>
+          <h1 className={`text-3xl font-bold text-white mb-3 bg-gradient-to-r from-white via-[hsl(var(--eclipse-glow))] to-white bg-clip-text transition-all duration-700 ease-out delay-150 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'}`}>
             RE/MAX Eclipse Dashboard
           </h1>
-          <p className={`text-white text-lg transition-all duration-400 delay-300 ${logoAnimation ? 'animate-text-reveal' : 'opacity-0'}`}>
+          <p className={`text-white text-lg transition-all duration-700 ease-out delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'}`}>
             Welcome back, Levan. Ready to manage your AI phone agents?
           </p>
         </div>
         
-        <form onSubmit={handleLogin} className={`space-y-6 transition-all duration-400 delay-400 ${formAnimation ? 'animate-text-reveal' : 'opacity-0'}`}>
+        <form onSubmit={handleLogin} className={`space-y-6 transition-all duration-700 ease-out delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'}`}>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-white font-medium">Email Address</Label>
@@ -152,7 +148,7 @@ export default function Login({ onLogin }: LoginProps) {
       </GlassmorphicCard>
 
       {/* Enhanced footer with animated tagline */}
-      <div className={`absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center z-10 transition-all duration-400 delay-500 ${formAnimation ? 'animate-text-reveal' : 'opacity-0'}`}>
+      <div className={`absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center z-10 transition-all duration-700 ease-out delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'}`}>
         <p className="text-white text-sm flex items-center space-x-2 hover:text-[hsl(var(--eclipse-glow))] transition-colors duration-200 cursor-default">
           <span>🤖</span>
           <span>AI-powered conversations, exceptional results</span>
