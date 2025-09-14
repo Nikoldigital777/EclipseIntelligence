@@ -61,30 +61,20 @@
     50% { transform: translateY(-2px); }
   }
 
-  @keyframes glow {
-    from { box-shadow: 0 0 15px rgba(111, 114, 255, 0.2); }
-    to { box-shadow: 0 0 20px rgba(62, 243, 255, 0.4); }
+  @keyframes smooth-glow {
+    from { box-shadow: 0 0 15px rgba(111, 114, 255, 0.1); }
+    to { box-shadow: 0 0 25px rgba(62, 243, 255, 0.2); }
   }
 
-  @keyframes twinkle {
-    0%, 100% { opacity: 0.6; }
-    50% { opacity: 0.9; }
+  @keyframes gentle-fade {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
   }
 
-  @keyframes pulse-slow {
-    0%, 100% { opacity: 0.9; }
-    50% { opacity: 0.6; }
-  }
-
-  @keyframes morphing-gradient {
+  @keyframes smooth-gradient {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
-  }
-
-  @keyframes card-hover-lift {
-    0% { transform: translateY(0) scale(1); }
-    100% { transform: translateY(-3px) scale(1.01); }
   }
 
   @keyframes text-reveal {
@@ -163,13 +153,13 @@
 
   .hover-glow:hover {
     box-shadow: 
-      0 0 25px rgba(62, 243, 255, 0.4),
-      0 0 50px rgba(62, 243, 255, 0.15),
-      0 12px 30px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.15);
-    transform: translateY(-2px) scale(1.01);
+      0 0 20px rgba(62, 243, 255, 0.2),
+      0 0 40px rgba(62, 243, 255, 0.1),
+      0 8px 25px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px) scale(1.005);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border-color: rgba(62, 243, 255, 0.4);
+    border-color: rgba(62, 243, 255, 0.3);
   }
 
   .hover-glow {
@@ -208,26 +198,30 @@
     animation: float 8s ease-in-out infinite;
   }
 
-  .animate-glow {
-    animation: glow 2s ease-in-out infinite alternate;
+  .animate-smooth-glow {
+    animation: smooth-glow 4s ease-in-out infinite alternate;
   }
 
-  .animate-twinkle {
-    animation: twinkle 6s infinite;
+  .animate-gentle-fade {
+    animation: gentle-fade 8s ease-in-out infinite;
   }
 
-  .animate-pulse-slow {
-    animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-
-  .animate-morphing-gradient {
+  .animate-smooth-gradient {
     background: linear-gradient(-45deg, 
       hsl(var(--eclipse-glow)), 
       hsl(var(--lunar-mist)), 
       hsl(var(--primary-blue)), 
       hsl(var(--accent-gold)));
     background-size: 200% 200%;
-    animation: morphing-gradient 12s ease infinite;
+    animation: smooth-gradient 20s ease infinite;
+  }
+
+  .hover\:scale-102:hover {
+    transform: scale(1.02);
+  }
+
+  .hover\:scale-\[1\.01\]:hover {
+    transform: scale(1.01);
   }
 
   .animate-card-hover-lift:hover {
