@@ -21,7 +21,7 @@ export default function Dashboard() {
           <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_75%_25%,hsl(var(--remax-red))_0%,transparent_50%)]"></div>
           <div className="absolute bottom-0 left-0 w-full h-full bg-[radial-gradient(circle_at_25%_75%,hsl(var(--manifest-blue))_0%,transparent_50%)]"></div>
         </div>
-        
+
         {/* Animated mesh background */}
         <div className="absolute inset-0 opacity-5">
           <svg className="w-full h-full" viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -36,18 +36,18 @@ export default function Dashboard() {
             <path d="M0,150 Q150,120 300,150 T400,150 L400,200 L0,200 Z" fill="url(#grad1)" opacity="0.5" className="animate-pulse" style={{animationDelay: '1s'}} />
           </svg>
         </div>
-        
+
         {/* Enhanced floating cosmic elements */}
         <div className="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full blur-xl opacity-20 animate-pulse" />
         <div className="absolute top-8 right-8 w-12 h-12 bg-gradient-to-br from-[hsl(var(--remax-red))] to-[hsl(var(--gold-manifest))] rounded-full blur-lg opacity-15 animate-float" />
         <div className="absolute bottom-4 left-8 w-16 h-16 bg-gradient-to-br from-[hsl(var(--manifest-blue))] to-[hsl(var(--eclipse-glow))] rounded-full blur-2xl opacity-10" />
-        
+
         {/* Subtle grid pattern */}
         <div className="absolute inset-0 opacity-5" style={{
           backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)`,
           backgroundSize: '20px 20px'
         }}></div>
-        
+
         <div className="flex items-center justify-between relative z-10">
           <div className={`transition-all duration-700 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
             <h1 className="text-5xl font-bold text-white mb-3 drop-shadow-2xl [text-shadow:_2px_2px_8px_rgb(0_0_0_/_50%)]">
@@ -96,7 +96,7 @@ export default function Dashboard() {
             </div>
           </GlassmorphicCard>
 
-          {/* Callbacks Due - Enhanced urgency aesthetics */}
+          {/* Callbacks Due - Urgency aesthetics */}
           <GlassmorphicCard className={`hover-glow relative overflow-hidden transition-all duration-700 delay-150 border border-[hsl(var(--remax-red))]/30 hover:border-[hsl(var(--remax-red))]/50 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'}`}>
             <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--remax-red))]/15 to-[hsl(var(--gold-manifest))]/8 animate-pulse" />
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[hsl(var(--remax-red))] to-transparent opacity-60" />
