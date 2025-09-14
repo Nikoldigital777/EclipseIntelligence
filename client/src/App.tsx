@@ -12,6 +12,7 @@ import AllAgents from "./pages/AllAgents";
 import CallHistory from "./pages/CallHistory";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
+import OutboundCalls from "./pages/OutboundCalls";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -33,6 +34,7 @@ function Router() {
           <Route path="/analytics" component={Analytics} />
           <Route path="/call-history" component={CallHistory} />
           <Route path="/agents" component={AllAgents} />
+          <Route path="/outbound-calls" component={OutboundCalls} />
           <Route path="/settings" component={Settings} />
           <Route component={NotFound} />
         </Switch>
