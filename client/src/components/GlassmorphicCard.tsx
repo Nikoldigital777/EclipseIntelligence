@@ -67,12 +67,12 @@ export default function GlassmorphicCard({
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
     
-    const rotateX = (mousePosition.y - centerY) / centerY * -3;
-    const rotateY = (mousePosition.x - centerX) / centerX * 3;
+    const rotateX = (mousePosition.y - centerY) / centerY * -1.5;
+    const rotateY = (mousePosition.x - centerX) / centerX * 1.5;
 
     return {
-      transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.01, 1.01, 1.01)`,
-      transition: isHovered ? 'none' : 'transform 0.3s ease-out',
+      transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.005, 1.005, 1.005)`,
+      transition: isHovered ? 'none' : 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
     };
   };
 
@@ -80,14 +80,12 @@ export default function GlassmorphicCard({
     if (!tiltEffect || !isHovered || !cardRef.current) return {};
 
     const rect = cardRef.current.getBoundingClientRect();
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
     
     const glowX = (mousePosition.x / rect.width) * 100;
     const glowY = (mousePosition.y / rect.height) * 100;
 
     return {
-      background: `radial-gradient(circle at ${glowX}% ${glowY}%, rgba(62, 243, 255, 0.05), transparent 60%)`,
+      background: `radial-gradient(circle at ${glowX}% ${glowY}%, rgba(62, 243, 255, 0.03), transparent 70%)`,
     };
   };
 
@@ -98,7 +96,7 @@ export default function GlassmorphicCard({
         intense ? "glassmorphism-intense" : "glassmorphism",
         "rounded-xl p-6 relative overflow-hidden",
         hover && "hover-glow",
-        tiltEffect && "transition-transform duration-300 ease-out",
+        tiltEffect && "transition-transform duration-200 ease-out",
         getBorderStyles(),
         className
       )}
