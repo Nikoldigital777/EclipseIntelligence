@@ -64,7 +64,7 @@ export default function Settings() {
               </div>
               <div>
                 <h4 className="text-white font-semibold">Levan Wood</h4>
-                <p className="text-[hsl(var(--soft-gray))] text-sm">Eclipse Rising Agent</p>
+                <p className="text-[hsl(var(--soft-gray))] text-sm">RE/MAX Eclipse Agent</p>
               </div>
             </div>
             
@@ -113,7 +113,7 @@ export default function Settings() {
                   New Lead Alerts
                 </Label>
                 <p className="text-[hsl(var(--soft-gray))] text-sm">
-                  Get notified when cosmic opportunities align
+                  Get notified when new leads come in
                 </p>
               </div>
               <Switch id="lead-notifications" defaultChecked />
@@ -125,7 +125,7 @@ export default function Settings() {
                   Callback Reminders
                 </Label>
                 <p className="text-[hsl(var(--soft-gray))] text-sm">
-                  Never miss a manifestation moment
+                  Never miss an important follow-up
                 </p>
               </div>
               <Switch id="callback-reminders" defaultChecked />
@@ -134,10 +134,10 @@ export default function Settings() {
             <div className="flex items-center justify-between">
               <div>
                 <Label htmlFor="ai-insights" className="text-white font-medium">
-                  AI Cosmic Insights
+                  AI Performance Insights
                 </Label>
                 <p className="text-[hsl(var(--soft-gray))] text-sm">
-                  Receive lunar guidance and tips
+                  Receive call analytics and optimization tips
                 </p>
               </div>
               <Switch id="ai-insights" defaultChecked />
@@ -146,10 +146,10 @@ export default function Settings() {
             <div className="flex items-center justify-between">
               <div>
                 <Label htmlFor="weekly-reports" className="text-white font-medium">
-                  Weekly Moon Reports
+                  Weekly Performance Reports
                 </Label>
                 <p className="text-[hsl(var(--soft-gray))] text-sm">
-                  Your cosmic performance summary
+                  Your call activity and conversion summary
                 </p>
               </div>
               <Switch id="weekly-reports" />
@@ -166,13 +166,13 @@ export default function Settings() {
           
           <div className="space-y-4">
             <p className="text-[hsl(var(--soft-gray))]">
-              Need help navigating your cosmic journey? Our manifestation support team is here to guide you.
+              Need help with your AI voice agents? Our technical support team is here to assist you.
             </p>
             
             <div className="bg-gradient-to-r from-[hsl(var(--eclipse-glow))]/20 to-[hsl(var(--lunar-mist))]/20 rounded-lg p-4 border border-[hsl(var(--eclipse-glow))]/30">
-              <p className="text-white font-medium mb-2">Manifestation AI Support</p>
+              <p className="text-white font-medium mb-2">AI Technical Support</p>
               <p className="text-[hsl(var(--soft-gray))] text-sm mb-3">
-                Get instant answers to your cosmic questions
+                Get instant answers to your platform questions
               </p>
               <CosmicButton variant="eclipse" size="sm">
                 Chat with AI Support
@@ -193,7 +193,7 @@ export default function Settings() {
               <span>Save Changes</span>
             </CosmicButton>
             <p className="text-[hsl(var(--soft-gray))] text-sm mt-3">
-              Your cosmic alignment will be updated
+              Your settings will be updated
             </p>
           </div>
         </GlassmorphicCard>
