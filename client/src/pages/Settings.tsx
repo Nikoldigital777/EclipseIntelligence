@@ -50,6 +50,53 @@ export default function Settings() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* API Configuration */}
+        <GlassmorphicCard className="border border-white/10 hover:border-white/20 transition-colors duration-300">
+          <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+            <MessageCircle className="w-5 h-5 mr-3 text-[hsl(var(--remax-red))]" />
+            API Configuration
+          </h3>
+          
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="retell-api-key" className="text-white font-medium">
+                Retell API Key
+              </Label>
+              <Input
+                id="retell-api-key"
+                type="password"
+                placeholder="Enter your Retell API key"
+                className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white placeholder-gray-400 focus:border-[hsl(var(--remax-red))]/50 focus:ring-[hsl(var(--remax-red))]/20"
+              />
+              <p className="text-[hsl(var(--soft-gray))] text-xs">
+                Your API key is securely encrypted and stored
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="webhook-url" className="text-white font-medium">
+                Webhook URL
+              </Label>
+              <Input
+                id="webhook-url"
+                type="url"
+                placeholder="https://your-domain.com/webhook"
+                className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white placeholder-gray-400 focus:border-[hsl(var(--remax-red))]/50 focus:ring-[hsl(var(--remax-red))]/20"
+              />
+              <p className="text-[hsl(var(--soft-gray))] text-xs">
+                URL where call events will be sent
+              </p>
+            </div>
+            
+            <CosmicButton 
+              variant="remax" 
+              className="w-full hover:scale-[1.02] transition-transform duration-200"
+            >
+              Save API Configuration
+            </CosmicButton>
+          </div>
+        </GlassmorphicCard>
+
         {/* Profile Settings */}
         <GlassmorphicCard className="border border-white/10 hover:border-white/20 transition-colors duration-300">
           <h3 className="text-xl font-semibold text-white mb-4 flex items-center">

@@ -32,6 +32,8 @@
   --eclipse-glow: hsl(185, 100%, 62%);
   --remax-red: hsl(350, 84%, 56%);
   --accent-gold: hsl(41, 100%, 50%);
+  --gold-manifest: hsl(41, 100%, 50%);
+  --manifest-blue: hsl(215, 100%, 37%);
   --pure-white: hsl(0, 0%, 100%);
   --success-green: hsl(149, 87%, 47%);
   --soft-gray: hsl(226, 63%, 69%);
@@ -277,5 +279,27 @@
 
   .cosmic-gradient {
     background: linear-gradient(135deg, hsl(var(--deep-night)) 0%, hsl(var(--lunar-glass)) 100%);
+  }
+
+  /* Enhanced input focus styles with RE/MAX red accent */
+  .focus\:border-\[hsl\(var\(--remax-red\)\)\]\/50:focus {
+    border-color: hsl(var(--remax-red) / 0.5);
+  }
+
+  .focus\:ring-\[hsl\(var\(--remax-red\)\)\]\/20:focus {
+    --tw-ring-color: hsl(var(--remax-red) / 0.2);
+    --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+    --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+    box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+  }
+
+  /* Professional input styling */
+  input[type="password"]:focus,
+  input[type="url"]:focus {
+    transform: translateY(-1px);
+    box-shadow: 
+      0 0 0 2px hsl(var(--remax-red) / 0.2),
+      0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }

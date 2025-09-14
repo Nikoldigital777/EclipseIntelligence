@@ -1,4 +1,3 @@
-
 import { Plus, Star, Phone, TrendingUp, Sparkles, History, Lightbulb, Crown, Zap, Target } from "lucide-react";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
 import CosmicButton from "@/components/CosmicButton";
@@ -228,6 +227,62 @@ export default function Dashboard() {
                     <p className="text-gray-300 text-sm">
                       3 high-value leads are ready for immediate contact. AI analysis shows optimal conversion timing!
                     </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </GlassmorphicCard>
+        </div>
+
+        {/* Settings Tab */}
+        <div className="p-8 mt-8">
+          <GlassmorphicCard className="p-6 border border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-[1.01]">
+            <h2 className="text-2xl font-bold text-white mb-6">4. Settings Tab</h2>
+            <div className="space-y-6">
+              {/* API Configuration Section */}
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                  <Zap className="w-5 h-5 mr-3 text-[hsl(var(--remax-red))]" />
+                  API Configuration
+                </h3>
+                <div className="space-y-4">
+                  {/* Retell API Key Field */}
+                  <div className="space-y-2">
+                    <label htmlFor="retellApiKey" className="block text-sm font-medium text-gray-300">
+                      Retell API Key
+                    </label>
+                    <input
+                      type="password"
+                      id="retellApiKey"
+                      className="block w-full px-4 py-3 rounded-lg shadow-inner focus:outline-none focus:ring-2 focus:ring-[hsl(var(--remax-red))] focus:border-transparent transition-all duration-300 placeholder-gray-500 bg-[hsl(var(--deep-night))]/50 border border-[hsl(var(--primary-blue))]/30 text-white"
+                      placeholder="Enter your Retell API Key"
+                    />
+                    <p className="text-xs text-[hsl(var(--remax-red))]/80">
+                      Securely enter your API key for full functionality.
+                    </p>
+                  </div>
+
+                  {/* Webhook URL Field */}
+                  <div className="space-y-2">
+                    <label htmlFor="webhookUrl" className="block text-sm font-medium text-gray-300">
+                      Webhook URL
+                    </label>
+                    <input
+                      type="url"
+                      id="webhookUrl"
+                      className="block w-full px-4 py-3 rounded-lg shadow-inner focus:outline-none focus:ring-2 focus:ring-[hsl(var(--remax-red))] focus:border-transparent transition-all duration-300 placeholder-gray-500 bg-[hsl(var(--deep-night))]/50 border border-[hsl(var(--primary-blue))]/30 text-white"
+                      placeholder="https://your-webhook.com/api/retell"
+                    />
+                    <p className="text-xs text-[hsl(var(--remax-red))]/80">
+                      Ensure this URL is publicly accessible for receiving callbacks.
+                    </p>
+                  </div>
+
+                  {/* Save Button */}
+                  <div className="flex justify-end">
+                    <CosmicButton variant="remax" className="px-8 py-3 hover:scale-105 transition-transform duration-200">
+                      Save Configuration
+                    </CosmicButton>
                   </div>
                 </div>
               </div>
