@@ -5,12 +5,10 @@ import { useEffect, useState } from "react";
 
 export default function Dashboard() {
   const [isVisible, setIsVisible] = useState(false);
-  const [statsAnimation, setStatsAnimation] = useState(false);
 
   useEffect(() => {
-    // Trigger entrance animations
-    setTimeout(() => setIsVisible(true), 100);
-    setTimeout(() => setStatsAnimation(true), 600);
+    // Smooth entrance animation
+    setIsVisible(true);
   }, []);
 
   return (
@@ -51,7 +49,7 @@ export default function Dashboard() {
         }}></div>
         
         <div className="flex items-center justify-between relative z-10">
-          <div className={`transition-all duration-1000 ${isVisible ? 'animate-text-reveal' : 'opacity-0'}`}>
+          <div className={`transition-all duration-700 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
             <h1 className="text-5xl font-bold text-white mb-3 drop-shadow-2xl [text-shadow:_2px_2px_8px_rgb(0_0_0_/_50%)]">
               Good Morning, Levan!
             </h1>
@@ -78,7 +76,7 @@ export default function Dashboard() {
       <div className="p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Today's Leads - Enhanced aesthetics */}
-          <GlassmorphicCard className={`hover-glow relative overflow-hidden transition-all duration-700 border border-[hsl(var(--manifest-blue))]/30 hover:border-[hsl(var(--manifest-blue))]/50 ${statsAnimation ? 'animate-text-reveal' : 'opacity-0 translate-y-4'}`}>
+          <GlassmorphicCard className={`hover-glow relative overflow-hidden transition-all duration-700 border border-[hsl(var(--manifest-blue))]/30 hover:border-[hsl(var(--manifest-blue))]/50 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'}`}>
             <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--manifest-blue))]/15 to-[hsl(var(--eclipse-glow))]/8 animate-aurora" />
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[hsl(var(--manifest-blue))] to-transparent opacity-60" />
             <div className="relative z-10">
@@ -99,7 +97,7 @@ export default function Dashboard() {
           </GlassmorphicCard>
 
           {/* Callbacks Due - Enhanced urgency aesthetics */}
-          <GlassmorphicCard className={`hover-glow relative overflow-hidden transition-all duration-700 delay-150 border border-[hsl(var(--remax-red))]/30 hover:border-[hsl(var(--remax-red))]/50 ${statsAnimation ? 'animate-text-reveal' : 'opacity-0 translate-y-4'}`}>
+          <GlassmorphicCard className={`hover-glow relative overflow-hidden transition-all duration-700 delay-150 border border-[hsl(var(--remax-red))]/30 hover:border-[hsl(var(--remax-red))]/50 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'}`}>
             <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--remax-red))]/15 to-[hsl(var(--gold-manifest))]/8 animate-pulse" />
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[hsl(var(--remax-red))] to-transparent opacity-60" />
             <div className="relative z-10">
@@ -120,7 +118,7 @@ export default function Dashboard() {
           </GlassmorphicCard>
 
           {/* Conversion Rate - Success celebration */}
-          <GlassmorphicCard className={`manifest-glow relative overflow-hidden transition-all duration-700 delay-300 border border-[hsl(var(--gold-manifest))]/30 hover:border-[hsl(var(--gold-manifest))]/50 ${statsAnimation ? 'animate-text-reveal' : 'opacity-0 translate-y-4'}`}>
+          <GlassmorphicCard className={`manifest-glow relative overflow-hidden transition-all duration-700 delay-300 border border-[hsl(var(--gold-manifest))]/30 hover:border-[hsl(var(--gold-manifest))]/50 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'}`}>
             <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--gold-manifest))]/15 to-[hsl(var(--success-green))]/8 animate-morphing-gradient" />
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[hsl(var(--gold-manifest))] to-transparent opacity-60" />
             <div className="relative z-10">
@@ -141,7 +139,7 @@ export default function Dashboard() {
           </GlassmorphicCard>
 
           {/* AI Performance - System efficiency */}
-          <GlassmorphicCard className={`hover-glow relative overflow-hidden transition-all duration-700 delay-500 border border-[hsl(var(--eclipse-glow))]/30 hover:border-[hsl(var(--eclipse-glow))]/50 ${statsAnimation ? 'animate-text-reveal' : 'opacity-0 translate-y-4'}`}>
+          <GlassmorphicCard className={`hover-glow relative overflow-hidden transition-all duration-700 delay-500 border border-[hsl(var(--eclipse-glow))]/30 hover:border-[hsl(var(--eclipse-glow))]/50 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'}`}>
             <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--lunar-mist))]/15 to-[hsl(var(--eclipse-glow))]/8 animate-aurora" />
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[hsl(var(--eclipse-glow))] to-transparent opacity-60" />
             <div className="absolute top-2 right-2 w-8 h-8 bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full blur-sm animate-pulse opacity-50" />
