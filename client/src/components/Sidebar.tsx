@@ -1,14 +1,10 @@
 import { Link, useLocation } from "wouter";
-import { Home, Users, UserCheck, Phone, History, BarChart3, PhoneCall, Settings } from "lucide-react";
+import { BarChart3, Settings, PhoneCall, Users } from "lucide-react";
 
 const navigationItems = [
-  { path: "/", label: "Dashboard", icon: Home },
-  { path: "/leads", label: "Leads", icon: Users },
-  { path: "/agents", label: "All Agents", icon: UserCheck },
-  { path: "/batch-calls", label: "Batch Calls", icon: PhoneCall },
-  { path: "/call-history", label: "Call History", icon: History },
   { path: "/analytics", label: "Analytics", icon: BarChart3 },
-  { path: "/numbers", label: "Numbers", icon: Phone },
+  { path: "/call-history", label: "Call History", icon: PhoneCall },
+  { path: "/agents", label: "Agents", icon: Users },
   { path: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -35,14 +31,14 @@ export default function Sidebar() {
         {navigationItems.map((item) => {
           const Icon = item.icon;
           const isActive = location === item.path;
-          
+
           return (
             <div key={item.path} className={`nav-item ${isActive ? 'active' : ''} hover-glow rounded-lg`}>
               <Link
                 href={item.path}
                 className={`flex items-center space-x-3 px-4 py-3 transition-colors ${
-                  isActive 
-                    ? 'text-white' 
+                  isActive
+                    ? 'text-white'
                     : 'text-[hsl(var(--soft-gray))] hover:text-white'
                 }`}
               >
