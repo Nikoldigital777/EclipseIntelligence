@@ -4,7 +4,7 @@ import { ReactNode } from "react";
 
 interface CosmicButtonProps {
   children: ReactNode;
-  variant?: "primary" | "secondary" | "manifest" | "remax" | "eclipse";
+  variant?: "primary" | "secondary" | "accent" | "remax" | "eclipse";
   size?: "sm" | "md" | "lg";
   className?: string;
   onClick?: () => void;
@@ -22,17 +22,17 @@ export default function CosmicButton({
   const getVariantStyles = () => {
     switch (variant) {
       case "primary":
-        return "bg-[hsl(var(--manifest-blue))] hover:bg-[hsl(var(--manifest-blue))]/80 text-white lunar-shadow hover-glow";
+        return "bg-[hsl(var(--primary-blue))] hover:bg-[hsl(var(--primary-blue))]/80 text-white lunar-shadow hover-glow";
       case "secondary":
         return "bg-[hsl(var(--lunar-mist))] hover:bg-[hsl(var(--lunar-mist))]/80 text-white lunar-shadow hover-glow";
-      case "manifest":
-        return "bg-[hsl(var(--gold-manifest))] hover:bg-[hsl(var(--gold-manifest))]/80 text-black manifest-shadow manifest-glow";
+      case "accent":
+        return "bg-[hsl(var(--accent-gold))] hover:bg-[hsl(var(--accent-gold))]/80 text-black accent-shadow accent-glow";
       case "remax":
         return "bg-[hsl(var(--remax-red))] hover:bg-[hsl(var(--remax-red))]/80 text-white remax-shadow remax-glow";
       case "eclipse":
         return "bg-[hsl(var(--eclipse-glow))] hover:bg-[hsl(var(--eclipse-glow))]/80 text-black eclipse-shadow hover-glow";
       default:
-        return "bg-[hsl(var(--manifest-blue))] hover:bg-[hsl(var(--manifest-blue))]/80 text-white lunar-shadow hover-glow";
+        return "bg-[hsl(var(--primary-blue))] hover:bg-[hsl(var(--primary-blue))]/80 text-white lunar-shadow hover-glow";
     }
   };
 

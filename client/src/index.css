@@ -24,15 +24,15 @@
   --ring: hsl(240, 4.9%, 83.9%);
   --radius: 0.5rem;
 
-  /* Cosmic Eclipse Theme Colors */
+  /* Eclipse AI Theme Colors */
   --deep-night: hsl(262, 45%, 13%);
   --lunar-glass: hsl(229, 31%, 17%);
   --lunar-mist: hsl(236, 100%, 71%);
-  --manifest-blue: hsl(215, 100%, 37%);
+  --primary-blue: hsl(215, 100%, 37%);
   --eclipse-glow: hsl(185, 100%, 62%);
   --remax-red: hsl(350, 84%, 56%);
-  --gold-manifest: hsl(41, 100%, 50%);
-  --moon-white: hsl(0, 0%, 100%);
+  --accent-gold: hsl(41, 100%, 50%);
+  --pure-white: hsl(0, 0%, 100%);
   --success-green: hsl(149, 87%, 47%);
   --soft-gray: hsl(226, 63%, 69%);
 }
@@ -176,7 +176,7 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .manifest-glow:hover {
+  .accent-glow:hover {
     box-shadow: 0 0 25px rgba(255, 179, 0, 0.5);
     transform: translateY(-2px);
     transition: all 0.3s ease;
@@ -196,7 +196,7 @@
     box-shadow: 0 0 25px rgba(62, 243, 255, 0.4);
   }
 
-  .manifest-shadow {
+  .accent-shadow {
     box-shadow: 0 0 30px rgba(255, 179, 0, 0.3);
   }
 
@@ -224,8 +224,8 @@
     background: linear-gradient(-45deg, 
       hsl(var(--eclipse-glow)), 
       hsl(var(--lunar-mist)), 
-      hsl(var(--manifest-blue)), 
-      hsl(var(--gold-manifest)));
+      hsl(var(--primary-blue)), 
+      hsl(var(--accent-gold)));
     background-size: 200% 200%;
     animation: morphing-gradient 12s ease infinite;
   }
