@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import AllAgents from "./pages/AllAgents";
 import CallHistory from "./pages/CallHistory";
 import Analytics from "./pages/Analytics";
+import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import OutboundCalls from "./pages/OutboundCalls";
 import NotFound from "@/pages/not-found";
@@ -28,9 +29,8 @@ function Router() {
       <Sidebar />
       <div className="flex-1 ml-64 relative z-10">
         <Switch>
-          <Route path="/">
-            <Redirect to="/analytics" />
-          </Route>
+          <Route path="/" component={Dashboard} />
+          <Route path="/dashboard" component={Dashboard} />
           <Route path="/analytics" component={Analytics} />
           <Route path="/call-history" component={CallHistory} />
           <Route path="/agents" component={AllAgents} />

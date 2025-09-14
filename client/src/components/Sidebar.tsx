@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import { BarChart3, Settings, PhoneCall, Users, Phone } from "lucide-react";
 
 const navigationItems = [
+  { path: "/", label: "Dashboard", icon: BarChart3 },
   { path: "/analytics", label: "Analytics", icon: BarChart3 },
   { path: "/call-history", label: "Call History", icon: PhoneCall },
   { path: "/agents", label: "Agents", icon: Users },
