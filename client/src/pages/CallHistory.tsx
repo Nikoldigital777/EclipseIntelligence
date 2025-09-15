@@ -1,4 +1,4 @@
-import { Download, Filter, Settings } from "lucide-react";
+import { Download, Filter } from "lucide-react";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
 import CosmicButton from "@/components/CosmicButton";
 
@@ -53,10 +53,6 @@ export default function CallHistory() {
               <Filter className="w-4 h-4" />
               <span>Filter</span>
             </CosmicButton>
-            <CosmicButton variant="secondary" className="flex items-center space-x-2 hover:scale-105 transition-transform duration-200">
-              <Settings className="w-4 h-4" />
-              <span>Customize Fields</span>
-            </CosmicButton>
             <CosmicButton variant="remax" className="flex items-center space-x-2 hover:scale-105 transition-transform duration-200">
               <Download className="w-4 h-4" />
               <span>Export</span>
@@ -65,21 +61,9 @@ export default function CallHistory() {
         </div>
       </div>
 
-      {/* Empty State */}
-      <GlassmorphicCard className="text-center py-16 border border-white/10 hover:border-white/20 transition-colors duration-300">
-        <div className="w-16 h-16 bg-gradient-to-br from-[hsl(var(--lunar-mist))] to-[hsl(var(--eclipse-glow))] rounded-full flex items-center justify-center mx-auto mb-4 lunar-shadow">
-          <span className="text-2xl">📱</span>
-        </div>
-        <h3 className="text-xl font-semibold text-white mb-2">No call history in this cycle</h3>
-        <p className="text-[hsl(var(--soft-gray))] mb-6">
-          Your cosmic call journey will appear here. Start making calls to see the manifestation unfold.
-        </p>
-        <CosmicButton variant="primary">View All Cycles</CosmicButton>
-      </GlassmorphicCard>
-
-      {/* Table Headers (for reference) */}
-      <div className="mt-8 opacity-50">
-        <GlassmorphicCard>
+      {/* Call History Table */}
+      <div className="mt-6">
+        <GlassmorphicCard className="border border-white/10 hover:border-white/20 transition-colors duration-300">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-[hsl(var(--lunar-mist))]/20">
@@ -96,8 +80,19 @@ export default function CallHistory() {
               </thead>
               <tbody>
                 <tr>
-                  <td className="py-8 px-6 text-center text-[hsl(var(--soft-gray))]" colSpan={8}>
-                    No call history in selected date range
+                  <td className="py-12 px-6 text-center" colSpan={8}>
+                    <div className="flex flex-col items-center space-y-4">
+                      <div className="w-16 h-16 bg-gradient-to-br from-[hsl(var(--lunar-mist))] to-[hsl(var(--eclipse-glow))] rounded-full flex items-center justify-center lunar-shadow">
+                        <span className="text-2xl">📱</span>
+                      </div>
+                      <div className="text-center">
+                        <h3 className="text-xl font-semibold text-white mb-2">No call history in this cycle</h3>
+                        <p className="text-[hsl(var(--soft-gray))] mb-6">
+                          Your AI phone agent call records will appear here once calls are made.
+                        </p>
+                        <CosmicButton variant="primary">View All Cycles</CosmicButton>
+                      </div>
+                    </div>
                   </td>
                 </tr>
               </tbody>

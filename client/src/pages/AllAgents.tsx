@@ -1,4 +1,4 @@
-import { Download, Plus, Edit, Trash2, Copy } from "lucide-react";
+import { Download, Edit, Trash2, Copy } from "lucide-react";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
 import CosmicButton from "@/components/CosmicButton";
 import { Badge } from "@/components/ui/badge";
@@ -90,10 +90,6 @@ export default function AllAgents() {
             <CosmicButton variant="primary" className="flex items-center space-x-2 hover:scale-105 transition-transform duration-200">
               <Download className="w-4 h-4" />
               <span>Import</span>
-            </CosmicButton>
-            <CosmicButton variant="remax" className="flex items-center space-x-2 hover:scale-105 transition-transform duration-200">
-              <Plus className="w-4 h-4" />
-              <span>Create an Agent</span>
             </CosmicButton>
           </div>
         </div>
