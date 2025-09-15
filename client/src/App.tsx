@@ -9,6 +9,7 @@ import Sidebar from "./components/Sidebar";
 import CustomCursor from "./components/CustomCursor";
 import Login from "./pages/Login";
 import AllAgents from "./pages/AllAgents";
+import AgentDetail from "./pages/AgentDetail";
 import CallHistory from "./pages/CallHistory";
 import Analytics from "./pages/Analytics";
 import Dashboard from "./pages/Dashboard";
@@ -34,6 +35,7 @@ function Router() {
           <Route path="/analytics" component={Analytics} />
           <Route path="/call-history" component={CallHistory} />
           <Route path="/agents" component={AllAgents} />
+          <Route path="/agents/:id" component={AgentDetail} />
           <Route path="/outbound-calls" component={OutboundCalls} />
           <Route path="/settings" component={Settings} />
           <Route component={NotFound} />

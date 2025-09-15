@@ -111,7 +111,7 @@ export default function AllAgents() {
             </thead>
             <tbody className="divide-y divide-white/10">
               {agents.map((agent, index) => (
-                <tr key={agent.id} className="hover:bg-[hsl(var(--lunar-mist))]/10 transition-colors group">
+                <tr key={agent.id} className="hover:bg-[hsl(var(--lunar-mist))]/10 transition-colors group cursor-pointer" onClick={() => window.location.href = `/agents/${agent.id}`}>
                   <td className="py-4 px-6">
                     <div className="flex items-center space-x-3">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
