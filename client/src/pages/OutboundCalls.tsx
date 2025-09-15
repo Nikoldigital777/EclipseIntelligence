@@ -1,7 +1,9 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Upload, Download, Plus, Minus, Phone, Calendar, Clock, Users, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/auth";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
 import CosmicButton from "@/components/CosmicButton";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +22,7 @@ const sampleRecipients = [
 
 export default function OutboundCalls() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedAgent, setSelectedAgent] = useState("");
   const [batchName, setBatchName] = useState("");
   const [schedulingMode, setSchedulingMode] = useState("now");
@@ -28,58 +31,53 @@ export default function OutboundCalls() {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [recipients, setRecipients] = useState(sampleRecipients);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [isLaunching, setIsLaunching] = useState(false);
-  const [agents, setAgents] = useState<any[]>([]);
-  const [isLoadingAgents, setIsLoadingAgents] = useState(true);
 
-  // Fetch agents on component mount
-  useEffect(() => {
-    const fetchAgents = async () => {
-      try {
-        const response = await fetch("/api/agents/simple");
-        if (response.ok) {
-          const agentsData = await response.json();
-          setAgents(agentsData);
-        } else {
-          // Fallback to default agents if API fails
-          setAgents([
-            {
-              id: 1,
-              name: "Levan Wood Eclipse Recruiting",
-              phone: "+1(248)283-4183",
-              voice: "Levan RE/MAX",
-              avatar: "LW"
-            },
-            {
-              id: 2,
-              name: "Madison RE/MAX Office", 
-              phone: "+1(586)500-6801",
-              voice: "Emily",
-              avatar: "MR"
-            }
-          ]);
-        }
-      } catch (error) {
-        console.error("Error fetching agents:", error);
-        // Fallback to default agents
-        setAgents([
-          {
-            id: 1,
-            name: "Levan Wood Eclipse Recruiting",
-            phone: "+1(248)283-4183", 
-            voice: "Levan RE/MAX",
-            avatar: "LW"
-          }
-        ]);
-      } finally {
-        setIsLoadingAgents(false);
-      }
-    };
+  // Agent type definition
+  interface Agent {
+    id: number;
+    name: string;
+    phone: string;
+    voice: string;
+    avatar: string;
+  }
 
-    fetchAgents();
-  }, []);
+  // Fetch agents using authenticated API
+  const { data: agents = [], isLoading: isLoadingAgents, error: agentsError } = useQuery<Agent[]>({
+    queryKey: ['/api/agents/simple'],
+    queryFn: () => apiClient.get('/api/agents/simple'),
+    retry: 1,
+    refetchOnWindowFocus: false
+  });
 
-  const selectedAgentData = agents.find(agent => agent.id.toString() === selectedAgent);
+  // Create batch campaign mutation
+  const createBatchCampaignMutation = useMutation({
+    mutationFn: (payload: any) => apiClient.post('/api/outbound-calls/batch', payload),
+    onSuccess: (data) => {
+      toast({
+        title: "Campaign Launched! 🚀",
+        description: data.message || `Successfully created batch call with ${recipients.length} recipients. Batch ID: ${data.batch_call_id}`,
+      });
+      
+      // Invalidate batch calls cache to refresh the BatchCalls page
+      queryClient.invalidateQueries({ queryKey: ['/api/batch-calls'] });
+      
+      // Reset form
+      setBatchName("");
+      setRecipients([]);
+      setCsvFile(null);
+      setTermsAccepted(false);
+      setSelectedAgent("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Launch Failed",
+        description: error.message || "Failed to launch batch campaign",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const selectedAgentData = agents.find((agent: Agent) => agent.id.toString() === selectedAgent);
   const totalRecipients = recipients.length;
   
   // Retell AI Pricing Components (per minute)
@@ -114,70 +112,35 @@ export default function OutboundCalls() {
       return;
     }
 
-    setIsLaunching(true);
-    
-    try {
-      const selectedAgentData = agents.find(agent => agent.id.toString() === selectedAgent);
-      if (!selectedAgentData) {
-        throw new Error("Selected agent not found");
-      }
-
-      const tasks = recipients.map(recipient => ({
-        to_number: recipient.phone,
-        retell_llm_dynamic_variables: {
-          customer_name: `${recipient.firstName} ${recipient.lastName}`,
-          first_name: recipient.firstName,
-          last_name: recipient.lastName
-        }
-      }));
-
-      const payload = {
-        from_number: selectedAgentData.phone,
-        tasks,
-        name: batchName,
-        override_agent_id: selectedAgent,
-        trigger_timestamp: schedulingMode === "schedule" && scheduledDateTime 
-          ? new Date(scheduledDateTime).getTime() 
-          : undefined
-      };
-
-      const response = await fetch("/api/outbound-calls/batch", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to launch batch campaign");
-      }
-
-      const result = await response.json();
-      
+    if (!selectedAgentData) {
       toast({
-        title: "Campaign Launched! 🚀",
-        description: result.message || `Successfully created batch call with ${tasks.length} recipients. Batch ID: ${result.batch_call_id}`,
-      });
-
-      // Reset form
-      setBatchName("");
-      setRecipients([]);
-      setCsvFile(null);
-      setTermsAccepted(false);
-      setSelectedAgent("");
-      
-    } catch (error) {
-      console.error("Error launching batch campaign:", error);
-      toast({
-        title: "Launch Failed",
-        description: error instanceof Error ? error.message : "Failed to launch batch campaign",
+        title: "Agent Error",
+        description: "Selected agent not found. Please choose a valid agent.",
         variant: "destructive",
       });
-    } finally {
-      setIsLaunching(false);
+      return;
     }
+
+    const tasks = recipients.map(recipient => ({
+      to_number: recipient.phone,
+      retell_llm_dynamic_variables: {
+        customer_name: `${recipient.firstName} ${recipient.lastName}`,
+        first_name: recipient.firstName,
+        last_name: recipient.lastName
+      }
+    }));
+
+    const payload = {
+      from_number: selectedAgentData.phone,
+      tasks,
+      name: batchName,
+      override_agent_id: selectedAgent,
+      trigger_timestamp: schedulingMode === "schedule" && scheduledDateTime 
+        ? new Date(scheduledDateTime).getTime() 
+        : undefined
+    };
+
+    createBatchCampaignMutation.mutate(payload);
   };
 
   const handleSaveAsDraft = async () => {
@@ -517,7 +480,7 @@ export default function OutboundCalls() {
               <CosmicButton 
                 variant="eclipse" 
                 className="w-full"
-                disabled={!batchName || !selectedAgent || recipients.length === 0 || isLaunching}
+                disabled={!batchName || !selectedAgent || recipients.length === 0 || createBatchCampaignMutation.isPending}
                 onClick={handleSaveAsDraft}
               >
                 Save as Draft
@@ -525,11 +488,11 @@ export default function OutboundCalls() {
               <CosmicButton 
                 variant="remax" 
                 className="w-full"
-                disabled={!batchName || !selectedAgent || recipients.length === 0 || !termsAccepted || isLaunching}
+                disabled={!batchName || !selectedAgent || recipients.length === 0 || !termsAccepted || createBatchCampaignMutation.isPending}
                 onClick={handleLaunchBatchCampaign}
               >
                 <Phone className="w-4 h-4 mr-2" />
-                {isLaunching ? "Launching..." : "Launch Batch Campaign"}
+                {createBatchCampaignMutation.isPending ? "Launching..." : "Launch Batch Campaign"}
               </CosmicButton>
             </div>
           </div>
