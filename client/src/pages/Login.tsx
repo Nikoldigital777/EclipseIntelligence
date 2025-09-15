@@ -16,7 +16,11 @@ interface LoginProps {
 export default function Login({ onLogin }: LoginProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isVisible, setIsVisible] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
 
   useEffect(() => {
     // Smooth entrance animation
@@ -36,6 +40,38 @@ export default function Login({ onLogin }: LoginProps) {
       onLogin();
     } catch (err: any) {
       setError(err.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      await AuthService.register({
+        username,
+        email,
+        password,
+        displayName
+      });
+      onLogin();
+    } catch (err: any) {
+      setError(err.message || "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -89,11 +125,11 @@ export default function Login({ onLogin }: LoginProps) {
             RE/MAX Eclipse Dashboard
           </h1>
           <p className={`text-white text-lg transition-all duration-700 ease-out delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'}`}>
-            Welcome back, Levan. Ready to manage your AI phone agents?
+            {isRegistering ? "Create your account to get started" : "Welcome back. Ready to manage your AI phone agents?"}
           </p>
         </div>
         
-        <form onSubmit={handleLogin} className={`space-y-6 transition-all duration-700 ease-out delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'}`}>
+        <form onSubmit={isRegistering ? handleRegister : handleLogin} className={`space-y-6 transition-all duration-700 ease-out delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'}`}>
           {error && (
             <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/30 text-red-200 text-sm">
               {error}
@@ -101,6 +137,36 @@ export default function Login({ onLogin }: LoginProps) {
           )}
           
           <div className="space-y-4">
+            {isRegistering && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="displayName" className="text-white font-medium">Full Name</Label>
+                  <Input
+                    id="displayName"
+                    type="text"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white placeholder:text-[hsl(var(--soft-gray))] focus:ring-2 focus:ring-[hsl(var(--eclipse-glow))] focus:border-transparent focus:scale-102 transition-all duration-200 h-12"
+                    placeholder="Your full name"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="username" className="text-white font-medium">Username</Label>
+                  <Input
+                    id="username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white placeholder:text-[hsl(var(--soft-gray))] focus:ring-2 focus:ring-[hsl(var(--eclipse-glow))] focus:border-transparent focus:scale-102 transition-all duration-200 h-12"
+                    placeholder="Choose a username"
+                    required
+                  />
+                </div>
+              </>
+            )}
+            
             <div className="space-y-2">
               <Label htmlFor="email" className="text-white font-medium">Email Address</Label>
               <Input
@@ -109,7 +175,7 @@ export default function Login({ onLogin }: LoginProps) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white placeholder:text-[hsl(var(--soft-gray))] focus:ring-2 focus:ring-[hsl(var(--eclipse-glow))] focus:border-transparent focus:scale-102 transition-all duration-200 h-12"
-                placeholder="levan@remaxeclipse.com"
+                placeholder={isRegistering ? "your.email@example.com" : "levan@remaxeclipse.com"}
                 required
               />
             </div>
@@ -122,10 +188,25 @@ export default function Login({ onLogin }: LoginProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white placeholder:text-[hsl(var(--soft-gray))] focus:ring-2 focus:ring-[hsl(var(--eclipse-glow))] focus:border-transparent focus:scale-102 transition-all duration-200 h-12"
-                placeholder="Enter your secure password"
+                placeholder={isRegistering ? "Create a secure password (6+ characters)" : "Enter your secure password"}
                 required
               />
             </div>
+            
+            {isRegistering && (
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-white font-medium">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white placeholder:text-[hsl(var(--soft-gray))] focus:ring-2 focus:ring-[hsl(var(--eclipse-glow))] focus:border-transparent focus:scale-102 transition-all duration-200 h-12"
+                  placeholder="Confirm your password"
+                  required
+                />
+              </div>
+            )}
           </div>
 
           <button 
@@ -137,12 +218,12 @@ export default function Login({ onLogin }: LoginProps) {
               {loading ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>Signing In...</span>
+                  <span>{isRegistering ? "Creating Account..." : "Signing In..."}</span>
                 </>
               ) : (
                 <>
-                  <span>Access Dashboard</span>
-                  <span className="text-xl">🚀</span>
+                  <span>{isRegistering ? "Create Account" : "Access Dashboard"}</span>
+                  <span className="text-xl">{isRegistering ? "✨" : "🚀"}</span>
                 </>
               )}
             </span>
@@ -152,11 +233,12 @@ export default function Login({ onLogin }: LoginProps) {
             <Button 
               type="button" 
               variant="link" 
+              onClick={() => setIsRegistering(!isRegistering)}
               className="text-[hsl(var(--eclipse-glow))] hover:text-white hover:scale-102 transition-all duration-200"
             >
               <span className="flex items-center space-x-2">
-                <span>Use Magic Link</span>
-                <span>🪄</span>
+                <span>{isRegistering ? "Already have an account? Sign In" : "New user? Create Account"}</span>
+                <span>{isRegistering ? "🔑" : "✨"}</span>
               </span>
             </Button>
             

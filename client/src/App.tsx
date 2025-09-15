@@ -24,9 +24,7 @@ function Router() {
 
   useEffect(() => {
     const checkAuth = () => {
-      const token = localStorage.getItem("authToken");
-      if (token) {
-        // Optionally, you could verify the token with the backend here
+      if (AuthService.isAuthenticated()) {
         setIsAuthenticated(true);
       }
       setIsLoading(false);
