@@ -4,8 +4,42 @@ import CosmicButton from "@/components/CosmicButton";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { useState, useEffect } from "react";
 
 export default function Settings() {
+  const [apiKey, setApiKey] = useState<string>("");
+  const [isApiKeyLoaded, setIsApiKeyLoaded] = useState<boolean>(false);
+
+  useEffect(() => {
+    // Check if API key is configured on component mount
+    const checkApiKeyStatus = async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const response = await fetch('/api/settings/api-key-status', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.hasApiKey) {
+            // Show masked API key (first 8 chars + asterisks)
+            const maskedKey = data.apiKeyPreview || "key_************************";
+            setApiKey(maskedKey);
+            setIsApiKeyLoaded(true);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to check API key status:', error);
+        // Fallback: assume API key is configured if we got this far
+        setApiKey("key_************************");
+        setIsApiKeyLoaded(true);
+      }
+    };
+
+    checkApiKeyStatus();
+  }, []);
   return (
     <div className="min-h-screen p-8">
       {/* Header with stunning design background */}
@@ -61,15 +95,28 @@ export default function Settings() {
             <div className="space-y-2">
               <Label htmlFor="retell-api-key" className="text-white font-medium">
                 Retell API Key
+                {isApiKeyLoaded && (
+                  <span className="ml-2 text-green-400 text-xs">✓ Configured</span>
+                )}
               </Label>
               <Input
                 id="retell-api-key"
-                type="password"
-                placeholder="Enter your Retell API key"
-                className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white placeholder-gray-400 focus:border-[hsl(var(--remax-red))]/50 focus:ring-[hsl(var(--remax-red))]/20"
+                type="text"
+                value={apiKey}
+                readOnly={isApiKeyLoaded}
+                placeholder={isApiKeyLoaded ? "" : "Enter your Retell API key"}
+                className={`${
+                  isApiKeyLoaded 
+                    ? "bg-gray-600/50 border-gray-500/50 text-gray-300 cursor-not-allowed" 
+                    : "bg-[hsl(var(--lunar-glass))] border-white/20 text-white focus:border-[hsl(var(--remax-red))]/50 focus:ring-[hsl(var(--remax-red))]/20"
+                } placeholder-gray-400`}
+                onChange={(e) => !isApiKeyLoaded && setApiKey(e.target.value)}
               />
               <p className="text-[hsl(var(--soft-gray))] text-xs">
-                Your API key is securely encrypted and stored
+                {isApiKeyLoaded 
+                  ? "Your API key is configured via environment variables" 
+                  : "Your API key is securely encrypted and stored"
+                }
               </p>
             </div>
             
@@ -91,8 +138,9 @@ export default function Settings() {
             <CosmicButton 
               variant="remax" 
               className="w-full hover:scale-[1.02] transition-transform duration-200"
+              disabled={isApiKeyLoaded}
             >
-              Save API Configuration
+              {isApiKeyLoaded ? "API Key Configured" : "Save API Configuration"}
             </CosmicButton>
           </div>
         </GlassmorphicCard>

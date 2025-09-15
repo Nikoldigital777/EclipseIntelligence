@@ -17,6 +17,30 @@ import { Router } from "express";
 const router = Router();
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Settings routes
+  router.get('/settings/api-key-status', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const apiKey = process.env.RETELL_API_KEY;
+      
+      if (apiKey && apiKey.length > 0) {
+        // Return first 8 characters + masked remainder for display
+        const preview = `${apiKey.substring(0, 8)}${'*'.repeat(Math.max(0, apiKey.length - 8))}`;
+        res.json({
+          hasApiKey: true,
+          apiKeyPreview: preview
+        });
+      } else {
+        res.json({
+          hasApiKey: false,
+          apiKeyPreview: null
+        });
+      }
+    } catch (error) {
+      console.error("Failed to check API key status:", error);
+      res.status(500).json({ error: "Failed to check API key status" });
+    }
+  });
+
   // Authentication routes
   router.post('/auth/login', async (req, res) => {
     try {
