@@ -1,4 +1,3 @@
-
 // Retell AI Client Utility
 // This file handles integration with Retell AI API
 
@@ -66,12 +65,48 @@ export class RetellClient {
     return this.makeRequest('/create-batch-call', 'POST', request);
   }
 
+  // Get call data with duration, sentiment, transcript etc.
   async getCall(callId: string) {
-    return this.makeRequest(`/v2/get-call/${callId}`);
+    const response = await fetch(`${this.baseUrl}/v2/get-call/${callId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Retell API error: ${response.status} - ${error}`);
+    }
+
+    return response.json();
   }
 
-  async listCalls() {
-    return this.makeRequest('/v2/list-calls');
+  // List calls with filtering options
+  async listCalls(filterCriteria?: any, sortOrder?: 'ascending' | 'descending', limit?: number, paginationKey?: string) {
+    const body = {
+      filter_criteria: filterCriteria || {},
+      sort_order: sortOrder || 'descending',
+      limit: limit || 50,
+      ...(paginationKey && { pagination_key: paginationKey })
+    };
+
+    const response = await fetch(`${this.baseUrl}/v2/list-calls`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Retell API error: ${response.status} - ${error}`);
+    }
+
+    return response.json();
   }
 
   async getAgent(agentId: string) {
@@ -90,7 +125,7 @@ export class RetellClient {
 // Factory function to create client instance
 export function createRetellClient(): RetellClient | null {
   const apiKey = process.env.RETELL_API_KEY;
-  
+
   if (!apiKey) {
     console.warn('RETELL_API_KEY environment variable not set. Retell integration disabled.');
     return null;

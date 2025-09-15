@@ -598,14 +598,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get detailed call data (protected)
+  router.get("/calls/:callId/details", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const callId = req.params.callId;
+      const retellClient = createRetellClient();
+
+      if (retellClient) {
+        try {
+          const callData = await retellClient.getCall(callId);
+          res.json(callData);
+        } catch (retellError) {
+          console.error("Failed to fetch call from Retell:", retellError);
+          res.status(404).json({ error: "Call not found in Retell API" });
+        }
+      } else {
+        // Fallback to local data
+        const localCall = await storage.getCall(parseInt(callId));
+        if (!localCall) {
+          return res.status(404).json({ error: "Call not found" });
+        }
+        res.json(localCall);
+      }
+    } catch (error) {
+      console.error("Failed to fetch call details:", error);
+      res.status(500).json({ error: "Failed to fetch call details" });
+    }
+  });
+
+  // List calls with filtering (protected)
+  router.post("/calls/list", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { filter_criteria, sort_order, limit, pagination_key } = req.body;
+      const retellClient = createRetellClient();
+
+      if (retellClient) {
+        try {
+          const callsData = await retellClient.listCalls(filter_criteria, sort_order, limit, pagination_key);
+          res.json(callsData);
+        } catch (retellError) {
+          console.error("Failed to fetch calls from Retell:", retellError);
+          // Fallback to local data
+          const localCalls = await storage.getCalls();
+          res.json(localCalls);
+        }
+      } else {
+        // Use local data when no API key
+        const localCalls = await storage.getCalls();
+        res.json(localCalls);
+      }
+    } catch (error) {
+      console.error("Failed to list calls:", error);
+      res.status(500).json({ error: "Failed to list calls" });
+    }
+  });
+
   // Analytics routes (protected)
   router.get("/analytics/stats", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const leads = await storage.getLeads();
       const calls = await storage.getCalls();
       const agents = await storage.getAgents();
+      const retellClient = createRetellClient();
 
-      const stats = {
+      let enhancedStats = {
         totalLeads: leads.length,
         hotLeads: leads.filter(lead => lead.type === "Hot Lead").length,
         callbacksDue: leads.filter(lead => lead.status === "Callback Due").length,
@@ -613,10 +669,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         successfulCalls: calls.filter(call => call.status === "completed").length,
         activeAgents: agents.length,
         conversionRate: leads.length > 0 ? Math.round((leads.filter(lead => lead.status === "Converted").length / leads.length) * 100) : 0,
+        averageCallDuration: 0,
+        positivesentimentCalls: 0,
+        inboundCalls: 0,
+        outboundCalls: 0
       };
 
-      res.json(stats);
+      // If Retell client is available, get enhanced analytics
+      if (retellClient) {
+        try {
+          const retellCalls = await retellClient.listCalls({}, 'descending', 100);
+          if (retellCalls && Array.isArray(retellCalls)) {
+            const callsWithDuration = retellCalls.filter(call => call.duration_ms);
+            enhancedStats.averageCallDuration = callsWithDuration.length > 0 
+              ? Math.round(callsWithDuration.reduce((sum, call) => sum + call.duration_ms, 0) / callsWithDuration.length / 1000)
+              : 0;
+            
+            enhancedStats.positivesentimentCalls = retellCalls.filter(call => 
+              call.call_analysis?.user_sentiment === 'Positive'
+            ).length;
+            
+            enhancedStats.inboundCalls = retellCalls.filter(call => call.direction === 'inbound').length;
+            enhancedStats.outboundCalls = retellCalls.filter(call => call.direction === 'outbound').length;
+          }
+        } catch (retellError) {
+          console.warn("Failed to get enhanced analytics from Retell:", retellError);
+        }
+      }
+
+      res.json(enhancedStats);
     } catch (error) {
+      console.error("Failed to fetch analytics:", error);
       res.status(500).json({ error: "Failed to fetch analytics" });
     }
   });

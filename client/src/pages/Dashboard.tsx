@@ -5,6 +5,15 @@ import { useEffect, useState } from "react";
 
 export default function Dashboard() {
   const [isVisible, setIsVisible] = useState(false);
+  const [stats, setStats] = useState({
+    totalLeads: 12,
+    callbacksDue: 5,
+    conversionRate: 78,
+    positivesentimentCalls: 0,
+    averageCallDuration: 0,
+    inboundCalls: 0,
+    outboundCalls: 0
+  });
 
   useEffect(() => {
     // Smooth entrance animation
@@ -12,6 +21,25 @@ export default function Dashboard() {
       setIsVisible(true);
     }, 100);
     return () => clearTimeout(timer);
+
+    // Fetch real analytics data
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/analytics/stats', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setStats(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch dashboard stats:', error);
+      }
+    };
+
+    fetchStats();
   }, []);
 
   return (
@@ -87,8 +115,8 @@ export default function Dashboard() {
                   <Star className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold text-white">12</p>
-                  <p className="text-gray-300 text-sm">Today's Leads</p>
+                  <p className="text-3xl font-bold text-white">{stats.totalLeads}</p>
+                  <p className="text-gray-300 text-sm">Total Leads</p>
                 </div>
               </div>
               <div className="w-full bg-[hsl(var(--deep-night))]/30 rounded-full h-2 relative overflow-hidden">
@@ -107,7 +135,7 @@ export default function Dashboard() {
                   <Phone className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold text-white">5</p>
+                  <p className="text-3xl font-bold text-white">{stats.callbacksDue}</p>
                   <p className="text-gray-300 text-sm">Callbacks Due</p>
                 </div>
               </div>
@@ -127,7 +155,7 @@ export default function Dashboard() {
                   <TrendingUp className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold text-white bg-gradient-to-r from-[hsl(var(--accent-gold))] to-[hsl(var(--success-green))] bg-clip-text text-transparent">78%</p>
+                  <p className="text-3xl font-bold text-white bg-gradient-to-r from-[hsl(var(--accent-gold))] to-[hsl(var(--success-green))] bg-clip-text text-transparent">{stats.conversionRate}%</p>
                   <p className="text-gray-300 text-sm">Conversion Rate</p>
                 </div>
               </div>
@@ -147,8 +175,8 @@ export default function Dashboard() {
                   <Sparkles className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold text-white bg-gradient-to-r from-[hsl(var(--lunar-mist))] to-[hsl(var(--eclipse-glow))] bg-clip-text text-transparent">92%</p>
-                  <p className="text-gray-300 text-sm">AI Performance</p>
+                  <p className="text-3xl font-bold text-white bg-gradient-to-r from-[hsl(var(--lunar-mist))] to-[hsl(var(--eclipse-glow))] bg-clip-text text-transparent">{stats.positivesentimentCalls}</p>
+                  <p className="text-gray-300 text-sm">Positive Sentiment</p>
                 </div>
               </div>
               <div className="w-full bg-[hsl(var(--deep-night))]/30 rounded-full h-2 relative overflow-hidden">
