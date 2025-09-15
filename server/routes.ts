@@ -14,6 +14,51 @@ import {
 } from "./auth";
 import { Router } from "express";
 
+// Type definitions for analytics and API responses
+interface RetellAgent {
+  agent_id?: string;
+  agent_name?: string;
+  phone?: string;
+  voice_id?: string;
+  voice?: string;
+  id?: string;
+  name?: string;
+  [key: string]: any;
+}
+
+interface RetellCall {
+  duration_ms?: number;
+  call_cost_breakdown?: { total_cost: string };
+  latency?: { avg_latency_ms: number };
+  call_analysis?: {
+    call_successful?: boolean;
+    user_sentiment?: string;
+  };
+  direction?: string;
+  start_timestamp?: string;
+  agent_id?: string;
+  call_status?: string;
+  [key: string]: any;
+}
+
+interface SentimentCounts {
+  positive: number;
+  neutral: number;
+  negative: number;
+  frustrated: number;
+  satisfied: number;
+  [key: string]: number;
+}
+
+interface ComprehensiveAgentData {
+  llm_details?: any;
+  voice_config?: any;
+  conversation_config?: any;
+  call_config?: any;
+  speech_config?: any;
+  analytics_config?: any;
+}
+
 const router = Router();
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -161,12 +206,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         agents = await storage.getAgents();
       }
 
-      const simpleAgents = agents.map((agent: any, index: number) => ({
+      const simpleAgents = (agents as RetellAgent[]).map((agent: RetellAgent, index: number) => ({
         id: agent.agent_id || agent.id,
         name: agent.agent_name || agent.name || "Unnamed Agent",
         phone: agent.phone || "+1(555)000-0000",
         voice: agent.voice_id || agent.voice || "Default",
-        avatar: (agent.agent_name || agent.name || "AG").split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+        avatar: (agent.agent_name || agent.name || "AG").split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()
       }));
 
       res.json(simpleAgents);
@@ -209,7 +254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const agentId = req.params.id;
       const retellClient = createRetellClient();
       let agent = null;
-      let comprehensiveAgentData = {};
+      let comprehensiveAgentData: ComprehensiveAgentData = {};
 
       // Check if it's a Retell agent ID format (starts with 'agent_')
       if (agentId.startsWith('agent_')) {
@@ -388,7 +433,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (agentId === "agent_aaf7c603e65435169a888c3768") {
           mockAgent = {
             id: 1,
-            agent_id: "agent_aaf7c603e65435169a888c3768",
             retellAgentId: "agent_aaf7c603e65435169a888c3768",
             name: "Madison Receptionist Agent",
             type: "Inbound Receptionist",
@@ -398,6 +442,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             editedBy: "System",
             editedAt: "07/03/2025, 19:43",
             avatar: "MR",
+            createdAt: new Date(),
+            updatedAt: new Date(),
             prompt: `### You are Madison, a professional receptionist at RE/MAX Eclipse...
 
 Your role is to:
@@ -413,7 +459,6 @@ Remember to always be helpful, patient, and represent the company professionally
         } else if (agentId === "agent_a1d03a295d3c542d90eecc826e") {
           mockAgent = {
             id: 2,
-            agent_id: "agent_a1d03a295d3c542d90eecc826e",
             retellAgentId: "agent_a1d03a295d3c542d90eecc826e",
             name: "Levan Outbound Recruiting Agent",
             type: "Outbound Recruiting",
@@ -423,6 +468,8 @@ Remember to always be helpful, patient, and represent the company professionally
             editedBy: "System",
             editedAt: "07/03/2025, 19:43",
             avatar: "LR",
+            createdAt: new Date(),
+            updatedAt: new Date(),
             prompt: `### You are Levan, a professional recruiting specialist at RE/MAX Eclipse...
 
 Your role is to:
@@ -437,7 +484,6 @@ Remember to be confident, informative, and highlight the unique advantages of ou
         } else if (agentId === "agent_c6fd1025f906a4561df5437214") {
           mockAgent = {
             id: 3,
-            agent_id: "agent_c6fd1025f906a4561df5437214",
             retellAgentId: "agent_c6fd1025f906a4561df5437214",
             name: "Levan Outbound Listing Agent",
             type: "Outbound Listing",
@@ -447,6 +493,8 @@ Remember to be confident, informative, and highlight the unique advantages of ou
             editedBy: "System",
             editedAt: "07/03/2025, 19:43",
             avatar: "LL",
+            createdAt: new Date(),
+            updatedAt: new Date(),
             prompt: `### You are Levan, a professional listing specialist at RE/MAX Eclipse...
 
 Your role is to:
@@ -461,7 +509,6 @@ Remember to be knowledgeable about the market, professional, and focused on help
         } else {
           mockAgent = {
             id: parseInt(agentId) || 1,
-            agent_id: agentId,
             retellAgentId: agentId,
             name: "Unknown Agent",
             type: "General",
@@ -471,6 +518,8 @@ Remember to be knowledgeable about the market, professional, and focused on help
             editedBy: "System",
             editedAt: "07/03/2025, 19:43",
             avatar: "AG",
+            createdAt: new Date(),
+            updatedAt: new Date(),
             prompt: "You are a helpful AI assistant."
           };
         }
@@ -949,8 +998,8 @@ Remember to be knowledgeable about the market, professional, and focused on help
           frustrated: 0,
           satisfied: 0
         },
-        weeklyTrends: [],
-        topPerformingAgents: []
+        weeklyTrends: [] as any[],
+        topPerformingAgents: [] as any[]
       };
 
       // If Retell client is available, get comprehensive analytics
@@ -963,33 +1012,33 @@ Remember to be knowledgeable about the market, professional, and focused on help
             enhancedStats.totalCalls = validCalls.length;
 
             // Calculate duration metrics
-            const callsWithDuration = validCalls.filter(call => call.duration_ms && call.duration_ms > 0);
+            const callsWithDuration = validCalls.filter((call: RetellCall) => call.duration_ms && call.duration_ms > 0);
             enhancedStats.averageCallDuration = callsWithDuration.length > 0
-              ? Math.round(callsWithDuration.reduce((sum, call) => sum + call.duration_ms, 0) / callsWithDuration.length / 1000)
+              ? Math.round(callsWithDuration.reduce((sum: number, call: RetellCall) => sum + (call.duration_ms || 0), 0) / callsWithDuration.length / 1000)
               : 0;
 
             // Calculate cost metrics
-            const callsWithCost = validCalls.filter(call => call.call_cost_breakdown?.total_cost);
+            const callsWithCost = validCalls.filter((call: RetellCall) => call.call_cost_breakdown?.total_cost);
             enhancedStats.totalCost = callsWithCost.length > 0
-              ? callsWithCost.reduce((sum, call) => sum + parseFloat(call.call_cost_breakdown.total_cost), 0)
+              ? callsWithCost.reduce((sum: number, call: RetellCall) => sum + parseFloat(call.call_cost_breakdown?.total_cost || '0'), 0)
               : 0;
 
             // Calculate latency metrics
-            const callsWithLatency = validCalls.filter(call => call.latency?.avg_latency_ms);
+            const callsWithLatency = validCalls.filter((call: RetellCall) => call.latency?.avg_latency_ms);
             enhancedStats.averageLatency = callsWithLatency.length > 0
-              ? Math.round(callsWithLatency.reduce((sum, call) => sum + call.latency.avg_latency_ms, 0) / callsWithLatency.length)
+              ? Math.round(callsWithLatency.reduce((sum: number, call: RetellCall) => sum + (call.latency?.avg_latency_ms || 0), 0) / callsWithLatency.length)
               : 0;
 
             // Calculate success rate based on call analysis
-            const callsWithAnalysis = validCalls.filter(call => call.call_analysis?.call_successful !== undefined);
-            const successfulCallsCount = validCalls.filter(call => call.call_analysis?.call_successful === true).length;
+            const callsWithAnalysis = validCalls.filter((call: RetellCall) => call.call_analysis?.call_successful !== undefined);
+            const successfulCallsCount = validCalls.filter((call: RetellCall) => call.call_analysis?.call_successful === true).length;
             enhancedStats.callSuccessRate = callsWithAnalysis.length > 0
               ? Math.round((successfulCallsCount / callsWithAnalysis.length) * 100)
               : 0;
             enhancedStats.successfulCalls = successfulCallsCount;
 
             // Sentiment analysis
-            const sentimentCounts = {
+            const sentimentCounts: SentimentCounts = {
               positive: 0,
               neutral: 0,
               negative: 0,
@@ -997,7 +1046,7 @@ Remember to be knowledgeable about the market, professional, and focused on help
               satisfied: 0
             };
 
-            validCalls.forEach(call => {
+            validCalls.forEach((call: RetellCall) => {
               const sentiment = call.call_analysis?.user_sentiment?.toLowerCase();
               if (sentiment && sentimentCounts.hasOwnProperty(sentiment)) {
                 sentimentCounts[sentiment]++;
@@ -1008,8 +1057,8 @@ Remember to be knowledgeable about the market, professional, and focused on help
             enhancedStats.positivesentimentCalls = sentimentCounts.positive + sentimentCounts.satisfied;
 
             // Direction analysis
-            enhancedStats.inboundCalls = validCalls.filter(call => call.direction === 'inbound').length;
-            enhancedStats.outboundCalls = validCalls.filter(call => call.direction === 'outbound').length;
+            enhancedStats.inboundCalls = validCalls.filter((call: RetellCall) => call.direction === 'inbound').length;
+            enhancedStats.outboundCalls = validCalls.filter((call: RetellCall) => call.direction === 'outbound').length;
 
             // Weekly trends (last 7 days)
             const sevenDaysAgo = new Date();
@@ -1022,20 +1071,20 @@ Remember to be knowledgeable about the market, professional, and focused on help
               const dayStart = new Date(date.setHours(0, 0, 0, 0));
               const dayEnd = new Date(date.setHours(23, 59, 59, 999));
 
-              const dayCalls = validCalls.filter(call => {
-                const callDate = new Date(call.start_timestamp);
+              const dayCalls = validCalls.filter((call: RetellCall) => {
+                const callDate = new Date(call.start_timestamp || '');
                 return callDate >= dayStart && callDate <= dayEnd;
               });
 
               weeklyData.push({
                 date: dayStart.toISOString().split('T')[0],
                 calls: dayCalls.length,
-                successful: dayCalls.filter(call => call.call_analysis?.call_successful === true).length,
-                duration: dayCalls.reduce((sum, call) => sum + (call.duration_ms || 0), 0) / 1000 / 60, // in minutes
-                cost: dayCalls.reduce((sum, call) => sum + parseFloat(call.call_cost_breakdown?.total_cost || 0), 0)
+                successful: dayCalls.filter((call: RetellCall) => call.call_analysis?.call_successful === true).length,
+                duration: dayCalls.reduce((sum: number, call: RetellCall) => sum + (call.duration_ms || 0), 0) / 1000 / 60, // in minutes
+                cost: dayCalls.reduce((sum: number, call: RetellCall) => sum + parseFloat(call.call_cost_breakdown?.total_cost || '0'), 0)
               });
             }
-            enhancedStats.weeklyTrends = weeklyData;
+            enhancedStats.weeklyTrends = weeklyData as any;
 
             // Top performing agents
             const agentPerformance: Record<string, {
@@ -1045,8 +1094,8 @@ Remember to be knowledgeable about the market, professional, and focused on help
               total_duration: number;
               positive_sentiment: number;
             }> = {};
-            validCalls.forEach((call: any) => {
-              const agentId = call.agent_id;
+            validCalls.forEach((call: RetellCall) => {
+              const agentId = call.agent_id || 'unknown';
               if (!agentPerformance[agentId]) {
                 agentPerformance[agentId] = {
                   agent_id: agentId,
@@ -1060,19 +1109,19 @@ Remember to be knowledgeable about the market, professional, and focused on help
               agentPerformance[agentId].total_calls++;
               if (call.call_analysis?.call_successful) agentPerformance[agentId].successful_calls++;
               agentPerformance[agentId].total_duration += call.duration_ms || 0;
-              if (['positive', 'satisfied'].includes(call.call_analysis?.user_sentiment?.toLowerCase())) {
+              if (['positive', 'satisfied'].includes(call.call_analysis?.user_sentiment?.toLowerCase() || '')) {
                 agentPerformance[agentId].positive_sentiment++;
               }
             });
 
             enhancedStats.topPerformingAgents = Object.values(agentPerformance)
-              .map(agent => ({
+              .map((agent: any) => ({
                 ...agent,
                 success_rate: agent.total_calls > 0 ? Math.round((agent.successful_calls / agent.total_calls) * 100) : 0,
                 avg_duration: agent.total_calls > 0 ? Math.round(agent.total_duration / agent.total_calls / 1000) : 0,
                 sentiment_rate: agent.total_calls > 0 ? Math.round((agent.positive_sentiment / agent.total_calls) * 100) : 0
               }))
-              .sort((a, b) => b.success_rate - a.success_rate)
+              .sort((a: any, b: any) => b.success_rate - a.success_rate)
               .slice(0, 5);
 
           }
@@ -1130,17 +1179,17 @@ Remember to be knowledgeable about the market, professional, and focused on help
       const analytics = {
         summary: {
           total_calls: calls.length,
-          total_duration_hours: calls.reduce((sum, call) => sum + (call.duration_ms || 0), 0) / 1000 / 3600,
-          total_cost: calls.reduce((sum, call) => sum + parseFloat(call.call_cost_breakdown?.total_cost || 0), 0),
-          success_rate: calls.length > 0 ? (calls.filter(call => call.call_analysis?.call_successful).length / calls.length * 100) : 0,
-          avg_call_duration: calls.length > 0 ? calls.reduce((sum, call) => sum + (call.duration_ms || 0), 0) / calls.length / 1000 : 0
+          total_duration_hours: (calls as RetellCall[]).reduce((sum: number, call: RetellCall) => sum + (call.duration_ms || 0), 0) / 1000 / 3600,
+          total_cost: (calls as RetellCall[]).reduce((sum: number, call: RetellCall) => sum + parseFloat(call.call_cost_breakdown?.total_cost || '0'), 0),
+          success_rate: calls.length > 0 ? (calls.filter((call: RetellCall) => call.call_analysis?.call_successful).length / calls.length * 100) : 0,
+          avg_call_duration: calls.length > 0 ? (calls as RetellCall[]).reduce((sum: number, call: RetellCall) => sum + (call.duration_ms || 0), 0) / calls.length / 1000 : 0
         },
         call_volume: {
           by_hour: {},
           by_day: {},
           by_direction: {
-            inbound: calls.filter(call => call.direction === 'inbound').length,
-            outbound: calls.filter(call => call.direction === 'outbound').length
+            inbound: calls.filter((call: RetellCall) => call.direction === 'inbound').length,
+            outbound: calls.filter((call: RetellCall) => call.direction === 'outbound').length
           }
         },
         performance: {
@@ -1166,8 +1215,8 @@ Remember to be knowledgeable about the market, professional, and focused on help
       };
 
       // Process sentiment distribution
-      const sentimentCounts = {};
-      calls.forEach(call => {
+      const sentimentCounts: Record<string, number> = {};
+      calls.forEach((call: RetellCall) => {
         const sentiment = call.call_analysis?.user_sentiment || 'unknown';
         sentimentCounts[sentiment] = (sentimentCounts[sentiment] || 0) + 1;
       });
@@ -1180,7 +1229,7 @@ Remember to be knowledgeable about the market, professional, and focused on help
         duration: number;
         cost: number;
       }> = {};
-      calls.forEach((call: any) => {
+      calls.forEach((call: RetellCall) => {
         const agentId = call.agent_id || 'unknown';
         if (!agentStats[agentId]) {
           agentStats[agentId] = { total: 0, successful: 0, duration: 0, cost: 0 };
@@ -1188,12 +1237,12 @@ Remember to be knowledgeable about the market, professional, and focused on help
         agentStats[agentId].total++;
         if (call.call_analysis?.call_successful) agentStats[agentId].successful++;
         agentStats[agentId].duration += call.duration_ms || 0;
-        agentStats[agentId].cost += parseFloat(call.call_cost_breakdown?.total_cost || 0);
+        agentStats[agentId].cost += parseFloat(call.call_cost_breakdown?.total_cost || '0');
       });
 
-      Object.keys(agentStats).forEach(agentId => {
+      Object.keys(agentStats).forEach((agentId: string) => {
         const stats = agentStats[agentId];
-        analytics.performance.success_by_agent[agentId] = {
+        (analytics.performance.success_by_agent as Record<string, any>)[agentId] = {
           success_rate: (stats.successful / stats.total * 100),
           avg_duration: stats.duration / stats.total / 1000,
           total_calls: stats.total,
@@ -1203,18 +1252,18 @@ Remember to be knowledgeable about the market, professional, and focused on help
 
       // Calculate latency statistics
       const latencies = calls
-        .filter(call => call.latency?.avg_latency_ms)
-        .map(call => call.latency.avg_latency_ms)
-        .sort((a, b) => a - b);
+        .filter((call: RetellCall) => call.latency?.avg_latency_ms)
+        .map((call: RetellCall) => call.latency?.avg_latency_ms || 0)
+        .sort((a: number, b: number) => a - b);
 
       if (latencies.length > 0) {
-        analytics.performance.latency_stats.avg_latency = latencies.reduce((sum, lat) => sum + lat, 0) / latencies.length;
+        analytics.performance.latency_stats.avg_latency = latencies.reduce((sum: number, lat: number) => sum + lat, 0) / latencies.length;
         analytics.performance.latency_stats.p95_latency = latencies[Math.floor(latencies.length * 0.95)];
         analytics.performance.latency_stats.p99_latency = latencies[Math.floor(latencies.length * 0.99)];
       }
 
       // Cost analysis
-      const totalMinutes = calls.reduce((sum, call) => sum + (call.duration_ms || 0), 0) / 1000 / 60;
+      const totalMinutes = calls.reduce((sum: number, call: RetellCall) => sum + (call.duration_ms || 0), 0) / 1000 / 60;
       const totalCost = analytics.summary.total_cost;
 
       analytics.performance.cost_analysis.cost_per_call = calls.length > 0 ? totalCost / calls.length : 0;
@@ -1222,11 +1271,11 @@ Remember to be knowledgeable about the market, professional, and focused on help
 
       // Cost by direction
       const inboundCost = calls
-        .filter(call => call.direction === 'inbound')
-        .reduce((sum, call) => sum + parseFloat(call.call_cost_breakdown?.total_cost || 0), 0);
+        .filter((call: RetellCall) => call.direction === 'inbound')
+        .reduce((sum: number, call: RetellCall) => sum + parseFloat(call.call_cost_breakdown?.total_cost || '0'), 0);
       const outboundCost = calls
-        .filter(call => call.direction === 'outbound')
-        .reduce((sum, call) => sum + parseFloat(call.call_cost_breakdown?.total_cost || 0), 0);
+        .filter((call: RetellCall) => call.direction === 'outbound')
+        .reduce((sum: number, call: RetellCall) => sum + parseFloat(call.call_cost_breakdown?.total_cost || '0'), 0);
 
       analytics.performance.cost_analysis.cost_by_direction = {
         inbound: inboundCost,
@@ -1234,20 +1283,20 @@ Remember to be knowledgeable about the market, professional, and focused on help
       };
 
       // Call volume by time
-      calls.forEach(call => {
-        const date = new Date(call.start_timestamp);
+      calls.forEach((call: RetellCall) => {
+        const date = new Date(call.start_timestamp || '');
         const hour = date.getHours();
         const day = date.toISOString().split('T')[0];
 
-        analytics.call_volume.by_hour[hour] = (analytics.call_volume.by_hour[hour] || 0) + 1;
-        analytics.call_volume.by_day[day] = (analytics.call_volume.by_day[day] || 0) + 1;
+        (analytics.call_volume.by_hour as Record<number, number>)[hour] = ((analytics.call_volume.by_hour as Record<number, number>)[hour] || 0) + 1;
+        (analytics.call_volume.by_day as Record<string, number>)[day] = ((analytics.call_volume.by_day as Record<string, number>)[day] || 0) + 1;
       });
 
       // Quality metrics
-      const completedCalls = calls.filter(call => call.call_status === 'completed');
+      const completedCalls = calls.filter((call: RetellCall) => call.call_status === 'completed');
       analytics.quality_metrics.call_completion_rate = calls.length > 0 ? (completedCalls.length / calls.length * 100) : 0;
 
-      const successfulCalls = calls.filter(call => call.call_analysis?.call_successful);
+      const successfulCalls = calls.filter((call: RetellCall) => call.call_analysis?.call_successful);
       analytics.quality_metrics.resolution_rate = calls.length > 0 ? (successfulCalls.length / calls.length * 100) : 0;
 
       res.json({
