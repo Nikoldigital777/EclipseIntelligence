@@ -672,25 +672,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
         averageCallDuration: 0,
         positivesentimentCalls: 0,
         inboundCalls: 0,
-        outboundCalls: 0
+        outboundCalls: 0,
+        totalCost: 0,
+        averageLatency: 0,
+        callSuccessRate: 0,
+        sentimentBreakdown: {
+          positive: 0,
+          neutral: 0,
+          negative: 0,
+          frustrated: 0,
+          satisfied: 0
+        },
+        weeklyTrends: [],
+        topPerformingAgents: []
       };
 
-      // If Retell client is available, get enhanced analytics
+      // If Retell client is available, get comprehensive analytics
       if (retellClient) {
         try {
-          const retellCalls = await retellClient.listCalls({}, 'descending', 100);
-          if (retellCalls && Array.isArray(retellCalls)) {
-            const callsWithDuration = retellCalls.filter(call => call.duration_ms);
+          const retellCalls = await retellClient.listCalls({}, 'descending', 500); // Get more data for better analytics
+          
+          if (retellCalls && retellCalls.calls && Array.isArray(retellCalls.calls)) {
+            const validCalls = retellCalls.calls;
+            enhancedStats.totalCalls = validCalls.length;
+
+            // Calculate duration metrics
+            const callsWithDuration = validCalls.filter(call => call.duration_ms && call.duration_ms > 0);
             enhancedStats.averageCallDuration = callsWithDuration.length > 0 
               ? Math.round(callsWithDuration.reduce((sum, call) => sum + call.duration_ms, 0) / callsWithDuration.length / 1000)
               : 0;
+
+            // Calculate cost metrics
+            const callsWithCost = validCalls.filter(call => call.call_cost_breakdown?.total_cost);
+            enhancedStats.totalCost = callsWithCost.length > 0 
+              ? callsWithCost.reduce((sum, call) => sum + parseFloat(call.call_cost_breakdown.total_cost), 0)
+              : 0;
+
+            // Calculate latency metrics
+            const callsWithLatency = validCalls.filter(call => call.latency?.avg_latency_ms);
+            enhancedStats.averageLatency = callsWithLatency.length > 0 
+              ? Math.round(callsWithLatency.reduce((sum, call) => sum + call.latency.avg_latency_ms, 0) / callsWithLatency.length)
+              : 0;
+
+            // Calculate success rate based on call analysis
+            const callsWithAnalysis = validCalls.filter(call => call.call_analysis?.call_successful !== undefined);
+            const successfulCallsCount = validCalls.filter(call => call.call_analysis?.call_successful === true).length;
+            enhancedStats.callSuccessRate = callsWithAnalysis.length > 0 
+              ? Math.round((successfulCallsCount / callsWithAnalysis.length) * 100)
+              : 0;
+            enhancedStats.successfulCalls = successfulCallsCount;
+
+            // Sentiment analysis
+            const sentimentCounts = {
+              positive: 0,
+              neutral: 0,
+              negative: 0,
+              frustrated: 0,
+              satisfied: 0
+            };
+
+            validCalls.forEach(call => {
+              const sentiment = call.call_analysis?.user_sentiment?.toLowerCase();
+              if (sentiment && sentimentCounts.hasOwnProperty(sentiment)) {
+                sentimentCounts[sentiment]++;
+              }
+            });
+
+            enhancedStats.sentimentBreakdown = sentimentCounts;
+            enhancedStats.positivesentimentCalls = sentimentCounts.positive + sentimentCounts.satisfied;
+
+            // Direction analysis
+            enhancedStats.inboundCalls = validCalls.filter(call => call.direction === 'inbound').length;
+            enhancedStats.outboundCalls = validCalls.filter(call => call.direction === 'outbound').length;
+
+            // Weekly trends (last 7 days)
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
             
-            enhancedStats.positivesentimentCalls = retellCalls.filter(call => 
-              call.call_analysis?.user_sentiment === 'Positive'
-            ).length;
-            
-            enhancedStats.inboundCalls = retellCalls.filter(call => call.direction === 'inbound').length;
-            enhancedStats.outboundCalls = retellCalls.filter(call => call.direction === 'outbound').length;
+            const weeklyData = [];
+            for (let i = 6; i >= 0; i--) {
+              const date = new Date();
+              date.setDate(date.getDate() - i);
+              const dayStart = new Date(date.setHours(0, 0, 0, 0));
+              const dayEnd = new Date(date.setHours(23, 59, 59, 999));
+              
+              const dayCalls = validCalls.filter(call => {
+                const callDate = new Date(call.start_timestamp);
+                return callDate >= dayStart && callDate <= dayEnd;
+              });
+
+              weeklyData.push({
+                date: dayStart.toISOString().split('T')[0],
+                calls: dayCalls.length,
+                successful: dayCalls.filter(call => call.call_analysis?.call_successful === true).length,
+                duration: dayCalls.reduce((sum, call) => sum + (call.duration_ms || 0), 0) / 1000 / 60, // in minutes
+                cost: dayCalls.reduce((sum, call) => sum + parseFloat(call.call_cost_breakdown?.total_cost || 0), 0)
+              });
+            }
+            enhancedStats.weeklyTrends = weeklyData;
+
+            // Top performing agents
+            const agentPerformance = {};
+            validCalls.forEach(call => {
+              const agentId = call.agent_id;
+              if (!agentPerformance[agentId]) {
+                agentPerformance[agentId] = {
+                  agent_id: agentId,
+                  total_calls: 0,
+                  successful_calls: 0,
+                  total_duration: 0,
+                  positive_sentiment: 0
+                };
+              }
+              
+              agentPerformance[agentId].total_calls++;
+              if (call.call_analysis?.call_successful) agentPerformance[agentId].successful_calls++;
+              agentPerformance[agentId].total_duration += call.duration_ms || 0;
+              if (['positive', 'satisfied'].includes(call.call_analysis?.user_sentiment?.toLowerCase())) {
+                agentPerformance[agentId].positive_sentiment++;
+              }
+            });
+
+            enhancedStats.topPerformingAgents = Object.values(agentPerformance)
+              .map(agent => ({
+                ...agent,
+                success_rate: agent.total_calls > 0 ? Math.round((agent.successful_calls / agent.total_calls) * 100) : 0,
+                avg_duration: agent.total_calls > 0 ? Math.round(agent.total_duration / agent.total_calls / 1000) : 0,
+                sentiment_rate: agent.total_calls > 0 ? Math.round((agent.positive_sentiment / agent.total_calls) * 100) : 0
+              }))
+              .sort((a, b) => b.success_rate - a.success_rate)
+              .slice(0, 5);
+
           }
         } catch (retellError) {
           console.warn("Failed to get enhanced analytics from Retell:", retellError);
@@ -701,6 +813,176 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to fetch analytics:", error);
       res.status(500).json({ error: "Failed to fetch analytics" });
+    }
+  });
+
+  // Detailed analytics for reports (protected)
+  router.get("/analytics/detailed", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { timeframe = '30d', metrics = 'all' } = req.query;
+      const retellClient = createRetellClient();
+
+      if (!retellClient) {
+        return res.status(503).json({ error: "Retell AI integration not configured" });
+      }
+
+      // Calculate date range
+      const endDate = new Date();
+      const startDate = new Date();
+      
+      switch (timeframe) {
+        case '24h':
+          startDate.setHours(startDate.getHours() - 24);
+          break;
+        case '7d':
+          startDate.setDate(startDate.getDate() - 7);
+          break;
+        case '30d':
+          startDate.setDate(startDate.getDate() - 30);
+          break;
+        case '90d':
+          startDate.setDate(startDate.getDate() - 90);
+          break;
+        default:
+          startDate.setDate(startDate.getDate() - 30);
+      }
+
+      const filterCriteria = {
+        start_timestamp: Math.floor(startDate.getTime() / 1000),
+        end_timestamp: Math.floor(endDate.getTime() / 1000)
+      };
+
+      const callsData = await retellClient.listCalls(filterCriteria, 'descending', 1000);
+      const calls = callsData.calls || [];
+
+      const analytics = {
+        summary: {
+          total_calls: calls.length,
+          total_duration_hours: calls.reduce((sum, call) => sum + (call.duration_ms || 0), 0) / 1000 / 3600,
+          total_cost: calls.reduce((sum, call) => sum + parseFloat(call.call_cost_breakdown?.total_cost || 0), 0),
+          success_rate: calls.length > 0 ? (calls.filter(call => call.call_analysis?.call_successful).length / calls.length * 100) : 0,
+          avg_call_duration: calls.length > 0 ? calls.reduce((sum, call) => sum + (call.duration_ms || 0), 0) / calls.length / 1000 : 0
+        },
+        call_volume: {
+          by_hour: {},
+          by_day: {},
+          by_direction: {
+            inbound: calls.filter(call => call.direction === 'inbound').length,
+            outbound: calls.filter(call => call.direction === 'outbound').length
+          }
+        },
+        performance: {
+          sentiment_distribution: {},
+          success_by_agent: {},
+          latency_stats: {
+            avg_latency: 0,
+            p95_latency: 0,
+            p99_latency: 0
+          },
+          cost_analysis: {
+            cost_per_call: 0,
+            cost_per_minute: 0,
+            cost_by_direction: {}
+          }
+        },
+        quality_metrics: {
+          call_completion_rate: 0,
+          average_rating: 0,
+          escalation_rate: 0,
+          resolution_rate: 0
+        }
+      };
+
+      // Process sentiment distribution
+      const sentimentCounts = {};
+      calls.forEach(call => {
+        const sentiment = call.call_analysis?.user_sentiment || 'unknown';
+        sentimentCounts[sentiment] = (sentimentCounts[sentiment] || 0) + 1;
+      });
+      analytics.performance.sentiment_distribution = sentimentCounts;
+
+      // Process agent performance
+      const agentStats = {};
+      calls.forEach(call => {
+        const agentId = call.agent_id || 'unknown';
+        if (!agentStats[agentId]) {
+          agentStats[agentId] = { total: 0, successful: 0, duration: 0, cost: 0 };
+        }
+        agentStats[agentId].total++;
+        if (call.call_analysis?.call_successful) agentStats[agentId].successful++;
+        agentStats[agentId].duration += call.duration_ms || 0;
+        agentStats[agentId].cost += parseFloat(call.call_cost_breakdown?.total_cost || 0);
+      });
+
+      Object.keys(agentStats).forEach(agentId => {
+        const stats = agentStats[agentId];
+        analytics.performance.success_by_agent[agentId] = {
+          success_rate: (stats.successful / stats.total * 100),
+          avg_duration: stats.duration / stats.total / 1000,
+          total_calls: stats.total,
+          total_cost: stats.cost
+        };
+      });
+
+      // Calculate latency statistics
+      const latencies = calls
+        .filter(call => call.latency?.avg_latency_ms)
+        .map(call => call.latency.avg_latency_ms)
+        .sort((a, b) => a - b);
+
+      if (latencies.length > 0) {
+        analytics.performance.latency_stats.avg_latency = latencies.reduce((sum, lat) => sum + lat, 0) / latencies.length;
+        analytics.performance.latency_stats.p95_latency = latencies[Math.floor(latencies.length * 0.95)];
+        analytics.performance.latency_stats.p99_latency = latencies[Math.floor(latencies.length * 0.99)];
+      }
+
+      // Cost analysis
+      const totalMinutes = calls.reduce((sum, call) => sum + (call.duration_ms || 0), 0) / 1000 / 60;
+      const totalCost = analytics.summary.total_cost;
+      
+      analytics.performance.cost_analysis.cost_per_call = calls.length > 0 ? totalCost / calls.length : 0;
+      analytics.performance.cost_analysis.cost_per_minute = totalMinutes > 0 ? totalCost / totalMinutes : 0;
+
+      // Cost by direction
+      const inboundCost = calls
+        .filter(call => call.direction === 'inbound')
+        .reduce((sum, call) => sum + parseFloat(call.call_cost_breakdown?.total_cost || 0), 0);
+      const outboundCost = calls
+        .filter(call => call.direction === 'outbound')
+        .reduce((sum, call) => sum + parseFloat(call.call_cost_breakdown?.total_cost || 0), 0);
+
+      analytics.performance.cost_analysis.cost_by_direction = {
+        inbound: inboundCost,
+        outbound: outboundCost
+      };
+
+      // Call volume by time
+      calls.forEach(call => {
+        const date = new Date(call.start_timestamp);
+        const hour = date.getHours();
+        const day = date.toISOString().split('T')[0];
+        
+        analytics.call_volume.by_hour[hour] = (analytics.call_volume.by_hour[hour] || 0) + 1;
+        analytics.call_volume.by_day[day] = (analytics.call_volume.by_day[day] || 0) + 1;
+      });
+
+      // Quality metrics
+      const completedCalls = calls.filter(call => call.call_status === 'completed');
+      analytics.quality_metrics.call_completion_rate = calls.length > 0 ? (completedCalls.length / calls.length * 100) : 0;
+      
+      const successfulCalls = calls.filter(call => call.call_analysis?.call_successful);
+      analytics.quality_metrics.resolution_rate = calls.length > 0 ? (successfulCalls.length / calls.length * 100) : 0;
+
+      res.json({
+        timeframe,
+        start_date: startDate.toISOString(),
+        end_date: endDate.toISOString(),
+        ...analytics
+      });
+
+    } catch (error) {
+      console.error("Failed to fetch detailed analytics:", error);
+      res.status(500).json({ error: "Failed to fetch detailed analytics" });
     }
   });
 

@@ -12,7 +12,21 @@ export default function Dashboard() {
     positivesentimentCalls: 0,
     averageCallDuration: 0,
     inboundCalls: 0,
-    outboundCalls: 0
+    outboundCalls: 0,
+    totalCalls: 0,
+    successfulCalls: 0,
+    callSuccessRate: 0,
+    totalCost: 0,
+    averageLatency: 0,
+    sentimentBreakdown: {
+      positive: 0,
+      neutral: 0,
+      negative: 0,
+      frustrated: 0,
+      satisfied: 0
+    },
+    weeklyTrends: [],
+    topPerformingAgents: []
   });
 
   useEffect(() => {
@@ -175,8 +189,10 @@ export default function Dashboard() {
                   <Sparkles className="w-6 h-6 text-white" />
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold text-white bg-gradient-to-r from-[hsl(var(--lunar-mist))] to-[hsl(var(--eclipse-glow))] bg-clip-text text-transparent">{stats.positivesentimentCalls}</p>
-                  <p className="text-gray-300 text-sm">Positive Sentiment</p>
+                  <p className="text-3xl font-bold text-white bg-gradient-to-r from-[hsl(var(--lunar-mist))] to-[hsl(var(--eclipse-glow))] bg-clip-text text-transparent">
+                    {stats.callSuccessRate || stats.positivesentimentCalls}%
+                  </p>
+                  <p className="text-gray-300 text-sm">Success Rate</p>
                 </div>
               </div>
               <div className="w-full bg-[hsl(var(--deep-night))]/30 rounded-full h-2 relative overflow-hidden">
