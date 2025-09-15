@@ -8,6 +8,7 @@ const navigationItems = [
   { path: "/analytics", label: "Analytics", icon: BarChart3 },
   { path: "/call-history", label: "Call History", icon: PhoneCall },
   { path: "/agents", label: "Agents", icon: Users },
+  { path: "/single-call", label: "Make Single Call", icon: Phone },
   { path: "/outbound-calls", label: "Send Outbound Calls", icon: Phone },
   { path: "/settings", label: "Settings", icon: Settings },
 ];

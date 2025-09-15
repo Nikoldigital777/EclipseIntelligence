@@ -17,6 +17,7 @@ import Analytics from "./pages/Analytics";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import OutboundCalls from "./pages/OutboundCalls";
+import SingleCall from "./pages/SingleCall";
 import NotFound from "@/pages/not-found";
 import { AuthService } from "./lib/auth";
 
@@ -62,6 +63,7 @@ function Router() {
     if (location === '/' || location === '/dashboard') return 'dashboard';
     if (location === '/agents') return 'agents';
     if (location === '/call-history') return 'call-history';
+    if (location === '/single-call') return 'single-call';
     if (location === '/outbound-calls') return 'outbound-calls';
     if (location === '/analytics') return 'analytics';
     if (location === '/settings') return 'settings';
@@ -80,6 +82,7 @@ function Router() {
           <Route path="/call-history" component={CallHistory} />
           <Route path="/agents" component={AllAgents} />
           <Route path="/agents/:id" component={AgentDetail} />
+          <Route path="/single-call" component={SingleCall} />
           <Route path="/outbound-calls" component={OutboundCalls} />
           <Route path="/settings" component={Settings} />
           <Route component={NotFound} />
