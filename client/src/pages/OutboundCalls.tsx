@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Upload, Download, Plus, Minus, Phone, Calendar, Clock, Users, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
@@ -11,30 +11,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-
-const agents = [
-  {
-    id: 1,
-    name: "Levan Wood Eclipse Recruiting",
-    phone: "+1(248)283-4183",
-    voice: "Levan RE/MAX",
-    avatar: "LW"
-  },
-  {
-    id: 2,
-    name: "Madison RE/MAX Office",
-    phone: "+1(586)500-6801",
-    voice: "Emily",
-    avatar: "MR"
-  },
-  {
-    id: 3,
-    name: "Levan Wood Listing Agent",
-    phone: "+1(248)599-0019",
-    voice: "Levan RE/MAX",
-    avatar: "LW"
-  }
-];
 
 const sampleRecipients = [
   { id: 1, phone: "+1(248)555-0123", firstName: "John", lastName: "Smith" },
@@ -53,6 +29,55 @@ export default function OutboundCalls() {
   const [recipients, setRecipients] = useState(sampleRecipients);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isLaunching, setIsLaunching] = useState(false);
+  const [agents, setAgents] = useState<any[]>([]);
+  const [isLoadingAgents, setIsLoadingAgents] = useState(true);
+
+  // Fetch agents on component mount
+  useEffect(() => {
+    const fetchAgents = async () => {
+      try {
+        const response = await fetch("/api/agents/simple");
+        if (response.ok) {
+          const agentsData = await response.json();
+          setAgents(agentsData);
+        } else {
+          // Fallback to default agents if API fails
+          setAgents([
+            {
+              id: 1,
+              name: "Levan Wood Eclipse Recruiting",
+              phone: "+1(248)283-4183",
+              voice: "Levan RE/MAX",
+              avatar: "LW"
+            },
+            {
+              id: 2,
+              name: "Madison RE/MAX Office", 
+              phone: "+1(586)500-6801",
+              voice: "Emily",
+              avatar: "MR"
+            }
+          ]);
+        }
+      } catch (error) {
+        console.error("Error fetching agents:", error);
+        // Fallback to default agents
+        setAgents([
+          {
+            id: 1,
+            name: "Levan Wood Eclipse Recruiting",
+            phone: "+1(248)283-4183", 
+            voice: "Levan RE/MAX",
+            avatar: "LW"
+          }
+        ]);
+      } finally {
+        setIsLoadingAgents(false);
+      }
+    };
+
+    fetchAgents();
+  }, []);
 
   const selectedAgentData = agents.find(agent => agent.id.toString() === selectedAgent);
   const totalRecipients = recipients.length;
@@ -133,7 +158,7 @@ export default function OutboundCalls() {
       
       toast({
         title: "Campaign Launched! 🚀",
-        description: `Successfully created batch call with ${tasks.length} recipients. Batch ID: ${result.batch_call_id}`,
+        description: result.message || `Successfully created batch call with ${tasks.length} recipients. Batch ID: ${result.batch_call_id}`,
       });
 
       // Reset form
@@ -141,6 +166,7 @@ export default function OutboundCalls() {
       setRecipients([]);
       setCsvFile(null);
       setTermsAccepted(false);
+      setSelectedAgent("");
       
     } catch (error) {
       console.error("Error launching batch campaign:", error);
@@ -224,9 +250,9 @@ export default function OutboundCalls() {
               {/* Agent Selection */}
               <div>
                 <Label htmlFor="agent-select" className="text-white mb-2 block">Select Agent</Label>
-                <Select value={selectedAgent} onValueChange={setSelectedAgent}>
+                <Select value={selectedAgent} onValueChange={setSelectedAgent} disabled={isLoadingAgents}>
                   <SelectTrigger className="bg-[hsl(var(--lunar-glass))]/30 border-white/20 text-white">
-                    <SelectValue placeholder="Choose an AI agent" />
+                    <SelectValue placeholder={isLoadingAgents ? "Loading agents..." : "Choose an AI agent"} />
                   </SelectTrigger>
                   <SelectContent className="bg-[hsl(var(--lunar-glass))] border-white/20">
                     {agents.map((agent) => (

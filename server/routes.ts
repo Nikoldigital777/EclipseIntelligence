@@ -248,11 +248,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "from_number and tasks array are required" });
       }
 
+      if (!name || name.trim() === "") {
+        return res.status(400).json({ error: "Batch name is required" });
+      }
+
+      if (!override_agent_id) {
+        return res.status(400).json({ error: "Agent selection is required" });
+      }
+
       // Validate tasks
       for (const task of tasks) {
         if (!task.to_number) {
           return res.status(400).json({ error: "Each task must have a to_number" });
         }
+      }
+
+      // Validate agent exists
+      const agent = await storage.getAgent(parseInt(override_agent_id));
+      if (!agent) {
+        return res.status(400).json({ error: "Selected agent not found" });
       }
 
       const retellClient = createRetellClient();
@@ -264,8 +278,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           retellResponse = await retellClient.createBatchCall({
             from_number,
             tasks,
-            name,
-            trigger_timestamp
+            name: name.trim(),
+            trigger_timestamp,
+            override_agent_id
           });
         } catch (retellError) {
           console.error("Retell Batch API error:", retellError);
@@ -276,22 +291,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const batchCallId = `batch_call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         retellResponse = {
           batch_call_id: batchCallId,
-          name: name || `Batch call ${new Date().toISOString()}`,
+          name: name.trim(),
           from_number,
           scheduled_timestamp: trigger_timestamp || Math.floor(Date.now() / 1000),
-          total_task_count: tasks.length
+          total_task_count: tasks.length,
+          agent_id: override_agent_id
         };
       }
 
       // Store individual calls for each task
       const createdCalls = [];
-      for (const task of tasks) {
+      for (let i = 0; i < tasks.length; i++) {
+        const task = tasks[i];
         const callData = {
-          sessionId: `${retellResponse.batch_call_id}_task_${createdCalls.length}`,
+          sessionId: `${retellResponse.batch_call_id}_task_${i + 1}`,
           fromNumber: from_number,
           toNumber: task.to_number,
           status: trigger_timestamp ? "scheduled" : "registered",
-          agentId: override_agent_id ? parseInt(override_agent_id) : null,
+          agentId: parseInt(override_agent_id),
           endReason: null,
           sentiment: null,
           outcome: null,
@@ -308,11 +325,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json({ 
         ...retellResponse, 
         created_calls: createdCalls.map(call => call.id),
-        message: `Batch call created with ${tasks.length} tasks`
+        message: `Batch call "${name.trim()}" created successfully with ${tasks.length} tasks`,
+        success: true
       });
     } catch (error) {
       console.error("Error creating batch call:", error);
       res.status(500).json({ error: "Failed to create batch call" });
+    }
+  });
+
+  // Simple agents endpoint for dropdowns
+  app.get("/api/agents/simple", async (req, res) => {
+    try {
+      const agents = await storage.getAgents();
+      const simpleAgents = agents.map(agent => ({
+        id: agent.id,
+        name: agent.name,
+        phone: agent.phone || "+1(555)000-0000",
+        voice: agent.voice || "Default",
+        avatar: agent.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+      }));
+      res.json(simpleAgents);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch agents" });
     }
   });
 

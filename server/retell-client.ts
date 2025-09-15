@@ -25,6 +25,7 @@ interface CreateBatchCallRequest {
   }>;
   name?: string;
   trigger_timestamp?: number;
+  override_agent_id?: string;
 }
 
 export class RetellClient {
