@@ -222,18 +222,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const retellAgent = await retellClient.getAgent(agentId);
             agent = localAgent ? { ...localAgent, ...retellAgent } : retellAgent;
             
-            // Get additional LLM details if response_engine contains llm_id
+            // Get comprehensive LLM details if response_engine contains llm_id
             if (retellAgent.response_engine?.llm_id) {
               try {
                 const llmData = await retellClient.getLlm(retellAgent.response_engine.llm_id);
                 comprehensiveAgentData.llm_details = {
-                  general_prompt: llmData.general_prompt,
+                  llm_id: llmData.llm_id,
+                  version: llmData.version,
+                  is_published: llmData.is_published,
                   model: llmData.model,
-                  temperature: llmData.temperature,
+                  s2s_model: llmData.s2s_model,
+                  model_temperature: llmData.model_temperature,
+                  model_high_priority: llmData.model_high_priority,
+                  tool_call_strict_mode: llmData.tool_call_strict_mode,
+                  general_prompt: llmData.general_prompt,
+                  general_tools: llmData.general_tools || [],
+                  states: llmData.states || [],
+                  starting_state: llmData.starting_state,
+                  begin_message: llmData.begin_message,
+                  default_dynamic_variables: llmData.default_dynamic_variables || {},
+                  knowledge_base_ids: llmData.knowledge_base_ids || [],
+                  kb_config: llmData.kb_config,
+                  last_modification_timestamp: llmData.last_modification_timestamp,
+                  // Legacy fields for backward compatibility
+                  temperature: llmData.model_temperature,
                   max_tokens: llmData.max_tokens,
-                  first_message: llmData.first_message,
-                  system_message: llmData.system_message,
-                  tools: llmData.tools || []
+                  first_message: llmData.begin_message,
+                  system_message: llmData.general_prompt,
+                  tools: llmData.general_tools || []
                 };
               } catch (llmError) {
                 console.warn("Failed to fetch LLM details:", llmError);

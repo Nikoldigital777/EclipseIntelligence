@@ -467,35 +467,107 @@ Remember to always be helpful, patient, and represent the company professionally
                 </h3>
                 
                 <div className="space-y-4">
-                  <div>
-                    <Label className="text-gray-300 text-sm">Model</Label>
-                    <p className="text-[hsl(var(--eclipse-glow))] font-medium">{agent.llm_details.model}</p>
+                  {agent.llm_details.llm_id && (
+                    <div>
+                      <Label className="text-gray-300 text-sm">LLM ID</Label>
+                      <p className="text-white font-mono bg-[hsl(var(--lunar-mist))]/20 px-3 py-2 rounded-md text-sm">
+                        {agent.llm_details.llm_id}
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-gray-300 text-sm">Model</Label>
+                      <p className="text-[hsl(var(--eclipse-glow))] font-medium">
+                        {agent.llm_details.model || agent.llm_details.s2s_model || 'gpt-4.1'}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-gray-300 text-sm">Version</Label>
+                      <p className="text-white">
+                        {agent.llm_details.version || 0} {agent.llm_details.is_published ? "(Published)" : "(Draft)"}
+                      </p>
+                    </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-gray-300 text-sm">Temperature</Label>
-                      <p className="text-white">{agent.llm_details.temperature || 0.7}</p>
+                      <p className="text-white">{agent.llm_details.model_temperature ?? agent.llm_details.temperature ?? 0}</p>
                     </div>
                     <div>
-                      <Label className="text-gray-300 text-sm">Max Tokens</Label>
-                      <p className="text-white">{agent.llm_details.max_tokens || 'Auto'}</p>
+                      <Label className="text-gray-300 text-sm">High Priority</Label>
+                      <p className="text-white">{agent.llm_details.model_high_priority ? "Yes" : "No"}</p>
                     </div>
                   </div>
-                  
-                  {agent.llm_details.first_message && (
+
+                  {agent.llm_details.tool_call_strict_mode !== undefined && (
                     <div>
-                      <Label className="text-gray-300 text-sm">First Message</Label>
-                      <p className="text-white bg-[hsl(var(--lunar-mist))]/20 px-3 py-2 rounded-md text-sm">
-                        {agent.llm_details.first_message}
-                      </p>
+                      <Label className="text-gray-300 text-sm">Strict Tool Calls</Label>
+                      <p className="text-white">{agent.llm_details.tool_call_strict_mode ? "Enabled" : "Disabled"}</p>
                     </div>
                   )}
                   
-                  {agent.llm_details.tools && agent.llm_details.tools.length > 0 && (
+                  {(agent.llm_details.begin_message || agent.llm_details.first_message) && (
                     <div>
-                      <Label className="text-gray-300 text-sm">Tools Available</Label>
-                      <p className="text-[hsl(var(--gold-manifest))]">{agent.llm_details.tools.length} tools configured</p>
+                      <Label className="text-gray-300 text-sm">Begin Message</Label>
+                      <p className="text-white bg-[hsl(var(--lunar-mist))]/20 px-3 py-2 rounded-md text-sm">
+                        {agent.llm_details.begin_message || agent.llm_details.first_message}
+                      </p>
+                    </div>
+                  )}
+
+                  {agent.llm_details.starting_state && (
+                    <div>
+                      <Label className="text-gray-300 text-sm">Starting State</Label>
+                      <p className="text-[hsl(var(--manifest-blue))] font-medium">{agent.llm_details.starting_state}</p>
+                    </div>
+                  )}
+
+                  {agent.llm_details.states && agent.llm_details.states.length > 0 && (
+                    <div>
+                      <Label className="text-gray-300 text-sm">States Configured</Label>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {agent.llm_details.states.map((state: any, index: number) => (
+                          <span key={index} className="bg-[hsl(var(--manifest-blue))]/20 px-2 py-1 rounded text-xs text-[hsl(var(--manifest-blue))] border border-[hsl(var(--manifest-blue))]/30">
+                            {state.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {agent.llm_details.general_tools && agent.llm_details.general_tools.length > 0 && (
+                    <div>
+                      <Label className="text-gray-300 text-sm">General Tools</Label>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {agent.llm_details.general_tools.map((tool: any, index: number) => (
+                          <span key={index} className="bg-[hsl(var(--gold-manifest))]/20 px-2 py-1 rounded text-xs text-[hsl(var(--gold-manifest))] border border-[hsl(var(--gold-manifest))]/30">
+                            {tool.name || tool.type}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {agent.llm_details.knowledge_base_ids && agent.llm_details.knowledge_base_ids.length > 0 && (
+                    <div>
+                      <Label className="text-gray-300 text-sm">Knowledge Bases</Label>
+                      <p className="text-[hsl(var(--eclipse-glow))]">{agent.llm_details.knowledge_base_ids.length} knowledge base(s) linked</p>
+                    </div>
+                  )}
+
+                  {agent.llm_details.default_dynamic_variables && Object.keys(agent.llm_details.default_dynamic_variables).length > 0 && (
+                    <div>
+                      <Label className="text-gray-300 text-sm">Dynamic Variables</Label>
+                      <div className="bg-[hsl(var(--lunar-mist))]/20 px-3 py-2 rounded-md text-sm">
+                        {Object.entries(agent.llm_details.default_dynamic_variables).map(([key, value]) => (
+                          <div key={key} className="text-gray-300">
+                            <span className="text-[hsl(var(--eclipse-glow))]">{key}:</span> {value as string}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
