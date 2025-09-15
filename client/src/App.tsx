@@ -1,9 +1,9 @@
-import { Switch, Route, Redirect } from "wouter";
+import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import StarField from "./components/StarField";
 import Sidebar from "./components/Sidebar";
 import CustomCursor from "./components/CustomCursor";
@@ -16,18 +16,49 @@ import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import OutboundCalls from "./pages/OutboundCalls";
 import NotFound from "@/pages/not-found";
+import { AuthService } from "./lib/auth";
 
 function Router() {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const token = localStorage.getItem("authToken");
+      if (token) {
+        // Optionally, you could verify the token with the backend here
+        setIsAuthenticated(true);
+      }
+      setIsLoading(false);
+    };
+    checkAuth();
+  }, []);
+
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    AuthService.logout(); // Assuming AuthService has a logout method that clears token
+    setIsAuthenticated(false);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[hsl(var(--deep-night))] via-[hsl(var(--lunar-glass))] to-[hsl(var(--deep-night))]">
+        <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
-    return <Login onLogin={() => setIsAuthenticated(true)} />;
+    return <Login onLogin={handleLogin} />;
   }
 
   return (
     <div className="flex min-h-screen relative">
       <StarField />
-      <Sidebar />
+      <Sidebar onLogout={handleLogout} />
       <div className="flex-1 ml-64 relative z-10">
         <Switch>
           <Route path="/" component={Dashboard} />

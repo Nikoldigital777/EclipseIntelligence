@@ -4,10 +4,105 @@ import { storage } from "./storage";
 import { insertAgentSchema, insertLeadSchema, insertCallSchema } from "@shared/schema";
 import { z } from "zod";
 import { createRetellClient } from "./retell-client";
+import { 
+  hashPassword, 
+  comparePassword, 
+  generateToken, 
+  authenticateToken, 
+  createSafeUser,
+  type AuthRequest 
+} from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Agent routes
-  app.get("/api/agents", async (req, res) => {
+  // Authentication routes
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+
+      if (!email || !password) {
+        return res.status(400).json({ error: "Email and password are required" });
+      }
+
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+
+      const isValidPassword = await comparePassword(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+
+      const token = generateToken(user.id);
+      const safeUser = createSafeUser(user);
+
+      res.json({ 
+        token, 
+        user: safeUser,
+        message: "Login successful" 
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ error: "Login failed" });
+    }
+  });
+
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const { username, email, password, displayName } = req.body;
+
+      if (!username || !email || !password || !displayName) {
+        return res.status(400).json({ 
+          error: "Username, email, password, and display name are required" 
+        });
+      }
+
+      // Check if user already exists
+      const existingUserByEmail = await storage.getUserByEmail(email);
+      if (existingUserByEmail) {
+        return res.status(409).json({ error: "Email already registered" });
+      }
+
+      const existingUserByUsername = await storage.getUserByUsername(username);
+      if (existingUserByUsername) {
+        return res.status(409).json({ error: "Username already taken" });
+      }
+
+      const hashedPassword = await hashPassword(password);
+      const userData = {
+        username,
+        email,
+        password: hashedPassword,
+        displayName,
+        role: "user"
+      };
+
+      const user = await storage.createUser(userData);
+      const token = generateToken(user.id);
+      const safeUser = createSafeUser(user);
+
+      res.status(201).json({ 
+        token, 
+        user: safeUser,
+        message: "Registration successful" 
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).json({ error: "Registration failed" });
+    }
+  });
+
+  app.get("/api/auth/me", authenticateToken, async (req: AuthRequest, res) => {
+    res.json({ user: req.user });
+  });
+
+  app.post("/api/auth/logout", (req, res) => {
+    // With JWT, logout is handled client-side by removing the token
+    res.json({ message: "Logout successful" });
+  });
+
+  // Agent routes (protected)
+  app.get("/api/agents", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const agents = await storage.getAgents();
       res.json(agents);
@@ -16,7 +111,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/agents/:id", async (req, res) => {
+  app.get("/api/agents/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const agent = await storage.getAgent(id);
@@ -29,7 +124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/agents", async (req, res) => {
+  app.post("/api/agents", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const agentData = insertAgentSchema.parse(req.body);
       const agent = await storage.createAgent(agentData);
@@ -42,7 +137,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/agents/:id", async (req, res) => {
+  app.put("/api/agents/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const updateData = insertAgentSchema.partial().parse(req.body);
@@ -59,7 +154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/agents/:id", async (req, res) => {
+  app.delete("/api/agents/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteAgent(id);
@@ -72,8 +167,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Lead routes
-  app.get("/api/leads", async (req, res) => {
+  // Lead routes (protected)
+  app.get("/api/leads", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const leads = await storage.getLeads();
       res.json(leads);
@@ -82,7 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/leads/:id", async (req, res) => {
+  app.get("/api/leads/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const lead = await storage.getLead(id);
@@ -95,7 +190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/leads", async (req, res) => {
+  app.post("/api/leads", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const leadData = insertLeadSchema.parse(req.body);
       const lead = await storage.createLead(leadData);
@@ -108,7 +203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/leads/:id", async (req, res) => {
+  app.put("/api/leads/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const updateData = insertLeadSchema.partial().parse(req.body);
@@ -125,7 +220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/leads/:id", async (req, res) => {
+  app.delete("/api/leads/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteLead(id);
@@ -138,8 +233,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Call routes
-  app.get("/api/calls", async (req, res) => {
+  // Call routes (protected)
+  app.get("/api/calls", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const calls = await storage.getCalls();
       res.json(calls);
@@ -148,7 +243,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/calls/:id", async (req, res) => {
+  app.get("/api/calls/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const call = await storage.getCall(id);
@@ -161,7 +256,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/calls", async (req, res) => {
+  app.post("/api/calls", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const callData = insertCallSchema.parse(req.body);
       const call = await storage.createCall(callData);
@@ -174,8 +269,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Outbound calls routes
-  app.post("/api/outbound-calls/single", async (req, res) => {
+  // Outbound calls routes (protected)
+  app.post("/api/outbound-calls/single", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const { from_number, to_number, override_agent_id, metadata, retell_llm_dynamic_variables } = req.body;
       
@@ -240,7 +335,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/outbound-calls/batch", async (req, res) => {
+  app.post("/api/outbound-calls/batch", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const { from_number, tasks, name, trigger_timestamp, override_agent_id } = req.body;
       
@@ -334,8 +429,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Simple agents endpoint for dropdowns
-  app.get("/api/agents/simple", async (req, res) => {
+  // Simple agents endpoint for dropdowns (protected)
+  app.get("/api/agents/simple", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const agents = await storage.getAgents();
       const simpleAgents = agents.map(agent => ({
@@ -351,8 +446,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Analytics routes
-  app.get("/api/analytics/stats", async (req, res) => {
+  // Analytics routes (protected)
+  app.get("/api/analytics/stats", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const leads = await storage.getLeads();
       const calls = await storage.getCalls();

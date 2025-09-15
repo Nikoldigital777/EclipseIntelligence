@@ -7,6 +7,7 @@ import StarField from "@/components/StarField";
 import CosmicButton from "@/components/CosmicButton";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
 import CustomCursor from "@/components/CustomCursor";
+import { AuthService } from "@/lib/auth";
 
 interface LoginProps {
   onLogin: () => void;
@@ -22,11 +23,21 @@ export default function Login({ onLogin }: LoginProps) {
     setIsVisible(true);
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simple authentication - in production, this would validate credentials
-    if (email && password) {
+    setLoading(true);
+    setError("");
+
+    try {
+      await AuthService.login(email, password);
       onLogin();
+    } catch (err: any) {
+      setError(err.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -83,6 +94,12 @@ export default function Login({ onLogin }: LoginProps) {
         </div>
         
         <form onSubmit={handleLogin} className={`space-y-6 transition-all duration-700 ease-out delay-200 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1'}`}>
+          {error && (
+            <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/30 text-red-200 text-sm">
+              {error}
+            </div>
+          )}
+          
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-white font-medium">Email Address</Label>
@@ -113,11 +130,21 @@ export default function Login({ onLogin }: LoginProps) {
 
           <button 
             type="submit"
-            className="w-full h-14 text-lg font-semibold hover:scale-102 transition-transform duration-200 bg-gradient-to-br from-[hsl(var(--remax-red))] to-[hsl(var(--gold-manifest))] text-white rounded-lg remax-shadow border-none cursor-pointer"
+            disabled={loading}
+            className="w-full h-14 text-lg font-semibold hover:scale-102 transition-transform duration-200 bg-gradient-to-br from-[hsl(var(--remax-red))] to-[hsl(var(--gold-manifest))] text-white rounded-lg remax-shadow border-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
-            <span className="flex items-center space-x-2">
-              <span>Access Dashboard</span>
-              <span className="text-xl">🚀</span>
+            <span className="flex items-center justify-center space-x-2">
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span>Signing In...</span>
+                </>
+              ) : (
+                <>
+                  <span>Access Dashboard</span>
+                  <span className="text-xl">🚀</span>
+                </>
+              )}
             </span>
           </button>
 

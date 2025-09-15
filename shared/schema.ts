@@ -1,15 +1,17 @@
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  email: text("email").notNull().unique(),
-  password: text("password").notNull(),
-  fullName: text("full_name"),
-  phone: text("phone"),
-  createdAt: timestamp("created_at").defaultNow(),
+  username: varchar("username", { length: 100 }).notNull().unique(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  password: varchar("password", { length: 255 }).notNull(),
+  displayName: varchar("display_name", { length: 100 }).notNull(),
+  avatarUrl: varchar("avatar_url", { length: 500 }),
+  role: varchar("role", { length: 50 }).notNull().default("user"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const agents = pgTable("agents", {
@@ -60,6 +62,7 @@ export const calls = pgTable("calls", {
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
+  updatedAt: true,
 });
 
 export const insertAgentSchema = createInsertSchema(agents).omit({
@@ -80,7 +83,9 @@ export const insertCallSchema = createInsertSchema(calls).omit({
 });
 
 export type User = typeof users.$inferSelect;
-export type InsertUser = z.infer<typeof insertUserSchema>;
+export type InsertUser = typeof users.$inferInsert;
+export type LoginUser = Pick<User, 'email' | 'password'>;
+export type SafeUser = Omit<User, 'password'>;
 export type Agent = typeof agents.$inferSelect;
 export type InsertAgent = z.infer<typeof insertAgentSchema>;
 export type Lead = typeof leads.$inferSelect;

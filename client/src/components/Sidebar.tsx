@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
-import { BarChart3, PhoneCall, Users, Phone, Settings } from "lucide-react";
+import { BarChart3, PhoneCall, Users, Phone, Settings, LogOut } from "lucide-react";
+import { AuthService } from "@/lib/auth";
 
 const navigationItems = [
   { path: "/", label: "Dashboard", icon: BarChart3 },
@@ -12,6 +13,11 @@ const navigationItems = [
 
 export default function Sidebar() {
   const [location] = useLocation();
+
+  const onLogout = () => {
+    AuthService.logout();
+    // Optionally redirect to login page or clear user session
+  };
 
   return (
     <div className="w-64 fixed left-0 top-0 h-full glassmorphism border-r border-white/10 z-20">
@@ -51,6 +57,22 @@ export default function Sidebar() {
           );
         })}
       </nav>
+
+      {/* Footer */}
+      <div className="mt-auto space-y-4">
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-white/70 hover:text-white hover:bg-white/5 transition-all duration-200 group"
+        >
+          <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+          <span className="font-medium">Logout</span>
+        </button>
+
+        <div className="px-4 py-3 rounded-xl bg-gradient-to-r from-[hsl(var(--remax-red))] to-[hsl(var(--gold-manifest))] text-white text-center">
+          <p className="text-xs font-medium">🌙 Eclipse AI</p>
+          <p className="text-xs opacity-80">Version 2.1</p>
+        </div>
+      </div>
 
       {/* User Profile */}
       <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
