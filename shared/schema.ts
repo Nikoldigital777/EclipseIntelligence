@@ -19,11 +19,10 @@ export const agents = pgTable("agents", {
   name: text("name").notNull(),
   phone: text("phone").notNull(),
   voice: text("voice").notNull(),
-  language: text("language").default("en").notNull(),
-  prompt: text("prompt"),
-  retellAgentId: text("retell_agent_id"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  avatar: text("avatar").notNull(),
+  description: text("description").notNull(),
+  editedBy: text("edited_by").notNull(),
+  editedAt: text("edited_at").notNull()
 });
 
 export const leads = pgTable("leads", {

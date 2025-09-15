@@ -67,7 +67,18 @@ export class DatabaseStorage implements IStorage {
 
   // Agent operations
   async getAgents(): Promise<Agent[]> {
-    return await db.select().from(agents).orderBy(agents.id);
+    const result = await db.select({
+        id: agents.id,
+        name: agents.name,
+        phone: agents.phone,
+        voice: agents.voice,
+        avatar: agents.avatar,
+        description: agents.description,
+        editedBy: agents.editedBy,
+        editedAt: agents.editedAt
+      })
+      .from(agents).orderBy(agents.id);
+    return result;
   }
 
   async getAgent(id: number): Promise<Agent | undefined> {
