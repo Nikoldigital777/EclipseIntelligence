@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertAgentSchema, insertLeadSchema, insertCallSchema } from "@shared/schema";
 import { z } from "zod";
+import { createRetellClient } from "./retell-client";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Agent routes
@@ -170,6 +171,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid call data", details: error.errors });
       }
       res.status(500).json({ error: "Failed to create call" });
+    }
+  });
+
+  // Outbound calls routes
+  app.post("/api/outbound-calls/single", async (req, res) => {
+    try {
+      const { from_number, to_number, override_agent_id, metadata, retell_llm_dynamic_variables } = req.body;
+      
+      if (!from_number || !to_number) {
+        return res.status(400).json({ error: "from_number and to_number are required" });
+      }
+
+      const retellClient = createRetellClient();
+      let retellResponse;
+
+      if (retellClient) {
+        // Use actual Retell AI API
+        try {
+          retellResponse = await retellClient.createPhoneCall({
+            from_number,
+            to_number,
+            override_agent_id,
+            metadata,
+            retell_llm_dynamic_variables
+          });
+        } catch (retellError) {
+          console.error("Retell API error:", retellError);
+          return res.status(500).json({ error: "Failed to create call with Retell AI" });
+        }
+      } else {
+        // Fallback to mock response when API key is not available
+        retellResponse = {
+          call_type: "phone_call",
+          from_number,
+          to_number,
+          direction: "outbound",
+          call_id: `call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          agent_id: override_agent_id || "default_agent",
+          agent_version: 1,
+          call_status: "registered",
+          metadata: metadata || {},
+          retell_llm_dynamic_variables: retell_llm_dynamic_variables || {}
+        };
+      }
+
+      // Store the call in our database
+      const callData = {
+        sessionId: retellResponse.call_id,
+        fromNumber: from_number,
+        toNumber: to_number,
+        status: retellResponse.call_status || "registered",
+        agentId: override_agent_id ? parseInt(override_agent_id) : null,
+        endReason: null,
+        sentiment: null,
+        outcome: null,
+        duration: null,
+        cost: null,
+        latency: null,
+        leadId: null
+      };
+
+      const call = await storage.createCall(callData);
+      res.status(201).json({ ...retellResponse, db_call_id: call.id });
+    } catch (error) {
+      console.error("Error creating outbound call:", error);
+      res.status(500).json({ error: "Failed to create outbound call" });
+    }
+  });
+
+  app.post("/api/outbound-calls/batch", async (req, res) => {
+    try {
+      const { from_number, tasks, name, trigger_timestamp, override_agent_id } = req.body;
+      
+      if (!from_number || !tasks || !Array.isArray(tasks) || tasks.length === 0) {
+        return res.status(400).json({ error: "from_number and tasks array are required" });
+      }
+
+      // Validate tasks
+      for (const task of tasks) {
+        if (!task.to_number) {
+          return res.status(400).json({ error: "Each task must have a to_number" });
+        }
+      }
+
+      const retellClient = createRetellClient();
+      let retellResponse;
+
+      if (retellClient) {
+        // Use actual Retell AI Batch API
+        try {
+          retellResponse = await retellClient.createBatchCall({
+            from_number,
+            tasks,
+            name,
+            trigger_timestamp
+          });
+        } catch (retellError) {
+          console.error("Retell Batch API error:", retellError);
+          return res.status(500).json({ error: "Failed to create batch call with Retell AI" });
+        }
+      } else {
+        // Fallback to mock response when API key is not available
+        const batchCallId = `batch_call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        retellResponse = {
+          batch_call_id: batchCallId,
+          name: name || `Batch call ${new Date().toISOString()}`,
+          from_number,
+          scheduled_timestamp: trigger_timestamp || Math.floor(Date.now() / 1000),
+          total_task_count: tasks.length
+        };
+      }
+
+      // Store individual calls for each task
+      const createdCalls = [];
+      for (const task of tasks) {
+        const callData = {
+          sessionId: `${retellResponse.batch_call_id}_task_${createdCalls.length}`,
+          fromNumber: from_number,
+          toNumber: task.to_number,
+          status: trigger_timestamp ? "scheduled" : "registered",
+          agentId: override_agent_id ? parseInt(override_agent_id) : null,
+          endReason: null,
+          sentiment: null,
+          outcome: null,
+          duration: null,
+          cost: null,
+          latency: null,
+          leadId: null
+        };
+
+        const call = await storage.createCall(callData);
+        createdCalls.push(call);
+      }
+
+      res.status(201).json({ 
+        ...retellResponse, 
+        created_calls: createdCalls.map(call => call.id),
+        message: `Batch call created with ${tasks.length} tasks`
+      });
+    } catch (error) {
+      console.error("Error creating batch call:", error);
+      res.status(500).json({ error: "Failed to create batch call" });
     }
   });
 

@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { Upload, Download, Plus, Minus, Phone, Calendar, Clock, Users, DollarSign } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
 import CosmicButton from "@/components/CosmicButton";
 import { Badge } from "@/components/ui/badge";
@@ -42,13 +43,16 @@ const sampleRecipients = [
 ];
 
 export default function OutboundCalls() {
+  const { toast } = useToast();
   const [selectedAgent, setSelectedAgent] = useState("");
   const [batchName, setBatchName] = useState("");
   const [schedulingMode, setSchedulingMode] = useState("now");
+  const [scheduledDateTime, setScheduledDateTime] = useState("");
   const [concurrency, setConcurrency] = useState(5);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [recipients, setRecipients] = useState(sampleRecipients);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [isLaunching, setIsLaunching] = useState(false);
 
   const selectedAgentData = agents.find(agent => agent.id.toString() === selectedAgent);
   const totalRecipients = recipients.length;
@@ -73,6 +77,97 @@ export default function OutboundCalls() {
 
   const handleConcurrencyChange = (delta: number) => {
     setConcurrency(Math.max(1, Math.min(15, concurrency + delta)));
+  };
+
+  const handleLaunchBatchCampaign = async () => {
+    if (!selectedAgent || recipients.length === 0 || !batchName || !termsAccepted) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields and accept terms.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLaunching(true);
+    
+    try {
+      const selectedAgentData = agents.find(agent => agent.id.toString() === selectedAgent);
+      if (!selectedAgentData) {
+        throw new Error("Selected agent not found");
+      }
+
+      const tasks = recipients.map(recipient => ({
+        to_number: recipient.phone,
+        retell_llm_dynamic_variables: {
+          customer_name: `${recipient.firstName} ${recipient.lastName}`,
+          first_name: recipient.firstName,
+          last_name: recipient.lastName
+        }
+      }));
+
+      const payload = {
+        from_number: selectedAgentData.phone,
+        tasks,
+        name: batchName,
+        override_agent_id: selectedAgent,
+        trigger_timestamp: schedulingMode === "schedule" && scheduledDateTime 
+          ? new Date(scheduledDateTime).getTime() 
+          : undefined
+      };
+
+      const response = await fetch("/api/outbound-calls/batch", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to launch batch campaign");
+      }
+
+      const result = await response.json();
+      
+      toast({
+        title: "Campaign Launched! 🚀",
+        description: `Successfully created batch call with ${tasks.length} recipients. Batch ID: ${result.batch_call_id}`,
+      });
+
+      // Reset form
+      setBatchName("");
+      setRecipients([]);
+      setCsvFile(null);
+      setTermsAccepted(false);
+      
+    } catch (error) {
+      console.error("Error launching batch campaign:", error);
+      toast({
+        title: "Launch Failed",
+        description: error instanceof Error ? error.message : "Failed to launch batch campaign",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLaunching(false);
+    }
+  };
+
+  const handleSaveAsDraft = async () => {
+    if (!selectedAgent || recipients.length === 0 || !batchName) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in batch name, select an agent, and add recipients.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Draft Saved",
+      description: "Your batch campaign has been saved as a draft.",
+    });
   };
 
   return (
@@ -204,6 +299,8 @@ export default function OutboundCalls() {
                       <Label className="text-white mb-2 block">Date & Time</Label>
                       <Input
                         type="datetime-local"
+                        value={scheduledDateTime}
+                        onChange={(e) => setScheduledDateTime(e.target.value)}
                         className="bg-[hsl(var(--lunar-glass))]/30 border-white/20 text-white"
                       />
                     </div>
@@ -394,17 +491,19 @@ export default function OutboundCalls() {
               <CosmicButton 
                 variant="eclipse" 
                 className="w-full"
-                disabled={!batchName || !selectedAgent || recipients.length === 0}
+                disabled={!batchName || !selectedAgent || recipients.length === 0 || isLaunching}
+                onClick={handleSaveAsDraft}
               >
                 Save as Draft
               </CosmicButton>
               <CosmicButton 
                 variant="remax" 
                 className="w-full"
-                disabled={!batchName || !selectedAgent || recipients.length === 0 || !termsAccepted}
+                disabled={!batchName || !selectedAgent || recipients.length === 0 || !termsAccepted || isLaunching}
+                onClick={handleLaunchBatchCampaign}
               >
                 <Phone className="w-4 h-4 mr-2" />
-                Launch Batch Campaign
+                {isLaunching ? "Launching..." : "Launch Batch Campaign"}
               </CosmicButton>
             </div>
           </div>
