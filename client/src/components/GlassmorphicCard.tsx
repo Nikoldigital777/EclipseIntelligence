@@ -1,3 +1,4 @@
+
 import { ReactNode, useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
@@ -5,7 +6,7 @@ interface GlassmorphicCardProps {
   children: ReactNode;
   className?: string;
   hover?: boolean;
-  borderColor?: "blue" | "red" | "gold" | "green" | "eclipse";
+  borderColor?: "blue" | "red" | "gold" | "green" | "eclipse" | "nebula" | "teal";
   intense?: boolean;
   tiltEffect?: boolean;
   style?: React.CSSProperties;
@@ -33,15 +34,19 @@ export default function GlassmorphicCard({
   const getBorderStyles = () => {
     switch (borderColor) {
       case "blue":
-        return "border-l-4 border-l-[hsl(var(--manifest-blue))]";
+        return "border-l-4 border-l-[#2E3A59]";
       case "red":
         return "border-l-4 border-l-[hsl(var(--remax-red))]";
       case "gold":
-        return "border-l-4 border-l-[hsl(var(--gold-manifest))]";
+        return "border-l-4 border-l-[#D4AF37]";
       case "green":
         return "border-l-4 border-l-[hsl(var(--success-green))]";
       case "eclipse":
-        return "border-l-4 border-l-[hsl(var(--eclipse-glow))]";
+        return "border-l-4 border-l-[#00D9FF]";
+      case "nebula":
+        return "border-l-4 border-l-[#6C63FF]";
+      case "teal":
+        return "border-l-4 border-l-[#00D9FF]";
       default:
         return "";
     }
@@ -91,7 +96,7 @@ export default function GlassmorphicCard({
     const glowY = (mousePosition.y / rect.height) * 100;
 
     return {
-      background: `radial-gradient(circle at ${glowX}% ${glowY}%, rgba(62, 243, 255, 0.03), transparent 70%)`,
+      background: `radial-gradient(circle at ${glowX}% ${glowY}%, rgba(0, 217, 255, 0.03), transparent 70%)`,
     };
   };
 
@@ -127,18 +132,18 @@ export default function GlassmorphicCard({
       {/* Enhanced floating particles for intense cards */}
       {intense && (
         <>
-          <div className="absolute top-4 right-4 w-2 h-2 bg-[hsl(var(--eclipse-glow))] rounded-full animate-twinkle opacity-60" />
-          <div className="absolute bottom-6 left-8 w-1 h-1 bg-[hsl(var(--lunar-mist))] rounded-full animate-twinkle opacity-40" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-1/2 right-8 w-1.5 h-1.5 bg-[hsl(var(--gold-manifest))] rounded-full animate-twinkle opacity-70" style={{ animationDelay: '2s' }} />
-          <div className="absolute top-1/4 left-1/4 w-0.5 h-0.5 bg-white rounded-full animate-twinkle opacity-30" style={{ animationDelay: '3s' }} />
+          <div className="absolute top-4 right-4 w-2 h-2 bg-[#00D9FF] rounded-full animate-twinkle opacity-60" />
+          <div className="absolute bottom-6 left-8 w-1 h-1 bg-[#6C63FF] rounded-full animate-twinkle opacity-40" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/2 right-8 w-1.5 h-1.5 bg-[#D4AF37] rounded-full animate-twinkle opacity-70" style={{ animationDelay: '2s' }} />
+          <div className="absolute top-1/4 left-1/4 w-0.5 h-0.5 bg-[#E8E9F3] rounded-full animate-twinkle opacity-30" style={{ animationDelay: '3s' }} />
           
           {/* Ambient glow overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--eclipse-glow))]/5 via-transparent to-[hsl(var(--lunar-mist))]/5 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#00D9FF]/3 via-transparent to-[#6C63FF]/3 pointer-events-none" />
         </>
       )}
       
-      {/* Enhanced border accent */}
-      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-20 pointer-events-none" style={{ height: '1px' }} />
+      {/* Enhanced border accent with cosmic silver shimmer */}
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-[#E8E9F3]/15 to-transparent opacity-30 pointer-events-none" style={{ height: '1px' }} />
       
       <div className="relative z-10">
         {children}
