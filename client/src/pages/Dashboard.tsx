@@ -67,7 +67,7 @@ export default function Dashboard() {
         {/* Very subtle accent hints */}
         <div className="absolute inset-0 opacity-2">
           <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_20%,#00D9FF_0%,transparent_60%)]"></div>
-          <div className="absolute bottom-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_80%,#6C63FF_0%,transparent_60%)]"></div>
+          <div className="absolute bottom-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_80%,#2E3A59_0%,transparent_60%)]"></div>
         </div>
 
         {/* Minimal grid pattern */}
@@ -162,23 +162,23 @@ export default function Dashboard() {
           </GlassmorphicCard>
 
           {/* AI Performance */}
-          <GlassmorphicCard className={`group hover:scale-102 relative overflow-hidden transition-all duration-300 delay-225 border border-[#6C63FF]/30 hover:border-[#6C63FF]/50 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <div className="absolute inset-0 bg-gradient-to-br from-[#6C63FF]/8 to-[#8b7aff]/4 group-hover:from-[#6C63FF]/12 group-hover:to-[#8b7aff]/6 transition-all duration-300" />
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#6C63FF] to-transparent opacity-60" />
+          <GlassmorphicCard className={`group hover:scale-102 relative overflow-hidden transition-all duration-300 delay-225 border border-[#00D9FF]/30 hover:border-[#00D9FF]/50 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            <div className="absolute inset-0 bg-gradient-to-br from-[#00D9FF]/8 to-[#2E3A59]/4 group-hover:from-[#00D9FF]/12 group-hover:to-[#2E3A59]/6 transition-all duration-300" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00D9FF] to-transparent opacity-60" />
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#6C63FF] to-[#8b7aff] rounded-full flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#00D9FF] to-[#2E3A59] rounded-full flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
                   <Sparkles className="w-6 h-6 text-[#E8E9F3]" />
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold text-[#E8E9F3] bg-gradient-to-r from-[#6C63FF] to-[#8b7aff] bg-clip-text text-transparent">
+                  <p className="text-3xl font-bold text-[#E8E9F3] bg-gradient-to-r from-[#00D9FF] to-[#2E3A59] bg-clip-text text-transparent">
                     {stats.callSuccessRate || stats.positivesentimentCalls || 95}%
                   </p>
                   <p className="text-[#B8BCC8] text-sm">Success Rate</p>
                 </div>
               </div>
               <div className="w-full bg-[#1A1B26]/40 rounded-full h-2 relative overflow-hidden">
-                <div className="bg-gradient-to-r from-[#6C63FF] to-[#8b7aff] h-2 rounded-full w-full shadow-sm"></div>
+                <div className="bg-gradient-to-r from-[#00D9FF] to-[#2E3A59] h-2 rounded-full w-full shadow-sm"></div>
               </div>
             </div>
           </GlassmorphicCard>
@@ -230,9 +230,9 @@ export default function Dashboard() {
               AI Performance Insights
             </h3>
             <div className="space-y-4">
-              <div className="bg-gradient-to-r from-[#00D9FF]/10 to-[#6C63FF]/10 rounded-lg p-4 border border-[#00D9FF]/20 hover:border-[#00D9FF]/30 transition-all duration-200 hover:scale-[1.01]">
+              <div className="bg-gradient-to-r from-[#00D9FF]/10 to-[#2E3A59]/10 rounded-lg p-4 border border-[#00D9FF]/20 hover:border-[#00D9FF]/30 transition-all duration-200 hover:scale-[1.01]">
                 <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-[#00D9FF] to-[#6C63FF] rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
+                  <div className="w-8 h-8 bg-gradient-to-br from-[#00D9FF] to-[#2E3A59] rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
                     <Lightbulb className="w-4 h-4 text-[#E8E9F3]" />
                   </div>
                   <div>

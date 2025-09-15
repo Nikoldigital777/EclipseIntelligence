@@ -273,9 +273,9 @@
   .animate-smooth-gradient {
     background: linear-gradient(-45deg, 
       var(--aurora-teal), 
-      var(--nebula-purple), 
       var(--quantum-blue), 
-      var(--stardust-gold));
+      var(--eclipse-gray), 
+      var(--titanium));
     background-size: 200% 200%;
     animation: smooth-gradient 20s ease infinite;
   }
@@ -299,9 +299,9 @@
   .animate-aurora {
     background: linear-gradient(-45deg, 
       rgba(0, 217, 255, 0.05), 
-      rgba(108, 99, 255, 0.08), 
-      rgba(212, 175, 55, 0.06), 
-      rgba(46, 58, 89, 0.08));
+      rgba(46, 58, 89, 0.08), 
+      rgba(184, 188, 200, 0.06), 
+      rgba(74, 78, 105, 0.08));
     background-size: 200% 200%;
     animation: aurora 15s ease infinite;
   }
@@ -334,8 +334,8 @@
   }
 
   .nav-item.active {
-    background: rgba(108, 99, 255, 0.15);
-    border-left: 4px solid var(--stardust-gold);
+    background: rgba(0, 217, 255, 0.15);
+    border-left: 4px solid var(--aurora-teal);
     border-radius: 0 8px 8px 0;
   }
 
