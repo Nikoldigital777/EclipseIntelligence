@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
-import { BarChart3, PhoneCall, Users, Phone, Settings, LogOut, Sparkles } from "lucide-react";
+import { BarChart3, PhoneCall, Users, Phone, Settings, LogOut, Sparkles, HelpCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { AuthService } from "@/lib/auth";
 
 const navigationItems = [
