@@ -15,6 +15,7 @@ export interface IStorage {
   createAgent(agent: InsertAgent): Promise<Agent>;
   updateAgent(id: number, agent: Partial<InsertAgent>): Promise<Agent | undefined>;
   deleteAgent(id: number): Promise<boolean>;
+  getAgentByRetellId(retellId: string): Promise<Agent | null>;
 
   // Lead operations
   getLeads(): Promise<Lead[]>;
@@ -66,7 +67,7 @@ export class DatabaseStorage implements IStorage {
 
   // Agent operations
   async getAgents(): Promise<Agent[]> {
-    return await db.select().from(agents);
+    return await db.select().from(agents).orderBy(agents.id);
   }
 
   async getAgent(id: number): Promise<Agent | undefined> {
@@ -95,6 +96,12 @@ export class DatabaseStorage implements IStorage {
     const result = await db.delete(agents).where(eq(agents.id, id));
     return (result.rowCount ?? 0) > 0;
   }
+
+  async getAgentByRetellId(retellId: string): Promise<Agent | null> {
+    const result = await db.select().from(agents).where(eq(agents.retellAgentId, retellId)).limit(1);
+    return result[0] || null;
+  }
+
 
   // Lead operations
   async getLeads(): Promise<Lead[]> {

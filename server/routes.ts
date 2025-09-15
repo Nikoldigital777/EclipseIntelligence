@@ -143,6 +143,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Simple agents endpoint for dropdowns (protected) - must come before /agents/:id
+  router.get("/agents/simple", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const retellClient = createRetellClient();
+      let agents = [];
+
+      if (retellClient) {
+        try {
+          const retellAgents = await retellClient.listAgents();
+          agents = retellAgents.agents || [];
+        } catch (retellError) {
+          console.warn("Failed to fetch from Retell API, using local data:", retellError);
+          agents = await storage.getAgents();
+        }
+      } else {
+        agents = await storage.getAgents();
+      }
+
+      const simpleAgents = agents.map((agent: any, index: number) => ({
+        id: agent.agent_id || agent.id,
+        name: agent.agent_name || agent.name || "Unnamed Agent",
+        phone: agent.phone || "+1(555)000-0000",
+        voice: agent.voice_id || agent.voice || "Default",
+        avatar: (agent.agent_name || agent.name || "AG").split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+      }));
+
+      res.json(simpleAgents);
+    } catch (error) {
+      console.error("Failed to fetch simple agents:", error);
+      res.status(500).json({ error: "Failed to fetch agents" });
+    }
+  });
+
   // Agent routes (protected)
   router.get("/agents", authenticateToken, async (req: AuthRequest, res) => {
     try {
@@ -590,38 +623,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Simple agents endpoint for dropdowns (protected)
-  router.get("/agents/simple", authenticateToken, async (req: AuthRequest, res) => {
-    try {
-      const retellClient = createRetellClient();
-      let agents = [];
-
-      if (retellClient) {
-        try {
-          const retellAgents = await retellClient.listAgents();
-          agents = retellAgents.agents || [];
-        } catch (retellError) {
-          console.warn("Failed to fetch from Retell API, using local data:", retellError);
-          agents = await storage.getAgents();
-        }
-      } else {
-        agents = await storage.getAgents();
-      }
-
-      const simpleAgents = agents.map((agent: any, index: number) => ({
-        id: agent.agent_id || agent.id,
-        name: agent.agent_name || agent.name || "Unnamed Agent",
-        phone: agent.phone || "+1(555)000-0000",
-        voice: agent.voice_id || agent.voice || "Default",
-        avatar: (agent.agent_name || agent.name || "AG").split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
-      }));
-
-      res.json(simpleAgents);
-    } catch (error) {
-      console.error("Failed to fetch simple agents:", error);
-      res.status(500).json({ error: "Failed to fetch agents" });
-    }
-  });
+  
 
   // Get detailed call data (protected)
   router.get("/calls/:callId/details", authenticateToken, async (req: AuthRequest, res) => {

@@ -16,15 +16,14 @@ export const users = pgTable("users", {
 
 export const agents = pgTable("agents", {
   id: serial("id").primaryKey(),
-  retellAgentId: text("retell_agent_id").unique(),
   name: text("name").notNull(),
-  type: text("type").notNull().default("Single Prompt"),
-  voice: text("voice").notNull(),
   phone: text("phone").notNull(),
-  description: text("description"),
-  editedBy: text("edited_by").notNull(),
-  editedAt: timestamp("edited_at").defaultNow(),
-  createdAt: timestamp("created_at").defaultNow(),
+  voice: text("voice").notNull(),
+  language: text("language").default("en").notNull(),
+  prompt: text("prompt"),
+  retellAgentId: text("retell_agent_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const leads = pgTable("leads", {
