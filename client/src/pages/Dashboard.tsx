@@ -67,7 +67,7 @@ export default function Dashboard() {
         {/* Very subtle accent hints */}
         <div className="absolute inset-0 opacity-2">
           <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_20%,#00D9FF_0%,transparent_60%)]"></div>
-          <div className="absolute bottom-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_80%,#D4AF37_0%,transparent_60%)]"></div>
+          <div className="absolute bottom-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_80%,#6C63FF_0%,transparent_60%)]"></div>
         </div>
 
         {/* Minimal grid pattern */}
@@ -88,7 +88,7 @@ export default function Dashboard() {
               <div className="w-14 h-14 bg-gradient-to-br from-[#00D9FF] to-[#6C63FF] rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer border border-[#E8E9F3]/20 group-hover:scale-105">
                 <span className="text-2xl filter drop-shadow-sm">🤖</span>
               </div>
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#D4AF37] rounded-full shadow-sm border border-[#E8E9F3]/20" />
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#00D9FF] rounded-full shadow-sm border border-[#E8E9F3]/20" />
             </div>
             <CosmicButton variant="accent" className="flex items-center space-x-2 hover:scale-105 transition-transform duration-200">
               <Plus className="w-4 h-4" />
