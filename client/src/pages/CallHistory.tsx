@@ -1,10 +1,53 @@
 import { Download, Filter } from "lucide-react";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
 import CosmicButton from "@/components/CosmicButton";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/lib/auth";
+import { Badge } from "@/components/ui/badge";
+import { type Call } from "@shared/schema";
 
 export default function CallHistory() {
+  const { data: calls, isLoading, error } = useQuery<Call[]>({
+    queryKey: ['/api/calls'],
+    queryFn: () => apiClient.get('/api/calls')
+  });
+
+  const formatDuration = (duration: number | null) => {
+    if (!duration) return 'N/A';
+    const minutes = Math.floor(duration / 60);
+    const seconds = duration % 60;
+    return `${minutes}m ${seconds}s`;
+  };
+
+  const formatDateTime = (dateString: Date | null) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleString();
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusColors = {
+      'completed': 'bg-green-500',
+      'failed': 'bg-red-500',
+      'in_progress': 'bg-yellow-500',
+      'registered': 'bg-blue-500'
+    };
+    return statusColors[status.toLowerCase() as keyof typeof statusColors] || 'bg-gray-500';
+  };
+
+  const getSentimentEmoji = (sentiment: string | null) => {
+    if (!sentiment) return '😐';
+    const sentimentEmojis: { [key: string]: string } = {
+      'positive': '😊',
+      'negative': '😞',
+      'neutral': '😐',
+      'frustrated': '😤',
+      'satisfied': '😌'
+    };
+    return sentimentEmojis[sentiment.toLowerCase()] || '😐';
+  };
+
   return (
-    <div className="min-h-screen p-8">
+    <div className="min-h-screen p-8" data-testid="page-call-history">
       {/* Header with stunning design background */}
       <div className="p-8 border-b border-white/10 relative overflow-hidden bg-gradient-to-br from-black/70 via-black/50 to-black/30 backdrop-blur-sm rounded-lg">
         {/* Abstract geometric background pattern */}
@@ -79,103 +122,56 @@ export default function CallHistory() {
                 </tr>
               </thead>
               <tbody>
-                {[
-                  {
-                    time: "2024-01-15 14:32",
-                    duration: "3m 45s",
-                    channelType: "Phone Call",
-                    cost: "$0.12",
-                    status: "Completed",
-                    sentiment: "Positive",
-                    from: "+1 (555) 123-4567",
-                    to: "+1 (555) 987-6543"
-                  },
-                  {
-                    time: "2024-01-15 13:18",
-                    duration: "7m 22s",
-                    channelType: "Phone Call",
-                    cost: "$0.24",
-                    status: "Completed",
-                    sentiment: "Neutral",
-                    from: "+1 (555) 123-4567",
-                    to: "+1 (555) 456-7890"
-                  },
-                  {
-                    time: "2024-01-15 12:05",
-                    duration: "2m 15s",
-                    channelType: "Phone Call",
-                    cost: "$0.08",
-                    status: "Completed",
-                    sentiment: "Positive",
-                    from: "+1 (555) 123-4567",
-                    to: "+1 (555) 234-5678"
-                  },
-                  {
-                    time: "2024-01-15 11:42",
-                    duration: "5m 33s",
-                    channelType: "Phone Call",
-                    cost: "$0.18",
-                    status: "Completed",
-                    sentiment: "Negative",
-                    from: "+1 (555) 123-4567",
-                    to: "+1 (555) 345-6789"
-                  },
-                  {
-                    time: "2024-01-15 10:28",
-                    duration: "1m 48s",
-                    channelType: "Phone Call",
-                    cost: "$0.06",
-                    status: "No Answer",
-                    sentiment: "N/A",
-                    from: "+1 (555) 123-4567",
-                    to: "+1 (555) 567-8901"
-                  },
-                  {
-                    time: "2024-01-15 09:15",
-                    duration: "4m 12s",
-                    channelType: "Phone Call",
-                    cost: "$0.14",
-                    status: "Completed",
-                    sentiment: "Positive",
-                    from: "+1 (555) 123-4567",
-                    to: "+1 (555) 678-9012"
-                  }
-                ].map((call, index) => (
-                  <tr key={index} className="border-b border-white/5 hover:bg-[hsl(var(--lunar-mist))]/10 transition-all duration-200">
-                    <td className="py-4 px-6 text-white">{call.time}</td>
-                    <td className="py-4 px-6 text-white">{call.duration}</td>
-                    <td className="py-4 px-6">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[hsl(var(--primary-blue))]/20 text-[hsl(var(--primary-blue))] border border-[hsl(var(--primary-blue))]/30">
-                        {call.channelType}
-                      </span>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={8} className="text-center py-8 text-[hsl(var(--soft-gray))]" data-testid="loading-message">
+                      Loading call history...
                     </td>
-                    <td className="py-4 px-6 text-white font-medium">{call.cost}</td>
-                    <td className="py-4 px-6">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        call.status === "Completed" 
-                          ? "bg-[hsl(var(--success-green))]/20 text-[hsl(var(--success-green))] border border-[hsl(var(--success-green))]/30"
-                          : "bg-[hsl(var(--remax-red))]/20 text-[hsl(var(--remax-red))] border border-[hsl(var(--remax-red))]/30"
-                      }`}>
-                        {call.status}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        call.sentiment === "Positive" 
-                          ? "bg-[hsl(var(--success-green))]/20 text-[hsl(var(--success-green))] border border-[hsl(var(--success-green))]/30"
-                          : call.sentiment === "Negative"
-                          ? "bg-[hsl(var(--remax-red))]/20 text-[hsl(var(--remax-red))] border border-[hsl(var(--remax-red))]/30"
-                          : call.sentiment === "Neutral"
-                          ? "bg-[hsl(var(--eclipse-glow))]/20 text-[hsl(var(--eclipse-glow))] border border-[hsl(var(--eclipse-glow))]/30"
-                          : "bg-[hsl(var(--soft-gray))]/20 text-[hsl(var(--soft-gray))] border border-[hsl(var(--soft-gray))]/30"
-                      }`}>
-                        {call.sentiment}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-[hsl(var(--soft-gray))] font-mono text-sm">{call.from}</td>
-                    <td className="py-4 px-6 text-[hsl(var(--soft-gray))] font-mono text-sm">{call.to}</td>
                   </tr>
-                ))}
+                ) : error ? (
+                  <tr>
+                    <td colSpan={8} className="text-center py-8 text-red-400" data-testid="error-message">
+                      Failed to load call history: {error instanceof Error ? error.message : 'Unknown error'}
+                    </td>
+                  </tr>
+                ) : !calls || calls.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="text-center py-8 text-[hsl(var(--soft-gray))]" data-testid="no-calls-message">
+                      No calls found. Start making some cosmic connections! 🌙
+                    </td>
+                  </tr>
+                ) : (
+                  calls.map((call) => (
+                    <tr key={call.id} className="border-b border-white/5 hover:bg-white/5 transition-colors" data-testid={`call-row-${call.id}`}>
+                      <td className="py-4 px-6 text-white" data-testid={`call-time-${call.id}`}>
+                        {formatDateTime(call.createdAt)}
+                      </td>
+                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`call-duration-${call.id}`}>
+                        {formatDuration(call.duration)}
+                      </td>
+                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))]">
+                        Phone Call
+                      </td>
+                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`call-cost-${call.id}`}>
+                        {call.cost || 'N/A'}
+                      </td>
+                      <td className="py-4 px-6" data-testid={`call-status-${call.id}`}>
+                        <Badge className={`${getStatusBadge(call.status)} text-white border-0`}>
+                          {call.status}
+                        </Badge>
+                      </td>
+                      <td className="py-4 px-6 text-2xl" data-testid={`call-sentiment-${call.id}`}>
+                        {getSentimentEmoji(call.sentiment)}
+                      </td>
+                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`call-from-${call.id}`}>
+                        {call.fromNumber}
+                      </td>
+                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`call-to-${call.id}`}>
+                        {call.toNumber}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

@@ -1,0 +1,1062 @@
+# Get Agent
+
+> Retrieve details of a specific agent
+
+## OpenAPI
+
+````yaml openapi-final get /get-agent/{agent_id}
+paths:
+  path: /get-agent/{agent_id}
+  method: get
+  servers:
+    - url: https://api.retellai.com
+      description: The production server.
+  request:
+    security:
+      - title: api key
+        parameters:
+          query: {}
+          header:
+            Authorization:
+              type: http
+              scheme: bearer
+              description: >-
+                Authentication header containing API key (find it in dashboard).
+                The format is "Bearer YOUR_API_KEY"
+          cookie: {}
+    parameters:
+      path:
+        agent_id:
+          schema:
+            - type: string
+              required: true
+              description: Unique id of the agent to be retrieved.
+              example: 16b980523634a6dc504898cda492e939
+      query:
+        version:
+          schema:
+            - type: integer
+              required: false
+              description: >-
+                Optional version of the API to use for this request. If not
+                provided, will default to latest version.
+              example: 1
+      header: {}
+      cookie: {}
+    body: {}
+    codeSamples:
+      - lang: JavaScript
+        source: >-
+          import Retell from 'retell-sdk';
+
+
+          const client = new Retell({
+            apiKey: 'YOUR_RETELL_API_KEY',
+          });
+
+
+          const agentResponse = await
+          client.agent.retrieve('16b980523634a6dc504898cda492e939');
+
+
+          console.log(agentResponse.agent_id);
+      - lang: Python
+        source: |-
+          from retell import Retell
+
+          client = Retell(
+              api_key="YOUR_RETELL_API_KEY",
+          )
+          agent_response = client.agent.retrieve(
+              agent_id="16b980523634a6dc504898cda492e939",
+          )
+          print(agent_response.agent_id)
+  response:
+    '200':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              agent_id:
+                allOf:
+                  - type: string
+                    example: oBeDLoLOeuAbiuaMFXRtDOLriTJ5tSxD
+                    description: Unique id of agent.
+              version:
+                allOf:
+                  - type: integer
+                    example: 0
+                    description: Version of the agent.
+              is_published:
+                allOf:
+                  - type: boolean
+                    example: false
+                    description: Whether the agent is published.
+              response_engine:
+                allOf:
+                  - $ref: '#/components/schemas/ResponseEngine'
+                    description: >-
+                      The Response Engine to attach to the agent. It is used to
+                      generate responses for the agent. You need to create a
+                      Response Engine first before attaching it to an agent.
+                    example:
+                      type: retell-llm
+                      llm_id: llm_234sdertfsdsfsdf
+                      version: 0
+              agent_name:
+                allOf:
+                  - type: string
+                    example: Jarvis
+                    description: The name of the agent. Only used for your own reference.
+                    nullable: true
+              voice_id:
+                allOf:
+                  - type: string
+                    example: 11labs-Adrian
+                    description: >-
+                      Unique voice id used for the agent. Find list of available
+                      voices and their preview in Dashboard.
+              voice_model:
+                allOf:
+                  - type: string
+                    enum:
+                      - eleven_turbo_v2
+                      - eleven_flash_v2
+                      - eleven_turbo_v2_5
+                      - eleven_flash_v2_5
+                      - eleven_multilingual_v2
+                      - tts-1
+                      - gpt-4o-mini-tts
+                      - null
+                    description: >-
+                      Optionally set the voice model used for the selected
+                      voice. Currently only elevenlab voices have voice model
+                      selections. Set to null to remove voice model selection,
+                      and default ones will apply. Check out the dashboard for
+                      details on each voice model.
+                    nullable: true
+              fallback_voice_ids:
+                allOf:
+                  - type: array
+                    items:
+                      type: string
+                    example:
+                      - openai-Alloy
+                      - deepgram-Angus
+                    description: >-
+                      When TTS provider for the selected voice is experiencing
+                      outages, we would use fallback voices listed here for the
+                      agent. Voice id and the fallback voice ids must be from
+                      different TTS providers. The system would go through the
+                      list in order, if the first one in the list is also having
+                      outage, it would use the next one. Set to null to remove
+                      voice fallback for the agent.
+                    nullable: true
+              voice_temperature:
+                allOf:
+                  - type: number
+                    example: 1
+                    description: >-
+                      Controls how stable the voice is. Value ranging from
+                      [0,2]. Lower value means more stable, and higher value
+                      means more variant speech generation. Currently this
+                      setting only applies to `11labs` voices. If unset, default
+                      value 1 will apply.
+              voice_speed:
+                allOf:
+                  - type: number
+                    example: 1
+                    description: >-
+                      Controls speed of voice. Value ranging from [0.5,2]. Lower
+                      value means slower speech, while higher value means faster
+                      speech rate. If unset, default value 1 will apply.
+              volume:
+                allOf:
+                  - type: number
+                    example: 1
+                    description: >-
+                      If set, will control the volume of the agent. Value
+                      ranging from [0,2]. Lower value means quieter agent
+                      speech, while higher value means louder agent speech. If
+                      unset, default value 1 will apply.
+              responsiveness:
+                allOf:
+                  - type: number
+                    example: 1
+                    description: >-
+                      Controls how responsive is the agent. Value ranging from
+                      [0,1]. Lower value means less responsive agent (wait more,
+                      respond slower), while higher value means faster exchanges
+                      (respond when it can). If unset, default value 1 will
+                      apply.
+              interruption_sensitivity:
+                allOf:
+                  - type: number
+                    example: 1
+                    description: >-
+                      Controls how sensitive the agent is to user interruptions.
+                      Value ranging from [0,1]. Lower value means it will take
+                      longer / more words for user to interrupt agent, while
+                      higher value means it's easier for user to interrupt
+                      agent. If unset, default value 1 will apply. When this is
+                      set to 0, agent would never be interrupted.
+              enable_backchannel:
+                allOf:
+                  - type: boolean
+                    example: true
+                    description: >-
+                      Controls whether the agent would backchannel (agent
+                      interjects the speaker with phrases like "yeah", "uh-huh"
+                      to signify interest and engagement). Backchannel when
+                      enabled tends to show up more in longer user utterances.
+                      If not set, agent will not backchannel.
+              backchannel_frequency:
+                allOf:
+                  - type: number
+                    example: 0.9
+                    description: >-
+                      Only applicable when enable_backchannel is true. Controls
+                      how often the agent would backchannel when a backchannel
+                      is possible. Value ranging from [0,1]. Lower value means
+                      less frequent backchannel, while higher value means more
+                      frequent backchannel. If unset, default value 0.8 will
+                      apply.
+              backchannel_words:
+                allOf:
+                  - type: array
+                    items:
+                      type: string
+                    example:
+                      - yeah
+                      - uh-huh
+                    description: >-
+                      Only applicable when enable_backchannel is true. A list of
+                      words that the agent would use as backchannel. If not set,
+                      default backchannel words will apply. Check out
+                      [backchannel default
+                      words](/agent/interaction-configuration#backchannel) for
+                      more details. Note that certain voices do not work too
+                      well with certain words, so it's recommended to expeirment
+                      before adding any words.
+                    nullable: true
+              reminder_trigger_ms:
+                allOf:
+                  - type: number
+                    example: 10000
+                    description: >-
+                      If set (in milliseconds), will trigger a reminder to the
+                      agent to speak if the user has been silent for the
+                      specified duration after some agent speech. Must be a
+                      positive number. If unset, default value of 10000 ms (10
+                      s) will apply.
+              reminder_max_count:
+                allOf:
+                  - type: integer
+                    example: 2
+                    description: >-
+                      If set, controls how many times agent would remind user
+                      when user is unresponsive. Must be a non negative integer.
+                      If unset, default value of 1 will apply (remind once). Set
+                      to 0 to disable agent from reminding.
+              ambient_sound:
+                allOf:
+                  - type: string
+                    enum:
+                      - coffee-shop
+                      - convention-hall
+                      - summer-outdoor
+                      - mountain-outdoor
+                      - static-noise
+                      - call-center
+                      - null
+                    description: >-
+                      If set, will add ambient environment sound to the call to
+                      make experience more realistic. Currently supports the
+                      following options:
+
+
+                      - `coffee-shop`: Coffee shop ambience with people chatting
+                      in background. [Listen to
+                      Ambience](https://retell-utils-public.s3.us-west-2.amazonaws.com/coffee-shop.wav)
+
+
+                      - `convention-hall`: Convention hall ambience, with some
+                      echo and people chatting in background. [Listen to
+                      Ambience](https://retell-utils-public.s3.us-west-2.amazonaws.com/convention-hall.wav)
+
+
+                      - `summer-outdoor`: Summer outdoor ambience with cicada
+                      chirping. [Listen to
+                      Ambience](https://retell-utils-public.s3.us-west-2.amazonaws.com/summer-outdoor.wav)
+
+
+                      - `mountain-outdoor`: Mountain outdoor ambience with birds
+                      singing. [Listen to
+                      Ambience](https://retell-utils-public.s3.us-west-2.amazonaws.com/mountain-outdoor.wav)
+
+
+                      - `static-noise`: Constant static noise. [Listen to
+                      Ambience](https://retell-utils-public.s3.us-west-2.amazonaws.com/static-noise.wav)
+
+
+                      - `call-center`: Call center work noise. [Listen to
+                      Ambience](https://retell-utils-public.s3.us-west-2.amazonaws.com/call-center.wav)
+
+                       Set to `null` to remove ambient sound from this agent.
+                    nullable: true
+              ambient_sound_volume:
+                allOf:
+                  - type: number
+                    example: 1
+                    description: >-
+                      If set, will control the volume of the ambient sound.
+                      Value ranging from [0,2]. Lower value means quieter
+                      ambient sound, while higher value means louder ambient
+                      sound. If unset, default value 1 will apply.
+              language:
+                allOf:
+                  - type: string
+                    example: en-US
+                    enum:
+                      - en-US
+                      - en-IN
+                      - en-GB
+                      - en-AU
+                      - en-NZ
+                      - de-DE
+                      - es-ES
+                      - es-419
+                      - hi-IN
+                      - fr-FR
+                      - fr-CA
+                      - ja-JP
+                      - pt-PT
+                      - pt-BR
+                      - zh-CN
+                      - ru-RU
+                      - it-IT
+                      - ko-KR
+                      - nl-NL
+                      - nl-BE
+                      - pl-PL
+                      - tr-TR
+                      - th-TH
+                      - vi-VN
+                      - ro-RO
+                      - bg-BG
+                      - ca-ES
+                      - da-DK
+                      - fi-FI
+                      - el-GR
+                      - hu-HU
+                      - id-ID
+                      - no-NO
+                      - sk-SK
+                      - sv-SE
+                      - multi
+                    description: >-
+                      Specifies what language (and dialect) the speech
+                      recognition will operate in. For instance, selecting
+                      `en-GB` optimizes speech recognition for British English.
+                      If unset, will use default value `en-US`. Select `multi`
+                      for multilingual support, currently this supports Spanish
+                      and English.
+              webhook_url:
+                allOf:
+                  - type: string
+                    example: https://webhook-url-here
+                    description: >-
+                      The webhook for agent to listen to call events. See what
+                      events it would get at [webhook doc](/features/webhook).
+                      If set, will binds webhook events for this agent to the
+                      specified url, and will ignore the account level webhook
+                      for this agent. Set to `null` to remove webhook url from
+                      this agent.
+                    nullable: true
+              webhook_timeout_ms:
+                allOf:
+                  - type: integer
+                    example: 10000
+                    description: >-
+                      The timeout for the webhook in milliseconds. If not set,
+                      default value of 10000 will apply.
+              boosted_keywords:
+                allOf:
+                  - type: array
+                    items:
+                      type: string
+                    example:
+                      - retell
+                      - kroger
+                    description: >-
+                      Provide a customized list of keywords to bias the
+                      transcriber model, so that these words are more likely to
+                      get transcribed. Commonly used for names, brands, street,
+                      etc.
+                    nullable: true
+              data_storage_setting:
+                allOf:
+                  - type: string
+                    enum:
+                      - everything
+                      - everything_except_pii
+                      - basic_attributes_only
+                    example: everything
+                    description: >
+                      Granular setting to manage how Retell stores sensitive
+                      data (transcripts, recordings, logs, etc.).
+
+                      This replaces the deprecated
+                      `opt_out_sensitive_data_storage` field.
+
+                      - `everything`: Store all data including transcripts,
+                      recordings, and logs.
+
+                      - `everything_except_pii`: Store data without PII when PII
+                      is detected.
+
+                      - `basic_attributes_only`: Store only basic attributes; no
+                      transcripts/recordings/logs.
+
+                      If not set, default value of "everything" will apply.
+              opt_in_signed_url:
+                allOf:
+                  - type: boolean
+                    example: true
+                    description: >-
+                      Whether this agent opts in for signed URLs for public logs
+                      and recordings. When enabled, the generated URLs will
+                      include security signatures that restrict access and
+                      automatically expire after 24 hours.
+              pronunciation_dictionary:
+                allOf:
+                  - type: array
+                    items:
+                      type: object
+                      required:
+                        - word
+                        - alphabet
+                        - phoneme
+                      properties:
+                        word:
+                          type: string
+                          example: actually
+                          description: >-
+                            The string of word / phrase to be annotated with
+                            pronunciation.
+                        alphabet:
+                          type: string
+                          enum:
+                            - ipa
+                            - cmu
+                          example: ipa
+                          description: The phonetic alphabet to be used for pronunciation.
+                        phoneme:
+                          type: string
+                          example: ˈæktʃuəli
+                          description: >-
+                            Pronunciation of the word in the format of a IPA /
+                            CMU pronunciation.
+                    description: >-
+                      A list of words / phrases and their pronunciation to be
+                      used to guide the audio synthesize for consistent
+                      pronunciation. Currently only supported for English &
+                      11labs voices. Set to null to remove pronunciation
+                      dictionary from this agent.
+                    nullable: true
+              normalize_for_speech:
+                allOf:
+                  - type: boolean
+                    example: true
+                    description: >-
+                      If set to true, will normalize the some part of text
+                      (number, currency, date, etc) to spoken to its spoken form
+                      for more consistent speech synthesis (sometimes the voice
+                      synthesize system itself might read these wrong with the
+                      raw text). For example, it will convert "Call my number
+                      2137112342 on Jul 5th, 2024 for the $24.12 payment" to
+                      "Call my number two one three seven one one two three four
+                      two on july fifth, twenty twenty four for the twenty four
+                      dollars twelve cents payment" before starting audio
+                      generation.
+              end_call_after_silence_ms:
+                allOf:
+                  - type: integer
+                    example: 600000
+                    description: >-
+                      If users stay silent for a period after agent speech, end
+                      the call. The minimum value allowed is 10,000 ms (10 s).
+                      By default, this is set to 600000 (10 min).
+              max_call_duration_ms:
+                allOf:
+                  - type: integer
+                    example: 3600000
+                    description: >-
+                      Maximum allowed length for the call, will force end the
+                      call if reached. The minimum value allowed is 60,000 ms (1
+                      min), and maximum value allowed is 7,200,000 (2 hours). By
+                      default, this is set to 3,600,000 (1 hour).
+              voicemail_option:
+                allOf:
+                  - type: object
+                    properties:
+                      action:
+                        $ref: '#/components/schemas/VoicemailAction'
+                    required:
+                      - action
+                    description: >-
+                      If this option is set, the call will try to detect
+                      voicemail in the first 3 minutes of the call. Actions
+                      defined (hangup, or leave a message) will be applied when
+                      the voicemail is detected. Set this to null to disable
+                      voicemail detection.
+                    example:
+                      action:
+                        type: static_text
+                        text: Please give us a callback tomorrow at 10am.
+                    nullable: true
+              post_call_analysis_data:
+                allOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/AnalysisData'
+                    description: >-
+                      Post call analysis data to extract from the call. This
+                      data will augment the pre-defined variables extracted in
+                      the call analysis. This will be available after the call
+                      ends.
+                    nullable: true
+              post_call_analysis_model:
+                allOf:
+                  - type: string
+                    enum:
+                      - gpt-4o
+                      - gpt-4o-mini
+                      - gpt-4.1
+                      - gpt-4.1-mini
+                      - gpt-4.1-nano
+                      - gpt-5
+                      - gpt-5-mini
+                      - gpt-5-nano
+                      - claude-4.0-sonnet
+                      - claude-3.7-sonnet
+                      - claude-3.5-haiku
+                      - gemini-2.0-flash
+                      - gemini-2.0-flash-lite
+                      - gemini-2.5-flash
+                      - gemini-2.5-flash-lite
+                    example: gpt-4o-mini
+                    description: >-
+                      The model to use for post call analysis. Default to
+                      gpt-4o-mini.
+              begin_message_delay_ms:
+                allOf:
+                  - type: integer
+                    example: 1000
+                    description: >-
+                      If set, will delay the first message by the specified
+                      amount of milliseconds, so that it gives user more time to
+                      prepare to take the call. Valid range is [0, 5000]. If not
+                      set or set to 0, agent will speak immediately. Only
+                      applicable when agent speaks first.
+              ring_duration_ms:
+                allOf:
+                  - type: integer
+                    example: 30000
+                    description: >-
+                      If set, the phone ringing will last for the specified
+                      amount of milliseconds. This applies for both outbound
+                      call ringtime, and call transfer ringtime. Default to
+                      30000 (30 s). Valid range is [5000, 90000].
+              stt_mode:
+                allOf:
+                  - type: string
+                    enum:
+                      - fast
+                      - accurate
+                    example: fast
+                    description: >-
+                      If set, determines whether speech to text should focus on
+                      latency or accuracy. Default to fast mode.
+              vocab_specialization:
+                allOf:
+                  - type: string
+                    enum:
+                      - general
+                      - medical
+                    example: general
+                    description: >-
+                      If set, determines the vocabulary set to use for
+                      transcription. This setting only applies for English
+                      agents, for non English agent, this setting is a no-op.
+                      Default to general.
+              allow_user_dtmf:
+                allOf:
+                  - type: boolean
+                    example: true
+                    description: >-
+                      If set to true, DTMF input will be accepted and processed.
+                      If false, any DTMF input will be ignored. Default to true.
+              user_dtmf_options:
+                allOf:
+                  - type: object
+                    properties:
+                      digit_limit:
+                        type: integer
+                        description: >-
+                          The maximum number of digits allowed in the user's
+                          DTMF (Dual-Tone Multi-Frequency) input per turn. Once
+                          this limit is reached, the input is considered
+                          complete and a response will be generated immediately.
+                        nullable: true
+                        minimum: 1
+                        maximum: 50
+                      termination_key:
+                        type: string
+                        nullable: true
+                        description: >-
+                          A single key that signals the end of DTMF input.
+                          Acceptable values include any digit (0–9), the
+                          pound/hash symbol (#), or the asterisk (*).
+                        example: '#'
+                      timeout_ms:
+                        type: integer
+                        description: >-
+                          The time (in milliseconds) to wait for user DTMF input
+                          before timing out. The timer resets with each digit
+                          received.
+                        minimum: 1000
+                        maximum: 15000
+                    nullable: true
+              denoising_mode:
+                allOf:
+                  - type: string
+                    enum:
+                      - noise-cancellation
+                      - noise-and-background-speech-cancellation
+                    example: noise-cancellation
+                    description: >-
+                      If set, determines what denoising mode to use. Default to
+                      noise-cancellation.
+              pii_config:
+                allOf:
+                  - $ref: '#/components/schemas/PIIConfig'
+                    description: >-
+                      Configuration for PII scrubbing from transcripts and
+                      recordings.
+              last_modification_timestamp:
+                allOf:
+                  - type: integer
+                    example: 1703413636133
+                    description: >-
+                      Last modification timestamp (milliseconds since epoch).
+                      Either the time of last update or creation if no updates
+                      available.
+            refIdentifier: '#/components/schemas/AgentRequest'
+            requiredProperties:
+              - agent_id
+              - last_modification_timestamp
+        examples:
+          example:
+            value:
+              agent_id: oBeDLoLOeuAbiuaMFXRtDOLriTJ5tSxD
+              version: 0
+              is_published: false
+              response_engine:
+                type: retell-llm
+                llm_id: llm_234sdertfsdsfsdf
+                version: 0
+              agent_name: Jarvis
+              voice_id: 11labs-Adrian
+              voice_model: eleven_turbo_v2
+              fallback_voice_ids:
+                - openai-Alloy
+                - deepgram-Angus
+              voice_temperature: 1
+              voice_speed: 1
+              volume: 1
+              responsiveness: 1
+              interruption_sensitivity: 1
+              enable_backchannel: true
+              backchannel_frequency: 0.9
+              backchannel_words:
+                - yeah
+                - uh-huh
+              reminder_trigger_ms: 10000
+              reminder_max_count: 2
+              ambient_sound: coffee-shop
+              ambient_sound_volume: 1
+              language: en-US
+              webhook_url: https://webhook-url-here
+              webhook_timeout_ms: 10000
+              boosted_keywords:
+                - retell
+                - kroger
+              data_storage_setting: everything
+              opt_in_signed_url: true
+              pronunciation_dictionary:
+                - word: actually
+                  alphabet: ipa
+                  phoneme: ˈæktʃuəli
+              normalize_for_speech: true
+              end_call_after_silence_ms: 600000
+              max_call_duration_ms: 3600000
+              voicemail_option:
+                action:
+                  type: static_text
+                  text: Please give us a callback tomorrow at 10am.
+              post_call_analysis_data:
+                - type: string
+                  name: customer_name
+                  description: The name of the customer.
+                  examples:
+                    - John Doe
+                    - Jane Smith
+              post_call_analysis_model: gpt-4o-mini
+              begin_message_delay_ms: 1000
+              ring_duration_ms: 30000
+              stt_mode: fast
+              vocab_specialization: general
+              allow_user_dtmf: true
+              user_dtmf_options:
+                digit_limit: 25
+                termination_key: '#'
+                timeout_ms: 8000
+              denoising_mode: noise-cancellation
+              pii_config:
+                mode: post_call
+                categories: []
+              last_modification_timestamp: 1703413636133
+        description: Successfully retrieved an agent.
+    '400':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              status:
+                allOf:
+                  - type: string
+                    enum:
+                      - error
+              message:
+                allOf:
+                  - type: string
+                    example: Invalid request format, please check API reference.
+        examples:
+          example:
+            value:
+              status: error
+              message: Invalid request format, please check API reference.
+        description: Bad Request
+    '401':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              status:
+                allOf:
+                  - type: string
+                    enum:
+                      - error
+              message:
+                allOf:
+                  - type: string
+                    example: API key is missing or invalid.
+        examples:
+          example:
+            value:
+              status: error
+              message: API key is missing or invalid.
+        description: Unauthorized
+    '422':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              status:
+                allOf:
+                  - type: string
+                    enum:
+                      - error
+              message:
+                allOf:
+                  - type: string
+                    example: Cannot find requested asset under given api key.
+        examples:
+          example:
+            value:
+              status: error
+              message: Cannot find requested asset under given api key.
+        description: Unprocessable Content
+    '500':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              status:
+                allOf:
+                  - type: string
+                    enum:
+                      - error
+              message:
+                allOf:
+                  - type: string
+                    example: An unexpected server error occurred.
+        examples:
+          example:
+            value:
+              status: error
+              message: An unexpected server error occurred.
+        description: Internal Server Error
+  deprecated: false
+  type: path
+components:
+  schemas:
+    PIIConfig:
+      type: object
+      required:
+        - mode
+        - categories
+      properties:
+        mode:
+          type: string
+          enum:
+            - post_call
+          default: post_call
+          description: >-
+            The processing mode for PII scrubbing. Currently only post-call is
+            supported.
+        categories:
+          type: array
+          items:
+            type: string
+            enum:
+              - person_name
+              - address
+              - email
+              - phone_number
+              - ssn
+              - passport
+              - driver_license
+              - credit_card
+              - bank_account
+              - password
+              - pin
+              - medical_id
+              - date_of_birth
+          uniqueItems: true
+          default: []
+          description: List of PII categories to scrub from transcripts and recordings.
+    StringAnalysisData:
+      type: object
+      required:
+        - type
+        - name
+        - description
+      properties:
+        type:
+          type: string
+          enum:
+            - string
+          description: Type of the variable to extract.
+          example: string
+        name:
+          type: string
+          description: Name of the variable.
+          example: customer_name
+        description:
+          type: string
+          description: Description of the variable.
+          example: The name of the customer.
+        examples:
+          type: array
+          items:
+            type: string
+          description: Examples of the variable value to teach model the style and syntax.
+          example:
+            - John Doe
+            - Jane Smith
+    EnumAnalysisData:
+      type: object
+      required:
+        - type
+        - name
+        - description
+        - choices
+      properties:
+        type:
+          type: string
+          enum:
+            - enum
+          description: Type of the variable to extract.
+          example: enum
+        name:
+          type: string
+          description: Name of the variable.
+          example: product_rating
+        description:
+          type: string
+          description: Description of the variable.
+          example: Rating of the product.
+        choices:
+          type: array
+          items:
+            type: string
+          description: The possible values of the variable, must be non empty array.
+          example:
+            - good
+            - bad
+    BooleanAnalysisData:
+      type: object
+      required:
+        - type
+        - name
+        - description
+      properties:
+        type:
+          type: string
+          enum:
+            - boolean
+          description: Type of the variable to extract.
+          example: boolean
+        name:
+          type: string
+          description: Name of the variable.
+          example: is_converted
+        description:
+          type: string
+          description: Description of the variable.
+          example: Whether the customer converted.
+    NumberAnalysisData:
+      type: object
+      required:
+        - type
+        - name
+        - description
+      properties:
+        type:
+          type: string
+          enum:
+            - number
+          description: Type of the variable to extract.
+          example: number
+        name:
+          type: string
+          description: Name of the variable.
+          example: order_count
+        description:
+          type: string
+          description: Description of the variable.
+          example: How many the customer intend to order.
+    AnalysisData:
+      oneOf:
+        - $ref: '#/components/schemas/StringAnalysisData'
+        - $ref: '#/components/schemas/EnumAnalysisData'
+        - $ref: '#/components/schemas/BooleanAnalysisData'
+        - $ref: '#/components/schemas/NumberAnalysisData'
+    ResponseEngineRetellLm:
+      type: object
+      required:
+        - type
+        - llm_id
+      properties:
+        type:
+          type: string
+          enum:
+            - retell-llm
+          description: type of the Response Engine.
+        llm_id:
+          type: string
+          description: id of the Retell LLM Response Engine.
+        version:
+          type: number
+          example: 0
+          description: Version of the Retell LLM Response Engine.
+          nullable: true
+    ResponseEngineCustomLm:
+      type: object
+      required:
+        - type
+        - llm_websocket_url
+      properties:
+        type:
+          type: string
+          enum:
+            - custom-llm
+          description: type of the Response Engine.
+        llm_websocket_url:
+          type: string
+          description: LLM websocket url of the custom LLM.
+    ResponseEngineConversationFlow:
+      type: object
+      required:
+        - type
+        - conversation_flow_id
+      properties:
+        type:
+          type: string
+          enum:
+            - conversation-flow
+          description: type of the Response Engine.
+        conversation_flow_id:
+          type: string
+          description: ID of the Conversation Flow Response Engine.
+        version:
+          type: number
+          example: 0
+          description: Version of the Conversation Flow Response Engine.
+          nullable: true
+    ResponseEngine:
+      oneOf:
+        - $ref: '#/components/schemas/ResponseEngineRetellLm'
+        - $ref: '#/components/schemas/ResponseEngineCustomLm'
+        - $ref: '#/components/schemas/ResponseEngineConversationFlow'
+    VoicemailActionPrompt:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - prompt
+          example: prompt
+        text:
+          type: string
+          example: Summarize the call in 2 sentences.
+          description: >-
+            The prompt used to generate the text to be spoken when the call is
+            detected to be in voicemail.
+      required:
+        - type
+        - text
+    VoicemailActionStaticText:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - static_text
+          example: static_text
+        text:
+          type: string
+          example: Please give us a callback tomorrow at 10am.
+          description: The text to be spoken when the call is detected to be in voicemail.
+      required:
+        - type
+        - text
+    VoicemailActionHangup:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - hangup
+          example: hangup
+      required:
+        - type
+    VoicemailAction:
+      oneOf:
+        - $ref: '#/components/schemas/VoicemailActionPrompt'
+        - $ref: '#/components/schemas/VoicemailActionStaticText'
+        - $ref: '#/components/schemas/VoicemailActionHangup'
+
+````
