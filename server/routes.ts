@@ -21,7 +21,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   router.get('/settings/api-key-status', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const apiKey = process.env.RETELL_API_KEY;
-      
+
       if (apiKey && apiKey.length > 0) {
         // Return first 8 characters + masked remainder for display
         const preview = `${apiKey.substring(0, 8)}${'*'.repeat(Math.max(0, apiKey.length - 8))}`;
@@ -215,13 +215,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (agentId.startsWith('agent_')) {
         // Try to find local agent by Retell ID first
         const localAgent = await storage.getAgentByRetellId(agentId);
-        
+
         if (retellClient) {
           try {
             // Get comprehensive agent data from Retell API
             const retellAgent = await retellClient.getAgent(agentId);
             agent = localAgent ? { ...localAgent, ...retellAgent } : retellAgent;
-            
+
             // Get comprehensive LLM details if response_engine contains llm_id
             if (retellAgent.response_engine?.llm_id) {
               try {
@@ -255,7 +255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 console.warn("Failed to fetch LLM details:", llmError);
               }
             }
-            
+
             // Structure comprehensive voice data
             comprehensiveAgentData.voice_config = {
               voice_id: retellAgent.voice_id,
@@ -267,7 +267,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               normalize_for_speech: retellAgent.normalize_for_speech,
               pronunciation_dictionary: retellAgent.pronunciation_dictionary
             };
-            
+
             // Structure conversation settings
             comprehensiveAgentData.conversation_config = {
               language: retellAgent.language,
@@ -281,7 +281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               end_call_after_silence_ms: retellAgent.end_call_after_silence_ms,
               max_call_duration_ms: retellAgent.max_call_duration_ms
             };
-            
+
             // Structure call handling settings
             comprehensiveAgentData.call_config = {
               webhook_url: retellAgent.webhook_url,
@@ -292,7 +292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               ambient_sound: retellAgent.ambient_sound,
               ambient_sound_volume: retellAgent.ambient_sound_volume
             };
-            
+
             // Structure speech recognition settings
             comprehensiveAgentData.speech_config = {
               stt_mode: retellAgent.stt_mode,
@@ -302,7 +302,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               user_dtmf_options: retellAgent.user_dtmf_options,
               denoising_mode: retellAgent.denoising_mode
             };
-            
+
             // Structure analytics and privacy settings
             comprehensiveAgentData.analytics_config = {
               data_storage_setting: retellAgent.data_storage_setting,
@@ -311,7 +311,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               post_call_analysis_model: retellAgent.post_call_analysis_model,
               pii_config: retellAgent.pii_config
             };
-            
+
           } catch (retellError) {
             console.warn("Failed to fetch from Retell API:", retellError);
             agent = localAgent;
@@ -322,13 +322,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else if (!isNaN(parseInt(agentId))) {
         // Numeric ID - local database lookup
         const localAgent = await storage.getAgent(parseInt(agentId));
-        
+
         if (localAgent && localAgent.retellAgentId && retellClient) {
           try {
             // Get comprehensive agent data from Retell API
             const retellAgent = await retellClient.getAgent(localAgent.retellAgentId);
             agent = { ...localAgent, ...retellAgent };
-            
+
             // Get LLM details if available
             if (retellAgent.response_engine?.llm_id) {
               try {
@@ -346,7 +346,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 console.warn("Failed to fetch LLM details:", llmError);
               }
             }
-            
+
             // Add all the comprehensive config data as above
             comprehensiveAgentData.voice_config = {
               voice_id: retellAgent.voice_id,
@@ -358,7 +358,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               normalize_for_speech: retellAgent.normalize_for_speech,
               pronunciation_dictionary: retellAgent.pronunciation_dictionary
             };
-            
+
             comprehensiveAgentData.conversation_config = {
               language: retellAgent.language,
               responsiveness: retellAgent.responsiveness,
@@ -371,7 +371,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               end_call_after_silence_ms: retellAgent.end_call_after_silence_ms,
               max_call_duration_ms: retellAgent.max_call_duration_ms
             };
-            
+
           } catch (retellError) {
             console.warn("Failed to fetch from Retell API:", retellError);
             agent = localAgent;
@@ -384,7 +384,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!agent) {
         return res.status(404).json({ error: "Agent not found" });
       }
-      
+
       // Return agent with comprehensive configuration data
       res.json({
         ...agent,
@@ -766,7 +766,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  
+
 
   // Get detailed call data (protected)
   router.get("/calls/:callId/details", authenticateToken, async (req: AuthRequest, res) => {
@@ -861,33 +861,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (retellClient) {
         try {
           const retellCalls = await retellClient.listCalls({}, 'descending', 500); // Get more data for better analytics
-          
+
           if (retellCalls && retellCalls.calls && Array.isArray(retellCalls.calls)) {
             const validCalls = retellCalls.calls;
             enhancedStats.totalCalls = validCalls.length;
 
             // Calculate duration metrics
             const callsWithDuration = validCalls.filter(call => call.duration_ms && call.duration_ms > 0);
-            enhancedStats.averageCallDuration = callsWithDuration.length > 0 
+            enhancedStats.averageCallDuration = callsWithDuration.length > 0
               ? Math.round(callsWithDuration.reduce((sum, call) => sum + call.duration_ms, 0) / callsWithDuration.length / 1000)
               : 0;
 
             // Calculate cost metrics
             const callsWithCost = validCalls.filter(call => call.call_cost_breakdown?.total_cost);
-            enhancedStats.totalCost = callsWithCost.length > 0 
+            enhancedStats.totalCost = callsWithCost.length > 0
               ? callsWithCost.reduce((sum, call) => sum + parseFloat(call.call_cost_breakdown.total_cost), 0)
               : 0;
 
             // Calculate latency metrics
             const callsWithLatency = validCalls.filter(call => call.latency?.avg_latency_ms);
-            enhancedStats.averageLatency = callsWithLatency.length > 0 
+            enhancedStats.averageLatency = callsWithLatency.length > 0
               ? Math.round(callsWithLatency.reduce((sum, call) => sum + call.latency.avg_latency_ms, 0) / callsWithLatency.length)
               : 0;
 
             // Calculate success rate based on call analysis
             const callsWithAnalysis = validCalls.filter(call => call.call_analysis?.call_successful !== undefined);
             const successfulCallsCount = validCalls.filter(call => call.call_analysis?.call_successful === true).length;
-            enhancedStats.callSuccessRate = callsWithAnalysis.length > 0 
+            enhancedStats.callSuccessRate = callsWithAnalysis.length > 0
               ? Math.round((successfulCallsCount / callsWithAnalysis.length) * 100)
               : 0;
             enhancedStats.successfulCalls = successfulCallsCount;
@@ -918,14 +918,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Weekly trends (last 7 days)
             const sevenDaysAgo = new Date();
             sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-            
+
             const weeklyData = [];
             for (let i = 6; i >= 0; i--) {
               const date = new Date();
               date.setDate(date.getDate() - i);
               const dayStart = new Date(date.setHours(0, 0, 0, 0));
               const dayEnd = new Date(date.setHours(23, 59, 59, 999));
-              
+
               const dayCalls = validCalls.filter(call => {
                 const callDate = new Date(call.start_timestamp);
                 return callDate >= dayStart && callDate <= dayEnd;
@@ -954,7 +954,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   positive_sentiment: 0
                 };
               }
-              
+
               agentPerformance[agentId].total_calls++;
               if (call.call_analysis?.call_successful) agentPerformance[agentId].successful_calls++;
               agentPerformance[agentId].total_duration += call.duration_ms || 0;
@@ -999,7 +999,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate date range
       const endDate = new Date();
       const startDate = new Date();
-      
+
       switch (timeframe) {
         case '24h':
           startDate.setHours(startDate.getHours() - 24);
@@ -1109,7 +1109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Cost analysis
       const totalMinutes = calls.reduce((sum, call) => sum + (call.duration_ms || 0), 0) / 1000 / 60;
       const totalCost = analytics.summary.total_cost;
-      
+
       analytics.performance.cost_analysis.cost_per_call = calls.length > 0 ? totalCost / calls.length : 0;
       analytics.performance.cost_analysis.cost_per_minute = totalMinutes > 0 ? totalCost / totalMinutes : 0;
 
@@ -1131,7 +1131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const date = new Date(call.start_timestamp);
         const hour = date.getHours();
         const day = date.toISOString().split('T')[0];
-        
+
         analytics.call_volume.by_hour[hour] = (analytics.call_volume.by_hour[hour] || 0) + 1;
         analytics.call_volume.by_day[day] = (analytics.call_volume.by_day[day] || 0) + 1;
       });
@@ -1139,7 +1139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Quality metrics
       const completedCalls = calls.filter(call => call.call_status === 'completed');
       analytics.quality_metrics.call_completion_rate = calls.length > 0 ? (completedCalls.length / calls.length * 100) : 0;
-      
+
       const successfulCalls = calls.filter(call => call.call_analysis?.call_successful);
       analytics.quality_metrics.resolution_rate = calls.length > 0 ? (successfulCalls.length / calls.length * 100) : 0;
 
