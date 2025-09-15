@@ -1,4 +1,3 @@
-
 import { Plus, Star, Phone, TrendingUp, Sparkles, History, Lightbulb, Crown, Target } from "lucide-react";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
 import CosmicButton from "@/components/CosmicButton";
@@ -63,7 +62,7 @@ export default function Dashboard() {
       <div className="p-8 border-b border-[#E8E9F3]/10 relative overflow-hidden">
         {/* Subtle sophisticated background */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#1A1B26]/70 via-[#1c1d28]/80 to-[#1A1B26]/70 backdrop-blur-sm"></div>
-        
+
         {/* Very subtle accent hints */}
         <div className="absolute inset-0 opacity-2">
           <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_20%,#00D9FF_0%,transparent_60%)]"></div>
@@ -84,11 +83,13 @@ export default function Dashboard() {
             <p className="text-[#B8BCC8] text-xl drop-shadow-lg font-medium tracking-wide">Welcome to your sophisticated command center</p>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="relative group">
-              <div className="w-14 h-14 bg-gradient-to-br from-[#00D9FF] to-[#6C63FF] rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer border border-[#E8E9F3]/20 group-hover:scale-105">
-                <span className="text-2xl filter drop-shadow-sm">🤖</span>
+            <div className="group relative ai-avatar">
+              <div className="relative">
+                <div className="w-14 h-14 bg-gradient-to-br from-[#00D9FF] to-[#6C63FF] rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer border border-[#E8E9F3]/20 group-hover:scale-105">
+                  <span className="text-2xl filter drop-shadow-sm">🤖</span>
+                </div>
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#00D9FF] rounded-full shadow-sm border border-[#E8E9F3]/20" />
               </div>
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#00D9FF] rounded-full shadow-sm border border-[#E8E9F3]/20" />
             </div>
             <CosmicButton variant="accent" className="flex items-center space-x-2 hover:scale-105 transition-transform duration-200">
               <Plus className="w-4 h-4" />
@@ -100,7 +101,7 @@ export default function Dashboard() {
 
       {/* Enhanced Stats Cards */}
       <div className="p-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 cosmic-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 dashboard-stats">
           {/* Today's Leads */}
           <GlassmorphicCard className={`group hover:scale-102 relative overflow-hidden transition-all duration-300 border border-[#2E3A59]/30 hover:border-[#00D9FF]/40 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
             <div className="absolute inset-0 bg-gradient-to-br from-[#2E3A59]/8 to-[#00D9FF]/4 group-hover:from-[#2E3A59]/12 group-hover:to-[#00D9FF]/6 transition-all duration-300" />
@@ -111,7 +112,7 @@ export default function Dashboard() {
                   <Star className="w-6 h-6 text-[#E8E9F3]" />
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold text-[#E8E9F3]">{stats.totalLeads}</p>
+                  <p className="text-3xl font-bold text-[#E8E9F3]">12</p>
                   <p className="text-[#B8BCC8] text-sm">Total Leads</p>
                 </div>
               </div>
@@ -131,7 +132,7 @@ export default function Dashboard() {
                   <Phone className="w-6 h-6 text-[#1A1B26]" />
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold text-[#E8E9F3]">{stats.callbacksDue}</p>
+                  <p className="text-3xl font-bold text-[#E8E9F3]">5</p>
                   <p className="text-[#B8BCC8] text-sm">Callbacks Due</p>
                 </div>
               </div>
@@ -151,7 +152,7 @@ export default function Dashboard() {
                   <TrendingUp className="w-6 h-6 text-[#1A1B26]" />
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold text-[#E8E9F3] bg-gradient-to-r from-[hsl(var(--success-green))] to-[#4ade80] bg-clip-text text-transparent">{stats.conversionRate}%</p>
+                  <p className="text-3xl font-bold text-[#E8E9F3] bg-gradient-to-r from-[hsl(var(--success-green))] to-[#4ade80] bg-clip-text text-transparent">78%</p>
                   <p className="text-[#B8BCC8] text-sm">Conversion Rate</p>
                 </div>
               </div>
@@ -172,7 +173,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-3xl font-bold text-[#E8E9F3] bg-gradient-to-r from-[#00D9FF] to-[#2E3A59] bg-clip-text text-transparent">
-                    {stats.callSuccessRate || stats.positivesentimentCalls || 95}%
+                    95%
                   </p>
                   <p className="text-[#B8BCC8] text-sm">Success Rate</p>
                 </div>

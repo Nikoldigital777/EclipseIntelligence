@@ -4,9 +4,11 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import StarField from "./components/StarField";
 import Sidebar from "./components/Sidebar";
 import CustomCursor from "./components/CustomCursor";
+import GuidedTour from "./components/GuidedTour";
 import Login from "./pages/Login";
 import AllAgents from "./pages/AllAgents";
 import AgentDetail from "./pages/AgentDetail";
@@ -21,6 +23,8 @@ import { AuthService } from "./lib/auth";
 function Router() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showTour, setShowTour] = useState(false);
+  const [location, navigate] = useLocation();
 
   useEffect(() => {
     const checkAuth = () => {
@@ -54,10 +58,20 @@ function Router() {
     return <Login onLogin={handleLogin} />;
   }
 
+  const getCurrentPageKey = () => {
+    if (location === '/' || location === '/dashboard') return 'dashboard';
+    if (location === '/agents') return 'agents';
+    if (location === '/call-history') return 'call-history';
+    if (location === '/outbound-calls') return 'outbound-calls';
+    if (location === '/analytics') return 'analytics';
+    if (location === '/settings') return 'settings';
+    return 'dashboard';
+  };
+
   return (
     <div className="flex min-h-screen relative">
       <StarField />
-      <Sidebar onLogout={handleLogout} />
+      <Sidebar onLogout={handleLogout} onStartTour={() => setShowTour(true)} />
       <div className="flex-1 ml-64 relative z-10">
         <Switch>
           <Route path="/" component={Dashboard} />
@@ -71,6 +85,14 @@ function Router() {
           <Route component={NotFound} />
         </Switch>
       </div>
+      
+      {/* Guided Tour */}
+      <GuidedTour
+        isOpen={showTour}
+        onClose={() => setShowTour(false)}
+        currentPage={getCurrentPageKey()}
+        onNavigate={navigate}
+      />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { BarChart3, PhoneCall, Users, Phone, Settings, LogOut } from "lucide-react";
+import { BarChart3, PhoneCall, Users, Phone, Settings, LogOut, Sparkles } from "lucide-react";
 import { AuthService } from "@/lib/auth";
 
 const navigationItems = [
@@ -11,10 +11,15 @@ const navigationItems = [
   { path: "/settings", label: "Settings", icon: Settings },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  onLogout: () => void;
+  onStartTour?: () => void;
+}
+
+export default function Sidebar({ onLogout, onStartTour }: SidebarProps) {
   const [location] = useLocation();
 
-  const onLogout = () => {
+  const onLogoutHandler = () => {
     AuthService.logout();
     // Optionally redirect to login page or clear user session
   };
@@ -61,12 +66,29 @@ export default function Sidebar() {
       {/* Footer */}
       <div className="mt-auto space-y-4">
         <button
-          onClick={onLogout}
+          onClick={onLogoutHandler}
           className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-white/70 hover:text-white hover:bg-white/5 transition-all duration-200 group"
         >
           <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
           <span className="font-medium">Logout</span>
         </button>
+
+        <div className="px-4 mb-4 space-y-2">
+          {onStartTour && (
+            <Button 
+              variant="ghost" 
+              onClick={onStartTour}
+              className="w-full justify-start text-white/70 hover:text-white hover:bg-white/10"
+            >
+              <Sparkles className="mr-3 h-4 w-4" />
+              Take a Tour
+            </Button>
+          )}
+          <Button variant="ghost" className="w-full justify-start text-white/70 hover:text-white hover:bg-white/10">
+            <HelpCircle className="mr-3 h-4 w-4" />
+            Help & Support
+          </Button>
+        </div>
 
         <div className="px-4 py-3 rounded-xl bg-gradient-to-r from-[hsl(var(--remax-red))] to-[hsl(var(--gold-manifest))] text-white text-center">
           <p className="text-xs font-medium">🌙 Eclipse AI</p>

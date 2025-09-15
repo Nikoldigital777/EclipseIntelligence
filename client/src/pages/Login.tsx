@@ -7,6 +7,7 @@ import StarField from "@/components/StarField";
 import CosmicButton from "@/components/CosmicButton";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
 import CustomCursor from "@/components/CustomCursor";
+import GuidedTour from "@/components/GuidedTour";
 import { AuthService } from "@/lib/auth";
 
 interface LoginProps {
@@ -21,6 +22,7 @@ export default function Login({ onLogin }: LoginProps) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isVisible, setIsVisible] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [showTour, setShowTour] = useState(false);
 
   useEffect(() => {
     // Smooth entrance animation
@@ -242,15 +244,28 @@ export default function Login({ onLogin }: LoginProps) {
               </span>
             </Button>
             
-            <div className="text-sm text-[hsl(var(--soft-gray))]">
-              Having trouble? 
-              <Button 
-                type="button" 
-                variant="link" 
-                className="text-[hsl(var(--eclipse-glow))] hover:text-white p-0 ml-1 hover:scale-102 transition-all duration-200"
-              >
-                Contact Support
-              </Button>
+            <div className="text-sm text-[hsl(var(--soft-gray))] space-y-2">
+              <div>
+                Having trouble? 
+                <Button 
+                  type="button" 
+                  variant="link" 
+                  className="text-[hsl(var(--eclipse-glow))] hover:text-white p-0 ml-1 hover:scale-102 transition-all duration-200"
+                >
+                  Contact Support
+                </Button>
+              </div>
+              <div>
+                New to the platform?
+                <Button 
+                  type="button" 
+                  variant="link" 
+                  onClick={() => setShowTour(true)}
+                  className="text-[hsl(var(--eclipse-glow))] hover:text-white p-0 ml-1 hover:scale-102 transition-all duration-200"
+                >
+                  Take a Tour ✨
+                </Button>
+              </div>
             </div>
           </div>
         </form>
@@ -271,6 +286,17 @@ export default function Login({ onLogin }: LoginProps) {
           <div className="w-1 h-1 bg-[hsl(var(--gold-manifest))] rounded-full animate-twinkle" style={{animationDelay: '2s'}}></div>
         </div>
       </div>
+      
+      {/* Guided Tour */}
+      <GuidedTour
+        isOpen={showTour}
+        onClose={() => setShowTour(false)}
+        currentPage="login"
+        onNavigate={(path) => {
+          // For login page, we'll simulate navigation by showing tour steps
+          console.log('Navigate to:', path);
+        }}
+      />
     </div>
   );
 }
