@@ -23,8 +23,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const apiKey = process.env.RETELL_API_KEY;
 
       if (apiKey && apiKey.length > 0) {
-        // Return first 8 characters + masked remainder for display
-        const preview = `${apiKey.substring(0, 8)}${'*'.repeat(Math.max(0, apiKey.length - 8))}`;
+        // Return first 8 characters + masked remainder + last 2 characters for display
+        const preview = `${apiKey.substring(0, 8)}${'*'.repeat(Math.max(0, apiKey.length - 10))}${apiKey.slice(-2)}`;
         res.json({
           hasApiKey: true,
           apiKeyPreview: preview

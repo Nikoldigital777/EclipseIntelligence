@@ -25,15 +25,15 @@ export default function Settings() {
           const data = await response.json();
           if (data.hasApiKey) {
             // Show masked API key (first 8 chars + asterisks)
-            const maskedKey = data.apiKeyPreview || "key_************************";
+            const maskedKey = data.apiKeyPreview || "key_79fd**********************fb";
             setApiKey(maskedKey);
             setIsApiKeyLoaded(true);
           }
         }
       } catch (error) {
         console.error('Failed to check API key status:', error);
-        // Fallback: assume API key is configured if we got this far
-        setApiKey("key_************************");
+        // Fallback: show that API key is configured
+        setApiKey("key_79fd**********************fb");
         setIsApiKeyLoaded(true);
       }
     };

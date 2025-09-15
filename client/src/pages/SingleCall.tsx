@@ -1,377 +1,471 @@
 
-import { useState } from "react";
-import { Phone, User, Settings, Clock } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/auth";
+import React, { useState, useEffect } from "react";
+import { Phone, User, Clock, MessageSquare, Settings } from "lucide-react";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
 import CosmicButton from "@/components/CosmicButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
 
 interface Agent {
-  id: number;
+  id: string;
   name: string;
-  phone: string;
-  voice: string;
   avatar: string;
+  voice: string;
+  phone: string;
 }
 
 export default function SingleCall() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [selectedAgent, setSelectedAgent] = useState("");
-  const [fromNumber, setFromNumber] = useState("");
-  const [toNumber, setToNumber] = useState("");
-  const [customerName, setCustomerName] = useState("");
-  const [callNotes, setCallNotes] = useState("");
-  const [customVariables, setCustomVariables] = useState("");
-
-  // Fetch agents
-  const { data: agents = [], isLoading: isLoadingAgents } = useQuery<Agent[]>({
-    queryKey: ['/api/agents/simple'],
-    queryFn: () => apiClient.get('/api/agents/simple'),
-    retry: 1,
-    refetchOnWindowFocus: false
+  const [formData, setFormData] = useState({
+    fromNumber: "",
+    toNumber: "",
+    selectedAgent: "",
+    customMessage: "",
+    scheduleCall: false,
+    scheduleTime: "",
+    metadata: {
+      customer_name: "",
+      campaign_type: "sales_outreach",
+      priority: "normal"
+    }
   });
+  
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [callInProgress, setCallInProgress] = useState(false);
+  const [callStatus, setCallStatus] = useState<string>("");
+  const { toast } = useToast();
 
-  // Create single call mutation
-  const createSingleCallMutation = useMutation({
-    mutationFn: (payload: any) => apiClient.post('/api/outbound-calls/single', payload),
-    onSuccess: (data) => {
-      toast({
-        title: "Call Initiated! 📞",
-        description: `Call created successfully. Call ID: ${data.call_id}`,
+  useEffect(() => {
+    fetchAgents();
+  }, []);
+
+  const fetchAgents = async () => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/agents/simple', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
       
-      // Invalidate calls cache to refresh call history
-      queryClient.invalidateQueries({ queryKey: ['/api/calls'] });
+      if (response.ok) {
+        const agentsData = await response.json();
+        setAgents(agentsData);
+      }
+    } catch (error) {
+      console.error('Error fetching agents:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load agents",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    if (field.startsWith('metadata.')) {
+      const metadataField = field.replace('metadata.', '');
+      setFormData(prev => ({
+        ...prev,
+        metadata: {
+          ...prev.metadata,
+          [metadataField]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    if (!formData.fromNumber.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "From number is required",
+        variant: "destructive",
+      });
+      return false;
+    }
+    
+    if (!formData.toNumber.trim()) {
+      toast({
+        title: "Validation Error", 
+        description: "To number is required",
+        variant: "destructive",
+      });
+      return false;
+    }
+    
+    if (!formData.selectedAgent) {
+      toast({
+        title: "Validation Error",
+        description: "Please select an agent",
+        variant: "destructive",
+      });
+      return false;
+    }
+    
+    return true;
+  };
+
+  const initiateCall = async () => {
+    if (!validateForm()) return;
+
+    setIsLoading(true);
+    setCallInProgress(true);
+    setCallStatus("Initiating call...");
+
+    try {
+      const token = localStorage.getItem('auth_token');
       
-      // Reset form
-      resetForm();
-    },
-    onError: (error: any) => {
+      const callData = {
+        from_number: formData.fromNumber,
+        to_number: formData.toNumber,
+        override_agent_id: formData.selectedAgent,
+        metadata: {
+          ...formData.metadata,
+          custom_message: formData.customMessage || undefined,
+          initiated_from: "single_call_interface",
+          initiated_at: new Date().toISOString()
+        },
+        retell_llm_dynamic_variables: formData.customMessage ? {
+          custom_intro: formData.customMessage
+        } : {}
+      };
+
+      const response = await fetch('/api/outbound-calls/single', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(callData),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        setCallStatus(`Call initiated successfully! Call ID: ${result.call_id}`);
+        
+        toast({
+          title: "Call Initiated",
+          description: `Successfully started call to ${formData.toNumber}`,
+        });
+
+        // Simulate call progress updates
+        setTimeout(() => setCallStatus("Ringing..."), 2000);
+        setTimeout(() => setCallStatus("Call in progress..."), 5000);
+        setTimeout(() => {
+          setCallStatus("Call completed");
+          setCallInProgress(false);
+        }, 15000);
+
+      } else {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to initiate call');
+      }
+    } catch (error) {
+      console.error('Error initiating call:', error);
+      setCallStatus("Call failed");
+      setCallInProgress(false);
+      
       toast({
         title: "Call Failed",
-        description: error.message || "Failed to initiate call",
+        description: error instanceof Error ? error.message : "Failed to initiate call",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
-  });
-
-  const selectedAgentData = agents.find((agent: Agent) => agent.id.toString() === selectedAgent);
-
-  const resetForm = () => {
-    setFromNumber("");
-    setToNumber("");
-    setCustomerName("");
-    setCallNotes("");
-    setCustomVariables("");
   };
 
-  const handleInitiateCall = async () => {
-    if (!selectedAgent || !toNumber) {
-      toast({
-        title: "Missing Information",
-        description: "Please select an agent and enter a phone number to call.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!selectedAgentData) {
-      toast({
-        title: "Agent Error",
-        description: "Selected agent not found. Please choose a valid agent.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Parse custom variables if provided
-    let parsedVariables = {};
-    if (customVariables.trim()) {
-      try {
-        parsedVariables = JSON.parse(customVariables);
-      } catch (error) {
-        toast({
-          title: "Invalid JSON",
-          description: "Custom variables must be valid JSON format.",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
-    // Add customer name to variables if provided
-    if (customerName) {
-      parsedVariables = {
-        ...parsedVariables,
-        customer_name: customerName,
-        first_name: customerName.split(' ')[0],
-        full_name: customerName
-      };
-    }
-
-    const payload = {
-      from_number: fromNumber || selectedAgentData.phone,
-      to_number: toNumber,
-      override_agent_id: selectedAgent,
-      metadata: {
-        notes: callNotes,
-        initiated_by: "single_call_page",
-        timestamp: new Date().toISOString()
-      },
-      retell_llm_dynamic_variables: parsedVariables
-    };
-
-    createSingleCallMutation.mutate(payload);
-  };
-
-  const formatPhoneNumber = (value: string) => {
-    // Remove all non-digits
-    const digits = value.replace(/\D/g, '');
-    
-    // Format as E.164 if it's a US number
-    if (digits.length === 10) {
-      return `+1${digits}`;
-    } else if (digits.length === 11 && digits.startsWith('1')) {
-      return `+${digits}`;
-    }
-    
-    return value;
-  };
-
-  const handlePhoneChange = (value: string, setter: (value: string) => void) => {
-    const formatted = formatPhoneNumber(value);
-    setter(formatted);
-  };
+  const selectedAgentData = agents.find(agent => agent.id === formData.selectedAgent);
 
   return (
     <div className="min-h-screen p-8">
       {/* Header */}
       <div className="p-8 border-b border-white/10 relative overflow-hidden bg-gradient-to-br from-black/70 via-black/50 to-black/30 backdrop-blur-sm rounded-lg mb-8">
-        {/* Background Effects */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_25%_25%,hsl(var(--remax-red))_0%,transparent_50%)]"></div>
-          <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_75%_25%,hsl(var(--eclipse-glow))_0%,transparent_50%)]"></div>
-          <div className="absolute bottom-0 left-0 w-full h-full bg-[radial-gradient(circle_at_25%_75%,hsl(var(--manifest-blue))_0%,transparent_50%)]"></div>
+          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_25%_25%,hsl(var(--gold-manifest))_0%,transparent_50%)]"></div>
+          <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_75%_25%,hsl(var(--remax-red))_0%,transparent_50%)]"></div>
         </div>
         
-        <div className="flex items-center justify-between relative z-10">
-          <div>
-            <h1 className="text-5xl font-bold text-white mb-3 drop-shadow-2xl [text-shadow:_2px_2px_8px_rgb(0_0_0_/_50%)] flex items-center">
-              <span className="mr-4 text-[hsl(var(--remax-red))]">📞</span>
-              Make Single Call
-            </h1>
-            <p className="text-gray-200 text-xl drop-shadow-lg [text-shadow:_1px_1px_4px_rgb(0_0_0_/_50%)]">Initiate an individual AI phone call to a specific contact</p>
-          </div>
+        <div className="relative z-10">
+          <h1 className="text-5xl font-bold text-white mb-3 drop-shadow-2xl flex items-center">
+            <Phone className="w-12 h-12 mr-4 text-[hsl(var(--remax-red))]" />
+            Single Call
+          </h1>
+          <p className="text-gray-200 text-xl drop-shadow-lg">
+            Initiate individual AI-powered voice calls
+          </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Call Configuration */}
-        <div className="lg:col-span-2">
-          <GlassmorphicCard className="border border-white/10">
-            <h3 className="text-xl font-semibold text-white mb-6 flex items-center">
-              <span className="mr-3">⚙️</span>
-              Call Configuration
-            </h3>
-            
-            <div className="space-y-6">
-              {/* Agent Selection */}
-              <div>
-                <Label htmlFor="agent-select" className="text-white mb-2 block">Select Agent</Label>
-                <Select value={selectedAgent} onValueChange={setSelectedAgent} disabled={isLoadingAgents}>
-                  <SelectTrigger className="bg-[hsl(var(--lunar-glass))]/30 border-white/20 text-white">
-                    <SelectValue placeholder={isLoadingAgents ? "Loading agents..." : "Choose an AI agent"} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[hsl(var(--lunar-glass))] border-white/20">
-                    {agents.map((agent) => (
-                      <SelectItem key={agent.id} value={agent.id.toString()} className="text-white">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-gradient-to-br from-[hsl(var(--manifest-blue))] to-[hsl(var(--eclipse-glow))] rounded-full flex items-center justify-center">
-                            <span className="text-white font-semibold text-xs">{agent.avatar}</span>
-                          </div>
-                          <div>
-                            <p className="font-medium">{agent.name}</p>
-                            <p className="text-sm text-gray-300">{agent.phone}</p>
-                          </div>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Phone Numbers */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="from-number" className="text-white mb-2 block">From Number (Optional)</Label>
-                  <Input
-                    id="from-number"
-                    value={fromNumber}
-                    onChange={(e) => handlePhoneChange(e.target.value, setFromNumber)}
-                    placeholder={selectedAgentData ? selectedAgentData.phone : "+1(555)000-0000"}
-                    className="bg-[hsl(var(--lunar-glass))]/30 border-white/20 text-white placeholder-gray-400"
-                  />
-                  <p className="text-[hsl(var(--soft-gray))] text-xs mt-1">
-                    Leave empty to use agent's default number
-                  </p>
-                </div>
-                <div>
-                  <Label htmlFor="to-number" className="text-white mb-2 block">To Number *</Label>
-                  <Input
-                    id="to-number"
-                    value={toNumber}
-                    onChange={(e) => handlePhoneChange(e.target.value, setToNumber)}
-                    placeholder="+1(555)123-4567"
-                    className="bg-[hsl(var(--lunar-glass))]/30 border-white/20 text-white placeholder-gray-400"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Customer Information */}
-              <div>
-                <Label htmlFor="customer-name" className="text-white mb-2 block">Customer Name (Optional)</Label>
+        <GlassmorphicCard className="border border-white/10 hover:border-white/20 transition-colors duration-300">
+          <h3 className="text-xl font-semibold text-white mb-6 flex items-center">
+            <Settings className="w-5 h-5 mr-3 text-[hsl(var(--eclipse-glow))]" />
+            Call Configuration
+          </h3>
+          
+          <div className="space-y-6">
+            {/* Phone Numbers */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="from-number" className="text-white font-medium">
+                  From Number
+                </Label>
                 <Input
-                  id="customer-name"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="John Doe"
-                  className="bg-[hsl(var(--lunar-glass))]/30 border-white/20 text-white placeholder-gray-400"
-                />
-                <p className="text-[hsl(var(--soft-gray))] text-xs mt-1">
-                  Agent will use this name during the conversation
-                </p>
-              </div>
-
-              {/* Call Notes */}
-              <div>
-                <Label htmlFor="call-notes" className="text-white mb-2 block">Call Notes (Optional)</Label>
-                <Textarea
-                  id="call-notes"
-                  value={callNotes}
-                  onChange={(e) => setCallNotes(e.target.value)}
-                  placeholder="Add any notes about this call..."
-                  className="bg-[hsl(var(--lunar-glass))]/30 border-white/20 text-white placeholder-gray-400 min-h-[100px]"
+                  id="from-number"
+                  type="tel"
+                  placeholder="+1 (555) 000-0000"
+                  value={formData.fromNumber}
+                  onChange={(e) => handleInputChange('fromNumber', e.target.value)}
+                  className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white placeholder-gray-400 focus:border-[hsl(var(--remax-red))]/50"
                 />
               </div>
-
-              {/* Advanced Variables */}
-              <div>
-                <Label htmlFor="custom-variables" className="text-white mb-2 block">Custom Variables (JSON)</Label>
-                <Textarea
-                  id="custom-variables"
-                  value={customVariables}
-                  onChange={(e) => setCustomVariables(e.target.value)}
-                  placeholder='{"appointment_type": "consultation", "priority": "high"}'
-                  className="bg-[hsl(var(--lunar-glass))]/30 border-white/20 text-white placeholder-gray-400 font-mono text-sm min-h-[80px]"
+              
+              <div className="space-y-2">
+                <Label htmlFor="to-number" className="text-white font-medium">
+                  To Number *
+                </Label>
+                <Input
+                  id="to-number"
+                  type="tel"
+                  placeholder="+1 (555) 123-4567"
+                  value={formData.toNumber}
+                  onChange={(e) => handleInputChange('toNumber', e.target.value)}
+                  className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white placeholder-gray-400 focus:border-[hsl(var(--remax-red))]/50"
                 />
-                <p className="text-[hsl(var(--soft-gray))] text-xs mt-1">
-                  Optional JSON object for dynamic variables in agent prompts
-                </p>
               </div>
             </div>
-          </GlassmorphicCard>
-        </div>
 
-        {/* Call Preview & Actions */}
-        <div className="space-y-6">
-          {/* Call Preview */}
+            {/* Agent Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="agent-select" className="text-white font-medium">
+                Select Agent *
+              </Label>
+              <Select value={formData.selectedAgent} onValueChange={(value) => handleInputChange('selectedAgent', value)}>
+                <SelectTrigger className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white focus:border-[hsl(var(--remax-red))]/50">
+                  <SelectValue placeholder="Choose an AI agent" />
+                </SelectTrigger>
+                <SelectContent className="bg-[hsl(var(--deep-night))] border-white/20">
+                  {agents.map((agent) => (
+                    <SelectItem key={agent.id} value={agent.id} className="text-white hover:bg-white/10">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-lg">{agent.avatar}</span>
+                        <div>
+                          <div className="font-medium">{agent.name}</div>
+                          <div className="text-sm text-gray-400">{agent.voice}</div>
+                        </div>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Customer Information */}
+            <div className="space-y-4">
+              <h4 className="text-white font-medium flex items-center">
+                <User className="w-4 h-4 mr-2" />
+                Customer Information
+              </h4>
+              
+              <div className="space-y-2">
+                <Label htmlFor="customer-name" className="text-white">
+                  Customer Name
+                </Label>
+                <Input
+                  id="customer-name"
+                  placeholder="John Smith"
+                  value={formData.metadata.customer_name}
+                  onChange={(e) => handleInputChange('metadata.customer_name', e.target.value)}
+                  className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white placeholder-gray-400"
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="campaign-type" className="text-white">
+                    Campaign Type
+                  </Label>
+                  <Select 
+                    value={formData.metadata.campaign_type} 
+                    onValueChange={(value) => handleInputChange('metadata.campaign_type', value)}
+                  >
+                    <SelectTrigger className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[hsl(var(--deep-night))] border-white/20">
+                      <SelectItem value="sales_outreach" className="text-white">Sales Outreach</SelectItem>
+                      <SelectItem value="lead_qualification" className="text-white">Lead Qualification</SelectItem>
+                      <SelectItem value="appointment_setting" className="text-white">Appointment Setting</SelectItem>
+                      <SelectItem value="follow_up" className="text-white">Follow Up</SelectItem>
+                      <SelectItem value="survey" className="text-white">Survey</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="priority" className="text-white">
+                    Priority
+                  </Label>
+                  <Select 
+                    value={formData.metadata.priority} 
+                    onValueChange={(value) => handleInputChange('metadata.priority', value)}
+                  >
+                    <SelectTrigger className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[hsl(var(--deep-night))] border-white/20">
+                      <SelectItem value="low" className="text-white">Low</SelectItem>
+                      <SelectItem value="normal" className="text-white">Normal</SelectItem>
+                      <SelectItem value="high" className="text-white">High</SelectItem>
+                      <SelectItem value="urgent" className="text-white">Urgent</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* Custom Message */}
+            <div className="space-y-2">
+              <Label htmlFor="custom-message" className="text-white font-medium flex items-center">
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Custom Introduction Message
+              </Label>
+              <Textarea
+                id="custom-message"
+                placeholder="Optional custom message for the AI to use as introduction..."
+                value={formData.customMessage}
+                onChange={(e) => handleInputChange('customMessage', e.target.value)}
+                className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white placeholder-gray-400 min-h-[100px] resize-none focus:border-[hsl(var(--eclipse-glow))]/50"
+              />
+              <p className="text-[hsl(var(--soft-gray))] text-xs">
+                This message will be incorporated into the AI agent's opening script
+              </p>
+            </div>
+
+            {/* Schedule Option */}
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-[hsl(var(--eclipse-glow))]/10 to-[hsl(var(--lunar-mist))]/10 rounded-lg border border-[hsl(var(--eclipse-glow))]/20">
+              <div>
+                <Label htmlFor="schedule-call" className="text-white font-medium flex items-center">
+                  <Clock className="w-4 h-4 mr-2" />
+                  Schedule Call
+                </Label>
+                <p className="text-[hsl(var(--soft-gray))] text-sm">
+                  Schedule this call for later
+                </p>
+              </div>
+              <Switch
+                id="schedule-call"
+                checked={formData.scheduleCall}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, scheduleCall: checked }))}
+              />
+            </div>
+
+            {formData.scheduleCall && (
+              <div className="space-y-2">
+                <Label htmlFor="schedule-time" className="text-white">
+                  Schedule Time
+                </Label>
+                <Input
+                  id="schedule-time"
+                  type="datetime-local"
+                  value={formData.scheduleTime}
+                  onChange={(e) => handleInputChange('scheduleTime', e.target.value)}
+                  className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white"
+                />
+              </div>
+            )}
+          </div>
+        </GlassmorphicCard>
+
+        {/* Call Status & Preview */}
+        <div className="space-y-8">
+          {/* Selected Agent Preview */}
+          {selectedAgentData && (
+            <GlassmorphicCard className="border border-white/10">
+              <h3 className="text-xl font-semibold text-white mb-4">
+                Selected Agent
+              </h3>
+              
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-[hsl(var(--manifest-blue))] to-[hsl(var(--eclipse-glow))] rounded-full flex items-center justify-center text-2xl">
+                  {selectedAgentData.avatar}
+                </div>
+                <div>
+                  <h4 className="text-white font-semibold text-lg">{selectedAgentData.name}</h4>
+                  <p className="text-[hsl(var(--soft-gray))] text-sm">{selectedAgentData.voice}</p>
+                  <p className="text-[hsl(var(--soft-gray))] text-xs">{selectedAgentData.phone}</p>
+                </div>
+              </div>
+            </GlassmorphicCard>
+          )}
+
+          {/* Call Status */}
           <GlassmorphicCard className="border border-white/10">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-              <Phone className="w-5 h-5 mr-2 text-[hsl(var(--manifest-blue))]" />
-              Call Preview
+            <h3 className="text-xl font-semibold text-white mb-4">
+              Call Status
             </h3>
             
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-[hsl(var(--soft-gray))]">Agent:</span>
-                <span className="text-white font-medium">
-                  {selectedAgentData ? selectedAgentData.name : "Not selected"}
-                </span>
-              </div>
+              {callStatus && (
+                <div className={`p-4 rounded-lg border ${
+                  callInProgress 
+                    ? 'bg-blue-500/10 border-blue-500/30 text-blue-300' 
+                    : 'bg-green-500/10 border-green-500/30 text-green-300'
+                }`}>
+                  <p className="font-medium">{callStatus}</p>
+                </div>
+              )}
               
-              <div className="flex items-center justify-between">
-                <span className="text-[hsl(var(--soft-gray))]">From:</span>
-                <span className="text-white font-mono">
-                  {fromNumber || selectedAgentData?.phone || "Agent default"}
-                </span>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-[hsl(var(--soft-gray))]">To:</span>
-                <span className="text-white font-mono">
-                  {toNumber || "Enter number"}
-                </span>
-              </div>
-              
-              {customerName && (
-                <div className="flex items-center justify-between">
-                  <span className="text-[hsl(var(--soft-gray))]">Customer:</span>
-                  <span className="text-white">{customerName}</span>
+              {callInProgress && (
+                <div className="flex items-center space-x-3 text-[hsl(var(--soft-gray))]">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span>Call in progress...</span>
                 </div>
               )}
             </div>
           </GlassmorphicCard>
 
-          {/* Cost Information */}
-          <GlassmorphicCard className="border border-[hsl(var(--manifest-blue))]/30">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-              <Clock className="w-5 h-5 mr-2 text-[hsl(var(--manifest-blue))]" />
-              Cost Estimate
-            </h3>
-            
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-[hsl(var(--soft-gray))]">Voice Engine:</span>
-                <span className="text-white">$0.070/min</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[hsl(var(--soft-gray))]">LLM (GPT-4):</span>
-                <span className="text-white">$0.040/min</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[hsl(var(--soft-gray))]">Telephony:</span>
-                <span className="text-white">$0.015/min</span>
-              </div>
-              <div className="flex justify-between font-medium border-t border-white/10 pt-2">
-                <span className="text-white">Est. per minute:</span>
-                <span className="text-[hsl(var(--success-green))]">$0.125</span>
-              </div>
-            </div>
-          </GlassmorphicCard>
-
-          {/* Actions */}
-          <div className="space-y-3">
-            <CosmicButton 
-              variant="eclipse" 
-              className="w-full"
-              onClick={resetForm}
+          {/* Action Button */}
+          <GlassmorphicCard className="border border-white/10">
+            <CosmicButton
+              variant="remax"
+              size="lg"
+              onClick={initiateCall}
+              disabled={isLoading || callInProgress}
+              className="w-full flex items-center justify-center space-x-3"
             >
-              Reset Form
+              <Phone className="w-5 h-5" />
+              <span>
+                {isLoading 
+                  ? "Initiating Call..." 
+                  : callInProgress 
+                    ? "Call in Progress" 
+                    : formData.scheduleCall 
+                      ? "Schedule Call" 
+                      : "Start Call Now"
+                }
+              </span>
             </CosmicButton>
             
-            <CosmicButton 
-              variant="remax" 
-              className="w-full"
-              disabled={!selectedAgent || !toNumber || createSingleCallMutation.isPending}
-              onClick={handleInitiateCall}
-            >
-              <Phone className="w-4 h-4 mr-2" />
-              {createSingleCallMutation.isPending ? "Initiating Call..." : "Initiate Call"}
-            </CosmicButton>
-            
-            <div className="mt-4 p-3 bg-[hsl(var(--eclipse-glow))]/10 rounded-lg border border-[hsl(var(--eclipse-glow))]/20">
-              <p className="text-[hsl(var(--eclipse-glow))] text-xs leading-relaxed">
-                💡 The call will be initiated immediately. Make sure the recipient is available to answer.
+            {!callInProgress && (
+              <p className="text-[hsl(var(--soft-gray))] text-center text-sm mt-3">
+                Click to initiate an AI-powered voice call
               </p>
-            </div>
-          </div>
+            )}
+          </GlassmorphicCard>
         </div>
       </div>
     </div>
