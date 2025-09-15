@@ -73,6 +73,18 @@ export class RetellClient {
   async listCalls() {
     return this.makeRequest('/v2/list-calls');
   }
+
+  async getAgent(agentId: string) {
+    return this.makeRequest(`/get-agent/${agentId}`);
+  }
+
+  async listAgents() {
+    return this.makeRequest('/list-agents');
+  }
+
+  async createWebCall(request: { agent_id: string }) {
+    return this.makeRequest('/v2/create-web-call', 'POST', request);
+  }
 }
 
 // Factory function to create client instance

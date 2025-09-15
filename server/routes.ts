@@ -104,22 +104,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Agent routes (protected)
   app.get("/api/agents", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const agents = await storage.getAgents();
+      const retellClient = createRetellClient();
+      let agents = [];
+
+      if (retellClient) {
+        try {
+          // Get agents from Retell API
+          const retellAgents = await retellClient.listAgents();
+          agents = retellAgents.agents || [];
+        } catch (retellError) {
+          console.warn("Failed to fetch from Retell API, using local data:", retellError);
+          // Fallback to local storage
+          agents = await storage.getAgents();
+        }
+      } else {
+        // No API key, use local storage
+        agents = await storage.getAgents();
+      }
+
       res.json(agents);
     } catch (error) {
+      console.error("Failed to fetch agents:", error);
       res.status(500).json({ error: "Failed to fetch agents" });
     }
   });
 
   app.get("/api/agents/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const id = parseInt(req.params.id);
-      const agent = await storage.getAgent(id);
+      const agentId = req.params.id;
+      const retellClient = createRetellClient();
+      let agent = null;
+
+      if (retellClient && !isNaN(parseInt(agentId))) {
+        try {
+          // If it's a numeric ID, try local storage first, then Retell
+          const localAgent = await storage.getAgent(parseInt(agentId));
+          if (localAgent && localAgent.retellAgentId) {
+            // Get detailed info from Retell
+            const retellAgent = await retellClient.getAgent(localAgent.retellAgentId);
+            agent = { ...localAgent, ...retellAgent };
+          } else {
+            agent = localAgent;
+          }
+        } catch (retellError) {
+          console.warn("Failed to fetch from Retell API:", retellError);
+          agent = await storage.getAgent(parseInt(agentId));
+        }
+      } else if (retellClient) {
+        try {
+          // Try to get directly from Retell with the provided ID
+          agent = await retellClient.getAgent(agentId);
+        } catch (retellError) {
+          console.warn("Failed to fetch from Retell API:", retellError);
+          return res.status(404).json({ error: "Agent not found" });
+        }
+      } else {
+        // No API key, use local storage
+        const id = parseInt(agentId);
+        if (isNaN(id)) {
+          return res.status(400).json({ error: "Invalid agent ID" });
+        }
+        agent = await storage.getAgent(id);
+      }
+
       if (!agent) {
         return res.status(404).json({ error: "Agent not found" });
       }
       res.json(agent);
     } catch (error) {
+      console.error("Failed to fetch agent:", error);
       res.status(500).json({ error: "Failed to fetch agent" });
     }
   });
@@ -458,19 +511,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Web call creation for testing (protected)
+  app.post("/api/web-calls", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { agent_id } = req.body;
+      
+      if (!agent_id) {
+        return res.status(400).json({ error: "agent_id is required" });
+      }
+
+      const retellClient = createRetellClient();
+      let webCallResponse;
+
+      if (retellClient) {
+        try {
+          webCallResponse = await retellClient.createWebCall({ agent_id });
+        } catch (retellError) {
+          console.error("Retell web call API error:", retellError);
+          return res.status(500).json({ error: "Failed to create web call with Retell AI" });
+        }
+      } else {
+        // Fallback mock response
+        webCallResponse = {
+          web_call_id: `web_call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          agent_id: agent_id,
+          call_status: "registered",
+          access_token: `mock_token_${Math.random().toString(36).substr(2, 16)}`
+        };
+      }
+
+      res.status(201).json(webCallResponse);
+    } catch (error) {
+      console.error("Error creating web call:", error);
+      res.status(500).json({ error: "Failed to create web call" });
+    }
+  });
+
   // Simple agents endpoint for dropdowns (protected)
   app.get("/api/agents/simple", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const agents = await storage.getAgents();
-      const simpleAgents = agents.map(agent => ({
-        id: agent.id,
-        name: agent.name,
+      const retellClient = createRetellClient();
+      let agents = [];
+
+      if (retellClient) {
+        try {
+          const retellAgents = await retellClient.listAgents();
+          agents = retellAgents.agents || [];
+        } catch (retellError) {
+          console.warn("Failed to fetch from Retell API, using local data:", retellError);
+          agents = await storage.getAgents();
+        }
+      } else {
+        agents = await storage.getAgents();
+      }
+
+      const simpleAgents = agents.map((agent: any, index: number) => ({
+        id: agent.agent_id || agent.id,
+        name: agent.agent_name || agent.name || "Unnamed Agent",
         phone: agent.phone || "+1(555)000-0000",
-        voice: agent.voice || "Default",
-        avatar: agent.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+        voice: agent.voice_id || agent.voice || "Default",
+        avatar: (agent.agent_name || agent.name || "AG").split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
       }));
+      
       res.json(simpleAgents);
     } catch (error) {
+      console.error("Failed to fetch simple agents:", error);
       res.status(500).json({ error: "Failed to fetch agents" });
     }
   });

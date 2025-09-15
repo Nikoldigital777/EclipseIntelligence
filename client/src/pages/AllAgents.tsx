@@ -1,46 +1,101 @@
+import { useState, useEffect } from "react";
 import { Download, Edit, Trash2, Copy } from "lucide-react";
+import { useLocation } from "wouter";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
 import CosmicButton from "@/components/CosmicButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-const agents = [
-  {
-    id: 1,
-    name: "Levan Wood Eclipse Recruiting",
-    type: "Single Prompt",
-    voice: "Levan RE/MAX",
-    phone: "+1(248)283-4183",
-    editedBy: "Levan Wood",
-    editedAt: "07/03/2025, 19:43",
-    avatar: "LW",
-    description: "Cosmic Recruiter"
-  },
-  {
-    id: 2,
-    name: "Madison RE/MAX Office",
-    type: "Single Prompt",
-    voice: "Emily",
-    phone: "+1(586)500-6801",
-    editedBy: "Emily",
-    editedAt: "07/01/2025, 02:37",
-    avatar: "MR",
-    description: "Office Manager"
-  },
-  {
-    id: 3,
-    name: "Levan Wood Listing Agent",
-    type: "Single Prompt",
-    voice: "Levan RE/MAX",
-    phone: "+1(248)599-0019",
-    editedBy: "Levan Wood",
-    editedAt: "05/29/2025, 02:02",
-    avatar: "LW",
-    description: "Listing Specialist"
-  }
-];
+interface Agent {
+  id?: number;
+  agent_id?: string;
+  agent_name?: string;
+  name?: string;
+  voice_id?: string;
+  voice?: string;
+  phone?: string;
+  type?: string;
+  editedBy?: string;
+  editedAt?: string;
+  last_modification_timestamp?: number;
+  avatar?: string;
+  description?: string;
+}
 
 export default function AllAgents() {
+  const [, navigate] = useLocation();
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchAgents();
+  }, []);
+
+  const fetchAgents = async () => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/agents', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch agents');
+      }
+
+      const data = await response.json();
+      setAgents(data);
+    } catch (err) {
+      console.error('Error fetching agents:', err);
+      setError('Failed to load agents');
+      // Fallback to mock data
+      setAgents([
+        {
+          id: 1,
+          name: "Levan Wood Eclipse Recruiting",
+          type: "Single Prompt",
+          voice: "Levan RE/MAX",
+          phone: "+1(248)283-4183",
+          editedBy: "Levan Wood",
+          editedAt: "07/03/2025, 19:43",
+          avatar: "LW",
+          description: "Cosmic Recruiter"
+        }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getAgentDisplayData = (agent: Agent, index: number) => {
+    return {
+      id: agent.agent_id || agent.id?.toString() || index.toString(),
+      name: agent.agent_name || agent.name || "Unnamed Agent",
+      type: agent.type || "Single Prompt",
+      voice: agent.voice_id || agent.voice || "Default Voice",
+      phone: agent.phone || "+1(555)000-0000",
+      editedBy: agent.editedBy || "System",
+      editedAt: agent.editedAt || (agent.last_modification_timestamp ? 
+        new Date(agent.last_modification_timestamp).toLocaleDateString() : "Unknown"),
+      avatar: agent.avatar || agent.name?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || "AG",
+      description: agent.description || "AI Agent"
+    };
+  };
+
+  const handleAgentClick = (agentId: string) => {
+    navigate(`/agents/${agentId}`);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-white text-xl">Loading agents...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen p-8">
       {/* Header with stunning design background */}
@@ -110,74 +165,93 @@ export default function AllAgents() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
-              {agents.map((agent, index) => (
-                <tr key={agent.id} className="hover:bg-[hsl(var(--lunar-mist))]/10 transition-colors group cursor-pointer" onClick={() => window.location.href = `/agents/${agent.id}`}>
-                  <td className="py-4 px-6">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        index === 0 ? 'bg-gradient-to-br from-[hsl(var(--manifest-blue))] to-[hsl(var(--eclipse-glow))] lunar-shadow' :
-                        index === 1 ? 'bg-gradient-to-br from-[hsl(var(--gold-manifest))] to-[hsl(var(--remax-red))] manifest-shadow' :
-                        'bg-gradient-to-br from-[hsl(var(--lunar-mist))] to-[hsl(var(--eclipse-glow))] lunar-shadow'
-                      }`}>
-                        <span className="text-white font-semibold text-sm">{agent.avatar}</span>
+              {agents.map((agent, index) => {
+                const displayData = getAgentDisplayData(agent, index);
+                return (
+                  <tr 
+                    key={displayData.id} 
+                    className="hover:bg-[hsl(var(--lunar-mist))]/10 transition-colors group cursor-pointer" 
+                    onClick={() => handleAgentClick(displayData.id)}
+                  >
+                    <td className="py-4 px-6">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          index === 0 ? 'bg-gradient-to-br from-[hsl(var(--manifest-blue))] to-[hsl(var(--eclipse-glow))] lunar-shadow' :
+                          index === 1 ? 'bg-gradient-to-br from-[hsl(var(--gold-manifest))] to-[hsl(var(--remax-red))] manifest-shadow' :
+                          'bg-gradient-to-br from-[hsl(var(--lunar-mist))] to-[hsl(var(--eclipse-glow))] lunar-shadow'
+                        }`}>
+                          <span className="text-white font-semibold text-sm">{displayData.avatar}</span>
+                        </div>
+                        <div>
+                          <p className="text-white font-medium">{displayData.name}</p>
+                          <p className="text-[hsl(var(--soft-gray))] text-sm">{displayData.description}</p>
+                        </div>
                       </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <Badge 
+                        variant="outline" 
+                        className="bg-[hsl(var(--eclipse-glow))]/20 text-[hsl(var(--eclipse-glow))] border-[hsl(var(--eclipse-glow))]/30"
+                      >
+                        {displayData.type}
+                      </Badge>
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className="text-[hsl(var(--manifest-blue))] font-medium">{displayData.voice}</span>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-white font-mono bg-[hsl(var(--lunar-mist))]/20 px-3 py-1 rounded-full text-sm">
+                          {displayData.phone}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-[hsl(var(--eclipse-glow))] hover:text-white transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(displayData.phone);
+                          }}
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
                       <div>
-                        <p className="text-white font-medium">{agent.name}</p>
-                        <p className="text-[hsl(var(--soft-gray))] text-sm">{agent.description}</p>
+                        <p className="text-[hsl(var(--gold-manifest))] font-medium">{displayData.editedBy}</p>
+                        <p className="text-[hsl(var(--soft-gray))] text-sm">{displayData.editedAt}</p>
                       </div>
-                    </div>
-                  </td>
-                  <td className="py-4 px-6">
-                    <Badge 
-                      variant="outline" 
-                      className="bg-[hsl(var(--eclipse-glow))]/20 text-[hsl(var(--eclipse-glow))] border-[hsl(var(--eclipse-glow))]/30"
-                    >
-                      {agent.type}
-                    </Badge>
-                  </td>
-                  <td className="py-4 px-6">
-                    <span className="text-[hsl(var(--manifest-blue))] font-medium">{agent.voice}</span>
-                  </td>
-                  <td className="py-4 px-6">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-white font-mono bg-[hsl(var(--lunar-mist))]/20 px-3 py-1 rounded-full text-sm">
-                        {agent.phone}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-[hsl(var(--eclipse-glow))] hover:text-white transition-colors"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </td>
-                  <td className="py-4 px-6">
-                    <div>
-                      <p className="text-[hsl(var(--gold-manifest))] font-medium">{agent.editedBy}</p>
-                      <p className="text-[hsl(var(--soft-gray))] text-sm">{agent.editedAt}</p>
-                    </div>
-                  </td>
-                  <td className="py-4 px-6">
-                    <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-[hsl(var(--manifest-blue))] hover:text-[hsl(var(--eclipse-glow))] transition-colors"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-[hsl(var(--remax-red))] hover:text-[hsl(var(--gold-manifest))] transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-[hsl(var(--manifest-blue))] hover:text-[hsl(var(--eclipse-glow))] transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAgentClick(displayData.id);
+                          }}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-[hsl(var(--remax-red))] hover:text-[hsl(var(--gold-manifest))] transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Add delete functionality here
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

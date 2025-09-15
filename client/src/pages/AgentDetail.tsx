@@ -31,9 +31,47 @@ export default function AgentDetail() {
 
   useEffect(() => {
     if (params?.id) {
-      // Fetch agent data - using mock data for now
+      fetchAgentData(params.id);
+    }
+  }, [params?.id]);
+
+  const fetchAgentData = async (agentId: string) => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`/api/agents/${agentId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch agent');
+      }
+
+      const agentData = await response.json();
+      
+      // Map Retell agent data to our interface
+      const mappedAgent: Agent = {
+        id: agentData.id || parseInt(agentId),
+        name: agentData.agent_name || agentData.name || "Unnamed Agent",
+        type: "Single Prompt", // Default type
+        voice: agentData.voice_id || "Default Voice",
+        phone: agentData.phone || "+1(555)000-0000",
+        description: agentData.description || "AI Agent",
+        editedBy: "System",
+        editedAt: agentData.last_modification_timestamp ? 
+          new Date(agentData.last_modification_timestamp).toLocaleDateString() : "Unknown",
+        avatar: agentData.agent_name?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || "AG",
+        prompt: agentData.general_prompt || agentData.prompt || ""
+      };
+
+      setAgent(mappedAgent);
+      setPrompt(mappedAgent.prompt || "");
+    } catch (error) {
+      console.error('Error fetching agent:', error);
+      // Fallback to mock data
       const mockAgent: Agent = {
-        id: parseInt(params.id),
+        id: parseInt(agentId),
         name: "Levan Wood Eclipse Recruiting",
         type: "Single Prompt",
         voice: "Levan RE/MAX",
@@ -42,21 +80,12 @@ export default function AgentDetail() {
         editedBy: "Levan Wood",
         editedAt: "07/03/2025, 19:43",
         avatar: "LW",
-        prompt: `### You are Levan Wood, Broker-Owner at REMAX Eclipse, a highly respected, charismatic, charming, personable, natural, realistic, real estate brokerage known for strong agent support, powerful brand recognition, and commission plans that help agents keep more of their income. Your job is to naturally call real estate agents (new, mid-level, and seasoned agents) to set appointments for a conversation about joining REMAX Eclipse. You can adapt based on what the prospect says. Your objective is to book an appointment.
-
-## IMPORTANT RULES:
-- PAUSE and take your time between each sentence that ends with a period.
-- WAIT FOR THE USER TO RESPOND AFTER YOUR STATEMENTS WHERE THEY SHOULD OBVIOUSLY RESPOND. DO NOT READ THE WHOLE SCRIPT IN ONE BREATH. HAVE A CONVERSATION.
-- If user objects (e.g., "I'm good," "I'm busy," "Not interested"), you MUST handle objections up to 4 TIMES and circle back to set the appointment. You are NOT allowed to call them back later.
-- Tone: Friendly, approachable, conversational, professional — never aggressive or pushy.
-- When offering appointment times, give two time slots, specifying "morning" or "afternoon" availability this week and say in word form ("ten a.m.," not "10 am"). If the person expresses interest in joining, respond by asking which date and time would work best for a quick call with Levan. Once they share their availability, confirm it back to them clearly, then proceed to book the appointment using the 'book_appointment' function, check availability using the 'check_availability' function
-
-If you're reading out an email address or social handle, pronounce the "@" symbol as "at." When reading email addresses, speak slowly and clearly, spelling out each part to ensure accurate transcription. Say the "@" symbol as "at," and pronounce periods as "dot." Avoid running any part of the email together — instead, pause slightly between segments. For example, say: "J - A - N - E — D - O - E — at — G - M - A - I - L — dot — C - O - M." Emphasize clarity over speed, and treat each character and symbol distinctly.`
+        prompt: `### You are Levan Wood, Broker-Owner at REMAX Eclipse...`
       };
       setAgent(mockAgent);
       setPrompt(mockAgent.prompt || "");
     }
-  }, [params?.id]);
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -66,10 +95,42 @@ If you're reading out an email address or social handle, pronounce the "@" symbo
   };
 
   const handleTestAudio = async () => {
+    if (!agent) return;
+    
     setIsTestingAudio(true);
-    // Simulate test call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsTestingAudio(false);
+    try {
+      const token = localStorage.getItem('auth_token');
+      const agentId = agent.id?.toString() || params?.id;
+      
+      const response = await fetch('/api/web-calls', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          agent_id: agentId
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create test call');
+      }
+
+      const webCallData = await response.json();
+      console.log('Web call created:', webCallData);
+      
+      // In a real implementation, you would use the access_token 
+      // to initialize the Retell web call widget here
+      alert(`Test call initiated! Web Call ID: ${webCallData.web_call_id}`);
+      
+    } catch (error) {
+      console.error('Error creating test call:', error);
+      alert('Failed to start test call. Please try again.');
+    } finally {
+      // Keep testing state for a bit longer for visual feedback
+      setTimeout(() => setIsTestingAudio(false), 2000);
+    }
   };
 
   if (!agent) {
