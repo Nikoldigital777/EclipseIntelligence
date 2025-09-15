@@ -22,7 +22,12 @@ export const agents = pgTable("agents", {
   avatar: text("avatar").notNull(),
   description: text("description").notNull(),
   editedBy: text("edited_by").notNull(),
-  editedAt: text("edited_at").notNull()
+  editedAt: text("edited_at").notNull(),
+  retellAgentId: text("retell_agent_id"),
+  type: text("type"),
+  prompt: text("prompt"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
 });
 
 export const leads = pgTable("leads", {
@@ -64,7 +69,7 @@ export const calls = pgTable("calls", {
   toNumber: varchar("to_number", { length: 50 }),
   status: varchar("status", { length: 50 }),
   agentId: integer("agent_id").references(() => agents.id),
-  retellAgentId: varchar("retell_agent_id", { length: 255 }), // Store Retell agent ID
+  retellAgentId: varchar("retell_agent_id", { length: 255 }),
   endReason: varchar("end_reason", { length: 100 }),
   sentiment: varchar("sentiment", { length: 50 }),
   outcome: varchar("outcome", { length: 100 }),
@@ -72,7 +77,7 @@ export const calls = pgTable("calls", {
   cost: decimal("cost", { precision: 10, scale: 4 }),
   latency: integer("latency"),
   leadId: integer("lead_id").references(() => leads.id),
-  batchCallId: integer("batch_call_id").references(() => batchCalls.id), // For batch call tracking
+  batchCallId: integer("batch_call_id").references(() => batchCalls.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

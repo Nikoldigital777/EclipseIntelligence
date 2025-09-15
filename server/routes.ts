@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertAgentSchema, insertLeadSchema, insertCallSchema } from "@shared/schema";
+import { insertAgentSchema, insertLeadSchema, insertCallSchema, type Agent } from "@shared/schema";
 import { z } from "zod";
 import { createRetellClient } from "./retell-client";
 import {
@@ -1038,8 +1038,14 @@ Remember to be knowledgeable about the market, professional, and focused on help
             enhancedStats.weeklyTrends = weeklyData;
 
             // Top performing agents
-            const agentPerformance = {};
-            validCalls.forEach(call => {
+            const agentPerformance: Record<string, {
+              agent_id: string;
+              total_calls: number;
+              successful_calls: number;
+              total_duration: number;
+              positive_sentiment: number;
+            }> = {};
+            validCalls.forEach((call: any) => {
               const agentId = call.agent_id;
               if (!agentPerformance[agentId]) {
                 agentPerformance[agentId] = {
@@ -1168,8 +1174,13 @@ Remember to be knowledgeable about the market, professional, and focused on help
       analytics.performance.sentiment_distribution = sentimentCounts;
 
       // Process agent performance
-      const agentStats = {};
-      calls.forEach(call => {
+      const agentStats: Record<string, {
+        total: number;
+        successful: number;
+        duration: number;
+        cost: number;
+      }> = {};
+      calls.forEach((call: any) => {
         const agentId = call.agent_id || 'unknown';
         if (!agentStats[agentId]) {
           agentStats[agentId] = { total: 0, successful: 0, duration: 0, cost: 0 };
