@@ -1,0 +1,1253 @@
+# Get Retell LLM
+
+> Retrieve details of a specific Retell LLM Response Engine
+
+## OpenAPI
+
+````yaml openapi-final get /get-retell-llm/{llm_id}
+paths:
+  path: /get-retell-llm/{llm_id}
+  method: get
+  servers:
+    - url: https://api.retellai.com
+      description: The production server.
+  request:
+    security:
+      - title: api key
+        parameters:
+          query: {}
+          header:
+            Authorization:
+              type: http
+              scheme: bearer
+              description: >-
+                Authentication header containing API key (find it in dashboard).
+                The format is "Bearer YOUR_API_KEY"
+          cookie: {}
+    parameters:
+      path:
+        llm_id:
+          schema:
+            - type: string
+              required: true
+              description: Unique id of the Retell LLM Response Engine to be retrieved.
+              example: 16b980523634a6dc504898cda492e939
+      query:
+        version:
+          schema:
+            - type: integer
+              required: false
+              description: >-
+                Optional version of the API to use for this request. Default to
+                latest version.
+              example: 1
+      header: {}
+      cookie: {}
+    body: {}
+    codeSamples:
+      - lang: JavaScript
+        source: >-
+          import Retell from 'retell-sdk';
+
+
+          const client = new Retell({
+            apiKey: 'YOUR_RETELL_API_KEY',
+          });
+
+
+          const llmResponse = await
+          client.llm.retrieve('16b980523634a6dc504898cda492e939');
+
+
+          console.log(llmResponse.llm_id);
+      - lang: Python
+        source: |-
+          from retell import Retell
+
+          client = Retell(
+              api_key="YOUR_RETELL_API_KEY",
+          )
+          llm_response = client.llm.retrieve(
+              llm_id="16b980523634a6dc504898cda492e939",
+          )
+          print(llm_response.llm_id)
+  response:
+    '200':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              llm_id:
+                allOf:
+                  - type: string
+                    example: oBeDLoLOeuAbiuaMFXRtDOLriTJ5tSxD
+                    description: Unique id of Retell LLM Response Engine.
+              version:
+                allOf:
+                  - type: integer
+                    example: 0
+                    description: Version of the Retell LLM Response Engine.
+                  - type: number
+                    example: 0
+                    description: Version of the Retell LLM.
+                    nullable: true
+              is_published:
+                allOf:
+                  - type: boolean
+                    example: false
+                    description: Whether the Retell LLM Response Engine is published.
+              model:
+                allOf:
+                  - type: string
+                    enum:
+                      - gpt-5
+                      - gpt-5-mini
+                      - gpt-5-nano
+                      - gpt-4o
+                      - gpt-4o-mini
+                      - gpt-4.1
+                      - gpt-4.1-mini
+                      - gpt-4.1-nano
+                      - claude-3.7-sonnet
+                      - claude-3.5-haiku
+                      - gemini-2.0-flash
+                      - gemini-2.0-flash-lite
+                      - gemini-2.5-flash
+                      - gemini-2.5-flash-lite
+                      - null
+                    example: gpt-4.1
+                    description: >-
+                      Select the underlying text LLM. If not set, would default
+                      to gpt-4.1.
+                    nullable: true
+              s2s_model:
+                allOf:
+                  - type: string
+                    enum:
+                      - gpt-4o-realtime
+                      - gpt-4o-mini-realtime
+                      - gpt-realtime
+                      - null
+                    example: gpt-4o-realtime
+                    description: >-
+                      Select the underlying speech to speech model. Can only set
+                      this or model, not both.
+                    nullable: true
+              model_temperature:
+                allOf:
+                  - type: number
+                    example: 0
+                    description: >-
+                      If set, will control the randomness of the response. Value
+                      ranging from [0,1]. Lower value means more deterministic,
+                      while higher value means more random. If unset, default
+                      value 0 will apply. Note that for tool calling, a lower
+                      value is recommended.
+              model_high_priority:
+                allOf:
+                  - type: boolean
+                    example: true
+                    description: >-
+                      If set to true, will enable fast tier, which uses high
+                      priority pool with more dedicated resource to ensure lower
+                      and more consistent latency, default to false. This
+                      feature usually comes with a higher cost.
+              tool_call_strict_mode:
+                allOf:
+                  - type: boolean
+                    example: true
+                    description: >-
+                      Only applicable when model is gpt-4o or gpt-4o mini. If
+                      set to true, will use structured output to make sure tool
+                      call arguments follow the json schema. The time to save a
+                      new tool or change to a tool will be longer as additional
+                      processing is needed. Default to false.
+              general_prompt:
+                allOf:
+                  - type: string
+                    example: You are ...
+                    description: >-
+                      General prompt appended to system prompt no matter what
+                      state the agent is in. 
+
+
+                      - System prompt (with state) = general prompt + state
+                      prompt.
+
+
+                      - System prompt (no state) = general prompt.
+                    nullable: true
+              general_tools:
+                allOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/Tool'
+                    description: >-
+                      A list of tools the model may call (to get external
+                      knowledge, call API, etc). You can select from some common
+                      predefined tools like end call, transfer call, etc; or you
+                      can create your own custom tool (last option) for the LLM
+                      to use. 
+
+
+                      - Tools of LLM (with state) = general tools + state tools
+                      + state transitions
+
+
+                      - Tools of LLM (no state) = general tools
+                    example:
+                      - type: end_call
+                        name: end_call
+                        description: End the call with user.
+                    nullable: true
+              states:
+                allOf:
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/State'
+                    description: >-
+                      States of the LLM. This is to help reduce prompt length
+                      and tool choices when the call can be broken into distinct
+                      states. With shorter prompts and less tools, the LLM can
+                      better focus and follow the rules, minimizing
+                      hallucination. If this field is not set, the agent would
+                      only have general prompt and general tools (essentially
+                      one state).
+                    example:
+                      - name: information_collection
+                        state_prompt: >-
+                          You will follow the steps below to collect
+                          information...
+                        edges:
+                          - destination_state_name: appointment_booking
+                            description: Transition to book an appointment.
+                        tools:
+                          - type: transfer_call
+                            name: transfer_to_support
+                            description: Transfer to the support team.
+                            transfer_destination:
+                              type: predefined
+                              number: '16175551212'
+                            transfer_option:
+                              type: cold_transfer
+                              show_transferee_as_caller: false
+                      - name: appointment_booking
+                        state_prompt: >-
+                          You will follow the steps below to book an
+                          appointment...
+                        tools:
+                          - type: book_appointment_cal
+                            name: book_appointment
+                            description: Book an annual check up.
+                            cal_api_key: cal_live_xxxxxxxxxxxx
+                            event_type_id: 60444
+                            timezone: America/Los_Angeles
+                    nullable: true
+              starting_state:
+                allOf:
+                  - type: string
+                    example: information_collection
+                    description: >-
+                      Name of the starting state. Required if states is not
+                      empty.
+                    nullable: true
+              begin_message:
+                allOf:
+                  - type: string
+                    example: Hey I am a virtual assistant calling from Retell Hospital.
+                    description: >-
+                      First utterance said by the agent in the call. If not set,
+                      LLM will dynamically generate a message. If set to "",
+                      agent will wait for user to speak first.
+                    nullable: true
+              default_dynamic_variables:
+                allOf:
+                  - type: object
+                    additionalProperties:
+                      type: string
+                    example:
+                      customer_name: John Doe
+                    description: >-
+                      Default dynamic variables represented as key-value pairs
+                      of strings. These are injected into your Retell LLM prompt
+                      and tool description when specific values are not provided
+                      in a request. Only applicable for Retell LLM.
+                    nullable: true
+              knowledge_base_ids:
+                allOf:
+                  - type: array
+                    items:
+                      type: string
+                    description: >-
+                      A list of knowledge base ids to use for this resource. Set
+                      to null to remove all knowledge bases.
+                    nullable: true
+              kb_config:
+                allOf:
+                  - type: object
+                    $ref: '#/components/schemas/KBConfig'
+                    description: Knowledge base configuration for RAG retrieval.
+                    nullable: true
+              last_modification_timestamp:
+                allOf:
+                  - type: integer
+                    example: 1703413636133
+                    description: >-
+                      Last modification timestamp (milliseconds since epoch).
+                      Either the time of last update or creation if no updates
+                      available.
+            refIdentifier: '#/components/schemas/RetellLlmRequest'
+            requiredProperties:
+              - llm_id
+              - last_modification_timestamp
+        examples:
+          example:
+            value:
+              llm_id: oBeDLoLOeuAbiuaMFXRtDOLriTJ5tSxD
+              version: 0
+              is_published: false
+              model: gpt-4.1
+              s2s_model: gpt-4o-realtime
+              model_temperature: 0
+              model_high_priority: true
+              tool_call_strict_mode: true
+              general_prompt: You are ...
+              general_tools:
+                - type: end_call
+                  name: end_call
+                  description: End the call with user.
+              states:
+                - name: information_collection
+                  state_prompt: You will follow the steps below to collect information...
+                  edges:
+                    - destination_state_name: appointment_booking
+                      description: Transition to book an appointment.
+                  tools:
+                    - type: transfer_call
+                      name: transfer_to_support
+                      description: Transfer to the support team.
+                      transfer_destination:
+                        type: predefined
+                        number: '16175551212'
+                      transfer_option:
+                        type: cold_transfer
+                        show_transferee_as_caller: false
+                - name: appointment_booking
+                  state_prompt: You will follow the steps below to book an appointment...
+                  tools:
+                    - type: book_appointment_cal
+                      name: book_appointment
+                      description: Book an annual check up.
+                      cal_api_key: cal_live_xxxxxxxxxxxx
+                      event_type_id: 60444
+                      timezone: America/Los_Angeles
+              starting_state: information_collection
+              begin_message: Hey I am a virtual assistant calling from Retell Hospital.
+              default_dynamic_variables:
+                customer_name: John Doe
+              knowledge_base_ids:
+                - <string>
+              kb_config:
+                top_k: 3
+                filter_score: 0.6
+              last_modification_timestamp: 1703413636133
+        description: Successfully retrieved an Retell LLM Response Engine.
+    '400':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              status:
+                allOf:
+                  - type: string
+                    enum:
+                      - error
+              message:
+                allOf:
+                  - type: string
+                    example: Invalid request format, please check API reference.
+        examples:
+          example:
+            value:
+              status: error
+              message: Invalid request format, please check API reference.
+        description: Bad Request
+    '401':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              status:
+                allOf:
+                  - type: string
+                    enum:
+                      - error
+              message:
+                allOf:
+                  - type: string
+                    example: API key is missing or invalid.
+        examples:
+          example:
+            value:
+              status: error
+              message: API key is missing or invalid.
+        description: Unauthorized
+    '422':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              status:
+                allOf:
+                  - type: string
+                    enum:
+                      - error
+              message:
+                allOf:
+                  - type: string
+                    example: Cannot find requested asset under given api key.
+        examples:
+          example:
+            value:
+              status: error
+              message: Cannot find requested asset under given api key.
+        description: Unprocessable Content
+    '500':
+      application/json:
+        schemaArray:
+          - type: object
+            properties:
+              status:
+                allOf:
+                  - type: string
+                    enum:
+                      - error
+              message:
+                allOf:
+                  - type: string
+                    example: An unexpected server error occurred.
+        examples:
+          example:
+            value:
+              status: error
+              message: An unexpected server error occurred.
+        description: Internal Server Error
+  deprecated: false
+  type: path
+components:
+  schemas:
+    StringAnalysisData:
+      type: object
+      required:
+        - type
+        - name
+        - description
+      properties:
+        type:
+          type: string
+          enum:
+            - string
+          description: Type of the variable to extract.
+          example: string
+        name:
+          type: string
+          description: Name of the variable.
+          example: customer_name
+        description:
+          type: string
+          description: Description of the variable.
+          example: The name of the customer.
+        examples:
+          type: array
+          items:
+            type: string
+          description: Examples of the variable value to teach model the style and syntax.
+          example:
+            - John Doe
+            - Jane Smith
+    EnumAnalysisData:
+      type: object
+      required:
+        - type
+        - name
+        - description
+        - choices
+      properties:
+        type:
+          type: string
+          enum:
+            - enum
+          description: Type of the variable to extract.
+          example: enum
+        name:
+          type: string
+          description: Name of the variable.
+          example: product_rating
+        description:
+          type: string
+          description: Description of the variable.
+          example: Rating of the product.
+        choices:
+          type: array
+          items:
+            type: string
+          description: The possible values of the variable, must be non empty array.
+          example:
+            - good
+            - bad
+    BooleanAnalysisData:
+      type: object
+      required:
+        - type
+        - name
+        - description
+      properties:
+        type:
+          type: string
+          enum:
+            - boolean
+          description: Type of the variable to extract.
+          example: boolean
+        name:
+          type: string
+          description: Name of the variable.
+          example: is_converted
+        description:
+          type: string
+          description: Description of the variable.
+          example: Whether the customer converted.
+    NumberAnalysisData:
+      type: object
+      required:
+        - type
+        - name
+        - description
+      properties:
+        type:
+          type: string
+          enum:
+            - number
+          description: Type of the variable to extract.
+          example: number
+        name:
+          type: string
+          description: Name of the variable.
+          example: order_count
+        description:
+          type: string
+          description: Description of the variable.
+          example: How many the customer intend to order.
+    AnalysisData:
+      oneOf:
+        - $ref: '#/components/schemas/StringAnalysisData'
+        - $ref: '#/components/schemas/EnumAnalysisData'
+        - $ref: '#/components/schemas/BooleanAnalysisData'
+        - $ref: '#/components/schemas/NumberAnalysisData'
+    EndCallTool:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - end_call
+        name:
+          type: string
+          description: >-
+            Name of the tool. Must be unique within all tools available to LLM
+            at any given time (general tools + state tools + state transitions).
+            Must be consisted of a-z, A-Z, 0-9, or contain underscores and
+            dashes, with a maximum length of 64 (no space allowed).
+        description:
+          type: string
+          description: >-
+            Describes what the tool does, sometimes can also include information
+            about when to call the tool.
+      required:
+        - type
+        - name
+    WarmTransferPrompt:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - prompt
+        prompt:
+          type: string
+          example: Summarize the call in one sentence for the warn handoff.
+          description: >-
+            The prompt to be used for warm handoff. Can contain dynamic
+            variables.
+    WarmTransferStaticMessage:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - static_message
+        message:
+          type: string
+          example: You can take it from here.
+          description: >-
+            The static message to be used for warm handoff. Can contain dynamic
+            variables.
+    TransferOptionColdTransfer:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - cold_transfer
+          description: The type of the transfer.
+        show_transferee_as_caller:
+          type: boolean
+          description: >-
+            If set to true, will show transferee (the user, not the AI agent) as
+            caller when transferring, requires the telephony side to support SIP
+            REFER to PSTN. This is only applicable for cold transfer, so if warm
+            transfer option is specified, this field will be ignored. Default to
+            false (default to show AI agent as caller).
+      required:
+        - type
+    TransferOptionWarmTransfer:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - warm_transfer
+          description: The type of the transfer.
+        agent_detection_timeout_ms:
+          type: number
+          description: The time to wait before considering transfer fails.
+        on_hold_music:
+          type: string
+          enum:
+            - none
+            - relaxing_sound
+            - uplifting_beats
+            - ringtone
+          description: The music to play while the caller is being transferred.
+        public_handoff_option:
+          type: object
+          oneOf:
+            - $ref: '#/components/schemas/WarmTransferPrompt'
+            - $ref: '#/components/schemas/WarmTransferStaticMessage'
+          description: >-
+            If set, when transfer is successful, will say the handoff message to
+            both the transferee and the agent receiving the transfer. Can leave
+            either a static message or a dynamic one based on prompt. Set to
+            null to disable warm handoff.
+        private_handoff_option:
+          type: object
+          oneOf:
+            - $ref: '#/components/schemas/WarmTransferPrompt'
+            - $ref: '#/components/schemas/WarmTransferStaticMessage'
+          description: >-
+            If set, when transfer is connected, will say the handoff message
+            only to the agent receiving the transfer. Can leave either a static
+            message or a dynamic one based on prompt. Set to null to disable
+            warm handoff.
+        opt_out_human_detection:
+          type: boolean
+          description: >-
+            If set to true, will not perform human detection for the transfer.
+            Default to false.
+        opt_out_initial_message:
+          type: boolean
+          description: >-
+            If set to true, AI will not say "Hello" after connecting the call.
+            Default to false.
+      required:
+        - type
+    TransferOption:
+      oneOf:
+        - $ref: '#/components/schemas/TransferOptionColdTransfer'
+        - $ref: '#/components/schemas/TransferOptionWarmTransfer'
+    PostCallAnalysisSetting:
+      type: string
+      enum:
+        - both_agents
+        - only_destination_agent
+    SmsContent:
+      oneOf:
+        - $ref: '#/components/schemas/SmsContentPredefined'
+        - $ref: '#/components/schemas/SmsContentInferred'
+    SmsContentPredefined:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - predefined
+        content:
+          type: string
+          description: >-
+            The static message to be sent in the SMS. Can contain dynamic
+            variables.
+    SmsContentInferred:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - inferred
+        prompt:
+          type: string
+          description: >-
+            The prompt to be used to help infer the SMS content. The model will
+            take the global prompt, the call transcript, and this prompt
+            together to deduce the right message to send. Can contain dynamic
+            variables.
+    TransferDestinationPredefined:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - predefined
+          description: The type of transfer destination.
+        number:
+          type: string
+          description: >-
+            The number to transfer to in E.164 format or a dynamic variable like
+            {{transfer_number}}.
+        extension:
+          type: string
+          description: >-
+            Extension digits to dial after the main number connects. Sent via
+            DTMF. Allow digits, '*', '#'.
+          example: 123*456#
+          pattern: ^[0-9*#]+$
+      required:
+        - type
+        - number
+    TransferDestinationInferred:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - inferred
+          description: The type of transfer destination.
+        prompt:
+          type: string
+          description: >-
+            The prompt to be used to help infer the transfer destination. The
+            model will take the global prompt, the call transcript, and this
+            prompt together to deduce the right number to transfer to. Can
+            contain dynamic variables.
+      required:
+        - type
+        - prompt
+    TransferDestination:
+      oneOf:
+        - $ref: '#/components/schemas/TransferDestinationPredefined'
+        - $ref: '#/components/schemas/TransferDestinationInferred'
+    TransferCallTool:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - transfer_call
+        name:
+          type: string
+          example: transfer_to_support
+          description: >-
+            Name of the tool. Must be unique within all tools available to LLM
+            at any given time (general tools + state tools + state edges).
+        description:
+          type: string
+          description: >-
+            Describes what the tool does, sometimes can also include information
+            about when to call the tool.
+        transfer_destination:
+          $ref: '#/components/schemas/TransferDestination'
+        transfer_option:
+          type: object
+          $ref: '#/components/schemas/TransferOption'
+        custom_sip_headers:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            X-Custom-Header: Custom Value
+          description: Custom SIP headers to be added to the call.
+      required:
+        - type
+        - name
+        - transfer_destination
+        - transfer_option
+    CheckAvailabilityCalTool:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - check_availability_cal
+        name:
+          type: string
+          description: >-
+            Name of the tool. Must be unique within all tools available to LLM
+            at any given time (general tools + state tools + state transitions).
+            Must be consisted of a-z, A-Z, 0-9, or contain underscores and
+            dashes, with a maximum length of 64 (no space allowed).
+        description:
+          type: string
+          description: >-
+            Describes what the tool does, sometimes can also include information
+            about when to call the tool.
+        cal_api_key:
+          type: string
+          description: >-
+            Cal.com Api key that have access to the cal.com event you want to
+            check availability for.
+        event_type_id:
+          type: number
+          description: >-
+            Cal.com event type id number for the cal.com event you want to check
+            availability for.
+        timezone:
+          type: string
+          description: >-
+            Timezone to be used when checking availability, must be in [IANA
+            timezone
+            database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
+            If not specified, will check if user specified timezone in call, and
+            if not, will use the timezone of the Retell servers.
+      required:
+        - type
+        - name
+        - cal_api_key
+        - event_type_id
+    BookAppointmentCalTool:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - book_appointment_cal
+        name:
+          type: string
+          description: >-
+            Name of the tool. Must be unique within all tools available to LLM
+            at any given time (general tools + state tools + state transitions).
+            Must be consisted of a-z, A-Z, 0-9, or contain underscores and
+            dashes, with a maximum length of 64 (no space allowed).
+        description:
+          type: string
+          description: >-
+            Describes what the tool does, sometimes can also include information
+            about when to call the tool.
+        cal_api_key:
+          type: string
+          description: >-
+            Cal.com Api key that have access to the cal.com event you want to
+            book appointment.
+        event_type_id:
+          type: number
+          description: >-
+            Cal.com event type id number for the cal.com event you want to book
+            appointment.
+        timezone:
+          type: string
+          description: >-
+            Timezone to be used when booking appointment, must be in [IANA
+            timezone
+            database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
+            If not specified, will check if user specified timezone in call, and
+            if not, will use the timezone of the Retell servers.
+      required:
+        - type
+        - name
+        - cal_api_key
+        - event_type_id
+    PressDigitTool:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - press_digit
+        name:
+          type: string
+          description: >-
+            Name of the tool. Must be unique within all tools available to LLM
+            at any given time (general tools + state tools + state transitions).
+            Must be consisted of a-z, A-Z, 0-9, or contain underscores and
+            dashes, with a maximum length of 64 (no space allowed).
+        description:
+          type: string
+          description: >-
+            Describes what the tool does, sometimes can also include information
+            about when to call the tool.
+        delay_ms:
+          type: integer
+          description: >-
+            Delay in milliseconds before pressing the digit, because a lot of
+            IVR systems speak very slowly, and a delay can make sure the agent
+            hears the full menu. Default to 1000 ms (1s). Valid range is 0 to
+            5000 ms (inclusive).
+      required:
+        - type
+        - name
+    CustomTool:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - custom
+        name:
+          type: string
+          description: >-
+            Name of the tool. Must be unique within all tools available to LLM
+            at any given time (general tools + state tools + state edges). Must
+            be consisted of a-z, A-Z, 0-9, or contain underscores and dashes,
+            with a maximum length of 64 (no space allowed).
+        url:
+          type: string
+          description: >-
+            Describes what the tool does, sometimes can also include information
+            about when to call the tool.
+        description:
+          type: string
+          description: Describes what this tool does and when to call this tool.
+        method:
+          type: string
+          enum:
+            - GET
+            - POST
+            - PUT
+            - PATCH
+            - DELETE
+          description: Method to use for the request, default to POST.
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            Authorization: Bearer 1234567890
+          description: Headers to add to the request.
+        query_params:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            page: '1'
+            sort: asc
+          description: Query parameters to append to the request URL.
+        parameters:
+          $ref: '#/components/schemas/ToolParameter'
+        response_variables:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            user_name: data.user.name
+          description: >-
+            A mapping of variable names to JSON paths in the response body.
+            These values will be extracted from the response and made available
+            as dynamic variables for use.
+        speak_during_execution:
+          type: boolean
+          description: >-
+            Determines whether the agent would say sentence like "One moment,
+            let me check that." when executing the function. Recommend to turn
+            on if your function call takes over 1s (including network) to
+            complete, so that your agent remains responsive.
+        speak_after_execution:
+          type: boolean
+          description: >-
+            Determines whether the agent would call LLM another time and speak
+            when the result of function is obtained. Usually this needs to get
+            turned on so user can get update for the function call.
+        execution_message_description:
+          type: string
+          description: >-
+            The description for the sentence agent say during execution. Only
+            applicable when speak_during_execution is true. Can write what to
+            say or even provide examples. The default is "The message you will
+            say to callee when calling this tool. Make sure it fits into the
+            conversation smoothly.".
+        timeout_ms:
+          type: integer
+          description: >-
+            The maximum time in milliseconds the tool can run before it's
+            considered timeout. If the tool times out, the agent would have that
+            info. The minimum value allowed is 1000 ms (1 s), and maximum value
+            allowed is 600,000 ms (10 min). By default, this is set to 120,000
+            ms (2 min).
+      required:
+        - type
+        - name
+        - url
+        - description
+        - speak_after_execution
+    ExtractDynamicVariableTool:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - extract_dynamic_variable
+        name:
+          type: string
+          description: >-
+            Name of the tool. Must be unique within all tools available to LLM
+            at any given time (general tools + state tools + state edges). Must
+            be consisted of a-z, A-Z, 0-9, or contain underscores and dashes,
+            with a maximum length of 64 (no space allowed).
+        description:
+          type: string
+          description: >-
+            Describes what the tool does, sometimes can also include information
+            about when to call the tool.
+        variables:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalysisData'
+          description: The variables to be extracted.
+      required:
+        - type
+        - name
+        - variables
+        - description
+    AgentSwapTool:
+      type: object
+      properties:
+        name:
+          type: string
+          description: >-
+            Name of the tool. Must be unique within all tools available to LLM
+            at any given time (general tools + state tools + state edges).
+        type:
+          type: string
+          enum:
+            - agent_swap
+        description:
+          type: string
+          description: >-
+            Describes what the tool does, sometimes can also include information
+            about when to call the tool.
+        agent_id:
+          type: string
+          description: The id of the agent to swap to.
+        agent_version:
+          type: number
+          description: >-
+            The version of the agent to swap to. If not specified, will use the
+            latest version.
+        speak_during_execution:
+          type: boolean
+        execution_message_description:
+          type: string
+          description: The message for the agent to speak when executing agent swap.
+        post_call_analysis_setting:
+          $ref: '#/components/schemas/PostCallAnalysisSetting'
+      required:
+        - type
+        - name
+        - agent_id
+    MCPTool:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - mcp
+        mcp_id:
+          type: string
+          description: Unique id of the MCP.
+        name:
+          type: string
+          description: Name of the MCP tool.
+        description:
+          type: string
+          description: Description of the MCP tool.
+        response_variables:
+          type: object
+          additionalProperties:
+            type: string
+          description: >-
+            Response variables to add to dynamic variables, key is the variable
+            name, value is the path to the variable in the response
+        speak_during_execution:
+          type: boolean
+          description: >-
+            Determines whether the agent would say sentence like "One moment,
+            let me check that." when executing the function. Recommend to turn
+            on if your function call takes over 1s (including network) to
+            complete, so that your agent remains responsive.
+        speak_after_execution:
+          type: boolean
+          description: >-
+            Determines whether the agent would call LLM another time and speak
+            when the result of function is obtained. Usually this needs to get
+            turned on so user can get update for the function call.
+        execution_message_description:
+          type: string
+          description: >-
+            The description for the sentence agent say during execution. Only
+            applicable when speak_during_execution is true. Can write what to
+            say or even provide examples. The default is "The message you will
+            say to callee when calling this tool. Make sure it fits into the
+            conversation smoothly.".
+      required:
+        - type
+        - name
+        - description
+    SendSMSTool:
+      type: object
+      properties:
+        name:
+          type: string
+          description: >-
+            Name of the tool. Must be unique within all tools available to LLM
+            at any given time (general tools + state tools + state edges).
+        type:
+          type: string
+          enum:
+            - send_sms
+        description:
+          type: string
+          description: >-
+            Describes what the tool does, sometimes can also include information
+            about when to call the tool.
+        sms_content:
+          $ref: '#/components/schemas/SmsContent'
+      required:
+        - type
+        - name
+        - sms_content
+    Tool:
+      oneOf:
+        - $ref: '#/components/schemas/EndCallTool'
+        - $ref: '#/components/schemas/TransferCallTool'
+        - $ref: '#/components/schemas/CheckAvailabilityCalTool'
+        - $ref: '#/components/schemas/BookAppointmentCalTool'
+        - $ref: '#/components/schemas/PressDigitTool'
+        - $ref: '#/components/schemas/CustomTool'
+        - $ref: '#/components/schemas/ExtractDynamicVariableTool'
+        - $ref: '#/components/schemas/AgentSwapTool'
+        - $ref: '#/components/schemas/MCPTool'
+        - $ref: '#/components/schemas/SendSMSTool'
+    State:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          example: information_collection
+          type: string
+          description: >-
+            Name of the state, must be unique for each state. Must be consisted
+            of a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum
+            length of 64 (no space allowed).
+        state_prompt:
+          example: |-
+            ## Task
+            You will follow the steps below...
+          type: string
+          description: |-
+            Prompt of the state, will be appended to the system prompt of LLM. 
+
+             - System prompt = general prompt + state prompt.
+        edges:
+          type: array
+          items:
+            $ref: '#/components/schemas/StateEdge'
+          description: >-
+            Edges of the state define how and what state can be reached from
+            this state.
+        tools:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tool'
+          description: >-
+            A list of tools specific to this state the model may call (to get
+            external knowledge, call API, etc). You can select from some common
+            predefined tools like end call, transfer call, etc; or you can
+            create your own custom tool (last option) for the LLM to use. 
+
+
+            - Tools of LLM = general tools + state tools + state transitions
+    StateEdge:
+      type: object
+      required:
+        - destination_state_name
+        - description
+      properties:
+        destination_state_name:
+          type: string
+          description: >-
+            The destination state name when going through transition of state
+            via this edge. State transition internally is implemented as a tool
+            call of LLM, and a tool call with name
+            "transition_to_{destination_state_name}" will get created. Feel free
+            to reference it inside the prompt.
+        description:
+          type: string
+          description: >-
+            Describes what's the transition and at what time / criteria should
+            this transition happen.
+        parameters:
+          $ref: '#/components/schemas/ToolParameter'
+          description: >-
+            Describes what parameters you want to extract out when the
+            transition changes. The parameters extracted here can be referenced
+            in prompts & function descriptions of later states via dynamic
+            variables. The parameters the functions accepts, described as a JSON
+            Schema object. See [JSON Schema
+            reference](https://json-schema.org/understanding-json-schema/) for
+            documentation about the format.
+    ToolParameter:
+      type: object
+      description: >-
+        The parameters the functions accepts, described as a JSON Schema object.
+        See [JSON Schema
+        reference](https://json-schema.org/understanding-json-schema/) for
+        documentation about the format. Omitting parameters defines a function
+        with an empty parameter list.
+      required:
+        - type
+        - properties
+      properties:
+        type:
+          type: string
+          enum:
+            - object
+          description: Type must be "object" for a JSON Schema object.
+        properties:
+          type: object
+          additionalProperties: {}
+          description: >-
+            The value of properties is an object, where each key is the name of
+            a property and each value is a schema used to validate that
+            property.
+        required:
+          type: array
+          items:
+            type: string
+          description: >-
+            List of names of required property when generating this parameter.
+            LLM will do its best to generate the required properties in its
+            function arguments. Property must exist in properties.
+    KBConfig:
+      type: object
+      properties:
+        top_k:
+          type: integer
+          minimum: 1
+          maximum: 10
+          example: 3
+          description: Max number of knowledge base chunks to retrieve
+        filter_score:
+          type: number
+          minimum: 0
+          maximum: 1
+          example: 0.6
+          description: Similarity threshold for filtering search results
+
+````

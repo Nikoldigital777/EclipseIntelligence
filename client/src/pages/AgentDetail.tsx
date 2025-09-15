@@ -11,16 +11,84 @@ import { Label } from "@/components/ui/label";
 
 interface Agent {
   id: number;
+  agent_id?: string;
   retellAgentId?: string;
+  agent_name?: string;
   name: string;
   type: string;
   voice: string;
+  voice_id?: string;
   phone: string;
   description: string;
   editedBy: string;
   editedAt: string;
   avatar: string;
   prompt?: string;
+  general_prompt?: string;
+  response_engine?: {
+    type: string;
+    llm_id?: string;
+    version?: number;
+  };
+  llm_details?: {
+    general_prompt?: string;
+    model?: string;
+    temperature?: number;
+    max_tokens?: number;
+    first_message?: string;
+    system_message?: string;
+    tools?: any[];
+  };
+  voice_config?: {
+    voice_id?: string;
+    voice_model?: string;
+    voice_temperature?: number;
+    voice_speed?: number;
+    fallback_voice_ids?: string[];
+    volume?: number;
+    normalize_for_speech?: boolean;
+    pronunciation_dictionary?: any[];
+  };
+  conversation_config?: {
+    language?: string;
+    responsiveness?: number;
+    interruption_sensitivity?: number;
+    enable_backchannel?: boolean;
+    backchannel_frequency?: number;
+    backchannel_words?: string[];
+    reminder_trigger_ms?: number;
+    reminder_max_count?: number;
+    end_call_after_silence_ms?: number;
+    max_call_duration_ms?: number;
+  };
+  call_config?: {
+    webhook_url?: string;
+    webhook_timeout_ms?: number;
+    begin_message_delay_ms?: number;
+    ring_duration_ms?: number;
+    voicemail_option?: any;
+    ambient_sound?: string;
+    ambient_sound_volume?: number;
+  };
+  speech_config?: {
+    stt_mode?: string;
+    vocab_specialization?: string;
+    boosted_keywords?: string[];
+    allow_user_dtmf?: boolean;
+    user_dtmf_options?: any;
+    denoising_mode?: string;
+  };
+  analytics_config?: {
+    data_storage_setting?: string;
+    opt_in_signed_url?: boolean;
+    post_call_analysis_data?: any[];
+    post_call_analysis_model?: string;
+    pii_config?: any;
+  };
+  last_modification_timestamp?: number;
+  language?: string;
+  version?: number;
+  is_published?: boolean;
 }
 
 export default function AgentDetail() {
@@ -51,19 +119,34 @@ export default function AgentDetail() {
 
       const agentData = await response.json();
       
-      // Map Retell agent data to our interface
+      // Map comprehensive agent data to our interface
       const mappedAgent: Agent = {
         id: agentData.id || parseInt(agentId),
+        agent_id: agentData.agent_id,
+        retellAgentId: agentData.agent_id || agentData.retellAgentId,
         name: agentData.agent_name || agentData.name || "Unnamed Agent",
-        type: "Single Prompt", // Default type
-        voice: agentData.voice_id || "Default Voice",
+        type: agentData.response_engine?.type || "Single Prompt",
+        voice: agentData.voice_config?.voice_id || agentData.voice_id || "Default Voice",
+        voice_id: agentData.voice_config?.voice_id || agentData.voice_id,
         phone: agentData.phone || "+1(555)000-0000",
         description: agentData.description || "AI Agent",
         editedBy: "System",
         editedAt: agentData.last_modification_timestamp ? 
           new Date(agentData.last_modification_timestamp).toLocaleDateString() : "Unknown",
-        avatar: agentData.agent_name?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || "AG",
-        prompt: agentData.general_prompt || agentData.prompt || ""
+        avatar: (agentData.agent_name || agentData.name || "AG").split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase(),
+        prompt: agentData.llm_details?.general_prompt || agentData.general_prompt || agentData.prompt || "",
+        general_prompt: agentData.llm_details?.general_prompt || agentData.general_prompt,
+        response_engine: agentData.response_engine,
+        llm_details: agentData.llm_details,
+        voice_config: agentData.voice_config,
+        conversation_config: agentData.conversation_config,
+        call_config: agentData.call_config,
+        speech_config: agentData.speech_config,
+        analytics_config: agentData.analytics_config,
+        last_modification_timestamp: agentData.last_modification_timestamp,
+        language: agentData.conversation_config?.language || agentData.language,
+        version: agentData.version,
+        is_published: agentData.is_published
       };
 
       setAgent(mappedAgent);
@@ -278,13 +361,28 @@ Remember to always be helpful, patient, and represent the company professionally
                 </div>
                 
                 <div>
-                  <Label className="text-gray-300 text-sm">Description</Label>
-                  <p className="text-white">{agent.description}</p>
+                  <Label className="text-gray-300 text-sm">Agent ID</Label>
+                  <p className="text-white font-mono bg-[hsl(var(--lunar-mist))]/20 px-3 py-2 rounded-md text-sm">
+                    {agent.agent_id || agent.retellAgentId || agent.id}
+                  </p>
                 </div>
                 
                 <div>
-                  <Label className="text-gray-300 text-sm">Voice Model</Label>
-                  <p className="text-[hsl(var(--manifest-blue))] font-medium">{agent.voice}</p>
+                  <Label className="text-gray-300 text-sm">Response Engine</Label>
+                  <p className="text-[hsl(var(--eclipse-glow))] font-medium">
+                    {agent.response_engine?.type || "Unknown"} 
+                    {agent.response_engine?.llm_id && ` (${agent.response_engine.llm_id})`}
+                  </p>
+                </div>
+                
+                <div>
+                  <Label className="text-gray-300 text-sm">Language</Label>
+                  <p className="text-white">{agent.language || "en-US"}</p>
+                </div>
+                
+                <div>
+                  <Label className="text-gray-300 text-sm">Version</Label>
+                  <p className="text-white">{agent.version || 0} {agent.is_published ? "(Published)" : "(Draft)"}</p>
                 </div>
                 
                 <div>
@@ -303,6 +401,153 @@ Remember to always be helpful, patient, and represent the company professionally
               </div>
             </div>
           </GlassmorphicCard>
+
+          {/* Voice Configuration */}
+          {agent.voice_config && (
+            <GlassmorphicCard>
+              <div className="p-6">
+                <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+                  <span className="mr-3 text-[hsl(var(--manifest-blue))]">🎙️</span>
+                  Voice Configuration
+                </h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-gray-300 text-sm">Voice ID</Label>
+                    <p className="text-[hsl(var(--manifest-blue))] font-medium">{agent.voice_config.voice_id}</p>
+                  </div>
+                  
+                  {agent.voice_config.voice_model && (
+                    <div>
+                      <Label className="text-gray-300 text-sm">Voice Model</Label>
+                      <p className="text-white">{agent.voice_config.voice_model}</p>
+                    </div>
+                  )}
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-gray-300 text-sm">Temperature</Label>
+                      <p className="text-white">{agent.voice_config.voice_temperature || 1}</p>
+                    </div>
+                    <div>
+                      <Label className="text-gray-300 text-sm">Speed</Label>
+                      <p className="text-white">{agent.voice_config.voice_speed || 1}</p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label className="text-gray-300 text-sm">Volume</Label>
+                    <p className="text-white">{agent.voice_config.volume || 1}</p>
+                  </div>
+                  
+                  {agent.voice_config.fallback_voice_ids && agent.voice_config.fallback_voice_ids.length > 0 && (
+                    <div>
+                      <Label className="text-gray-300 text-sm">Fallback Voices</Label>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {agent.voice_config.fallback_voice_ids.map((voiceId, index) => (
+                          <span key={index} className="bg-[hsl(var(--lunar-mist))]/20 px-2 py-1 rounded text-xs text-gray-300">
+                            {voiceId}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </GlassmorphicCard>
+          )}
+
+          {/* LLM Details */}
+          {agent.llm_details && (
+            <GlassmorphicCard>
+              <div className="p-6">
+                <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+                  <span className="mr-3 text-[hsl(var(--eclipse-glow))]">🧠</span>
+                  LLM Configuration
+                </h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-gray-300 text-sm">Model</Label>
+                    <p className="text-[hsl(var(--eclipse-glow))] font-medium">{agent.llm_details.model}</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-gray-300 text-sm">Temperature</Label>
+                      <p className="text-white">{agent.llm_details.temperature || 0.7}</p>
+                    </div>
+                    <div>
+                      <Label className="text-gray-300 text-sm">Max Tokens</Label>
+                      <p className="text-white">{agent.llm_details.max_tokens || 'Auto'}</p>
+                    </div>
+                  </div>
+                  
+                  {agent.llm_details.first_message && (
+                    <div>
+                      <Label className="text-gray-300 text-sm">First Message</Label>
+                      <p className="text-white bg-[hsl(var(--lunar-mist))]/20 px-3 py-2 rounded-md text-sm">
+                        {agent.llm_details.first_message}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {agent.llm_details.tools && agent.llm_details.tools.length > 0 && (
+                    <div>
+                      <Label className="text-gray-300 text-sm">Tools Available</Label>
+                      <p className="text-[hsl(var(--gold-manifest))]">{agent.llm_details.tools.length} tools configured</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </GlassmorphicCard>
+          )}
+
+          {/* Conversation Settings */}
+          {agent.conversation_config && (
+            <GlassmorphicCard>
+              <div className="p-6">
+                <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
+                  <span className="mr-3 text-[hsl(var(--gold-manifest))]">💬</span>
+                  Conversation Settings
+                </h3>
+                
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-gray-300 text-sm">Responsiveness</Label>
+                      <p className="text-white">{agent.conversation_config.responsiveness || 1}</p>
+                    </div>
+                    <div>
+                      <Label className="text-gray-300 text-sm">Interruption Sensitivity</Label>
+                      <p className="text-white">{agent.conversation_config.interruption_sensitivity || 1}</p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label className="text-gray-300 text-sm">Backchannel</Label>
+                    <p className="text-white">
+                      {agent.conversation_config.enable_backchannel ? "Enabled" : "Disabled"}
+                      {agent.conversation_config.enable_backchannel && agent.conversation_config.backchannel_frequency && 
+                        ` (${agent.conversation_config.backchannel_frequency} frequency)`
+                      }
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-gray-300 text-sm">Reminder Trigger</Label>
+                      <p className="text-white">{(agent.conversation_config.reminder_trigger_ms || 10000) / 1000}s</p>
+                    </div>
+                    <div>
+                      <Label className="text-gray-300 text-sm">Max Reminders</Label>
+                      <p className="text-white">{agent.conversation_config.reminder_max_count || 1}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </GlassmorphicCard>
+          )}
 
           {/* Test Audio Panel */}
           <GlassmorphicCard>

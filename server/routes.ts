@@ -209,6 +209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const agentId = req.params.id;
       const retellClient = createRetellClient();
       let agent = null;
+      let comprehensiveAgentData = {};
 
       // Check if it's a Retell agent ID format (starts with 'agent_')
       if (agentId.startsWith('agent_')) {
@@ -217,8 +218,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (retellClient) {
           try {
+            // Get comprehensive agent data from Retell API
             const retellAgent = await retellClient.getAgent(agentId);
             agent = localAgent ? { ...localAgent, ...retellAgent } : retellAgent;
+            
+            // Get additional LLM details if response_engine contains llm_id
+            if (retellAgent.response_engine?.llm_id) {
+              try {
+                const llmData = await retellClient.getLlm(retellAgent.response_engine.llm_id);
+                comprehensiveAgentData.llm_details = {
+                  general_prompt: llmData.general_prompt,
+                  model: llmData.model,
+                  temperature: llmData.temperature,
+                  max_tokens: llmData.max_tokens,
+                  first_message: llmData.first_message,
+                  system_message: llmData.system_message,
+                  tools: llmData.tools || []
+                };
+              } catch (llmError) {
+                console.warn("Failed to fetch LLM details:", llmError);
+              }
+            }
+            
+            // Structure comprehensive voice data
+            comprehensiveAgentData.voice_config = {
+              voice_id: retellAgent.voice_id,
+              voice_model: retellAgent.voice_model,
+              voice_temperature: retellAgent.voice_temperature,
+              voice_speed: retellAgent.voice_speed,
+              fallback_voice_ids: retellAgent.fallback_voice_ids,
+              volume: retellAgent.volume,
+              normalize_for_speech: retellAgent.normalize_for_speech,
+              pronunciation_dictionary: retellAgent.pronunciation_dictionary
+            };
+            
+            // Structure conversation settings
+            comprehensiveAgentData.conversation_config = {
+              language: retellAgent.language,
+              responsiveness: retellAgent.responsiveness,
+              interruption_sensitivity: retellAgent.interruption_sensitivity,
+              enable_backchannel: retellAgent.enable_backchannel,
+              backchannel_frequency: retellAgent.backchannel_frequency,
+              backchannel_words: retellAgent.backchannel_words,
+              reminder_trigger_ms: retellAgent.reminder_trigger_ms,
+              reminder_max_count: retellAgent.reminder_max_count,
+              end_call_after_silence_ms: retellAgent.end_call_after_silence_ms,
+              max_call_duration_ms: retellAgent.max_call_duration_ms
+            };
+            
+            // Structure call handling settings
+            comprehensiveAgentData.call_config = {
+              webhook_url: retellAgent.webhook_url,
+              webhook_timeout_ms: retellAgent.webhook_timeout_ms,
+              begin_message_delay_ms: retellAgent.begin_message_delay_ms,
+              ring_duration_ms: retellAgent.ring_duration_ms,
+              voicemail_option: retellAgent.voicemail_option,
+              ambient_sound: retellAgent.ambient_sound,
+              ambient_sound_volume: retellAgent.ambient_sound_volume
+            };
+            
+            // Structure speech recognition settings
+            comprehensiveAgentData.speech_config = {
+              stt_mode: retellAgent.stt_mode,
+              vocab_specialization: retellAgent.vocab_specialization,
+              boosted_keywords: retellAgent.boosted_keywords,
+              allow_user_dtmf: retellAgent.allow_user_dtmf,
+              user_dtmf_options: retellAgent.user_dtmf_options,
+              denoising_mode: retellAgent.denoising_mode
+            };
+            
+            // Structure analytics and privacy settings
+            comprehensiveAgentData.analytics_config = {
+              data_storage_setting: retellAgent.data_storage_setting,
+              opt_in_signed_url: retellAgent.opt_in_signed_url,
+              post_call_analysis_data: retellAgent.post_call_analysis_data,
+              post_call_analysis_model: retellAgent.post_call_analysis_model,
+              pii_config: retellAgent.pii_config
+            };
+            
           } catch (retellError) {
             console.warn("Failed to fetch from Retell API:", retellError);
             agent = localAgent;
@@ -232,8 +309,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (localAgent && localAgent.retellAgentId && retellClient) {
           try {
+            // Get comprehensive agent data from Retell API
             const retellAgent = await retellClient.getAgent(localAgent.retellAgentId);
             agent = { ...localAgent, ...retellAgent };
+            
+            // Get LLM details if available
+            if (retellAgent.response_engine?.llm_id) {
+              try {
+                const llmData = await retellClient.getLlm(retellAgent.response_engine.llm_id);
+                comprehensiveAgentData.llm_details = {
+                  general_prompt: llmData.general_prompt,
+                  model: llmData.model,
+                  temperature: llmData.temperature,
+                  max_tokens: llmData.max_tokens,
+                  first_message: llmData.first_message,
+                  system_message: llmData.system_message,
+                  tools: llmData.tools || []
+                };
+              } catch (llmError) {
+                console.warn("Failed to fetch LLM details:", llmError);
+              }
+            }
+            
+            // Add all the comprehensive config data as above
+            comprehensiveAgentData.voice_config = {
+              voice_id: retellAgent.voice_id,
+              voice_model: retellAgent.voice_model,
+              voice_temperature: retellAgent.voice_temperature,
+              voice_speed: retellAgent.voice_speed,
+              fallback_voice_ids: retellAgent.fallback_voice_ids,
+              volume: retellAgent.volume,
+              normalize_for_speech: retellAgent.normalize_for_speech,
+              pronunciation_dictionary: retellAgent.pronunciation_dictionary
+            };
+            
+            comprehensiveAgentData.conversation_config = {
+              language: retellAgent.language,
+              responsiveness: retellAgent.responsiveness,
+              interruption_sensitivity: retellAgent.interruption_sensitivity,
+              enable_backchannel: retellAgent.enable_backchannel,
+              backchannel_frequency: retellAgent.backchannel_frequency,
+              backchannel_words: retellAgent.backchannel_words,
+              reminder_trigger_ms: retellAgent.reminder_trigger_ms,
+              reminder_max_count: retellAgent.reminder_max_count,
+              end_call_after_silence_ms: retellAgent.end_call_after_silence_ms,
+              max_call_duration_ms: retellAgent.max_call_duration_ms
+            };
+            
           } catch (retellError) {
             console.warn("Failed to fetch from Retell API:", retellError);
             agent = localAgent;
@@ -246,7 +368,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!agent) {
         return res.status(404).json({ error: "Agent not found" });
       }
-      res.json(agent);
+      
+      // Return agent with comprehensive configuration data
+      res.json({
+        ...agent,
+        ...comprehensiveAgentData
+      });
     } catch (error) {
       console.error("Failed to fetch agent:", error);
       res.status(500).json({ error: "Failed to fetch agent" });

@@ -117,8 +117,37 @@ export class RetellClient {
     return this.makeRequest('/list-agents');
   }
 
-  async createWebCall(request: { agent_id: string }) {
-    return this.makeRequest('/v2/create-web-call', 'POST', request);
+  async createWebCall(callDetails: any) {
+    const response = await fetch(`${this.baseUrl}/create-web-call`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(callDetails),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Retell API error: ${response.status}`);
+    }
+
+    return await response.json();
+  }
+
+  async getLlm(llmId: string) {
+    const response = await fetch(`${this.baseUrl}/get-retell-llm/${llmId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Retell API error: ${response.status}`);
+    }
+
+    return await response.json();
   }
 }
 
