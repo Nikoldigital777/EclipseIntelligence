@@ -8,28 +8,28 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  
+
   // Agent operations
   getAgents(): Promise<Agent[]>;
   getAgent(id: number): Promise<Agent | undefined>;
   createAgent(agent: InsertAgent): Promise<Agent>;
   updateAgent(id: number, agent: Partial<InsertAgent>): Promise<Agent | undefined>;
   deleteAgent(id: number): Promise<boolean>;
-  
+
   // Lead operations
   getLeads(): Promise<Lead[]>;
   getLead(id: number): Promise<Lead | undefined>;
   createLead(lead: InsertLead): Promise<Lead>;
   updateLead(id: number, lead: Partial<InsertLead>): Promise<Lead | undefined>;
   deleteLead(id: number): Promise<boolean>;
-  
+
   // Call operations
   getCalls(): Promise<Call[]>;
   getCall(id: number): Promise<Call | undefined>;
   createCall(call: InsertCall): Promise<Call>;
   getCallsByLead(leadId: number): Promise<Call[]>;
   getCallsByAgent(agentId: number): Promise<Call[]>;
-  
+
   // Batch call operations
   getBatchCalls(): Promise<BatchCall[]>;
   getBatchCall(id: number): Promise<BatchCall | undefined>;
@@ -153,7 +153,7 @@ export class DatabaseStorage implements IStorage {
   async getCallsByAgent(agentId: number): Promise<Call[]> {
     return await db.select().from(calls).where(eq(calls.agentId, agentId));
   }
-  
+
   // Batch call operations
   async getBatchCalls(): Promise<BatchCall[]> {
     return await db.select().from(batchCalls).orderBy(batchCalls.createdAt);

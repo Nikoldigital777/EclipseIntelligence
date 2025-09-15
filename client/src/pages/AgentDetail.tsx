@@ -72,15 +72,25 @@ export default function AgentDetail() {
       // Fallback to mock data
       const mockAgent: Agent = {
         id: parseInt(agentId),
-        name: "Levan Wood Eclipse Recruiting",
-        type: "Single Prompt",
-        voice: "Levan RE/MAX",
-        phone: "+1(248)283-4183",
-        description: "Cosmic Recruiter",
-        editedBy: "Levan Wood",
+        name: "Madison Receptionist Agent",
+        type: "Inbound Receptionist",
+        voice: "Madison Professional",
+        phone: "+1(248)283-4180",
+        description: "Professional inbound receptionist",
+        editedBy: "System",
         editedAt: "07/03/2025, 19:43",
-        avatar: "LW",
-        prompt: `### You are Levan Wood, Broker-Owner at REMAX Eclipse...`
+        avatar: "MR",
+        prompt: `### You are Madison, a professional receptionist at RE/MAX Eclipse...
+
+Your role is to:
+- Answer incoming calls professionally and courteously
+- Schedule appointments and manage calendars
+- Route calls to appropriate agents
+- Take detailed messages when agents are unavailable
+- Provide basic information about services
+- Maintain a warm, welcoming tone at all times
+
+Remember to always be helpful, patient, and represent the company professionally.`
       };
       setAgent(mockAgent);
       setPrompt(mockAgent.prompt || "");

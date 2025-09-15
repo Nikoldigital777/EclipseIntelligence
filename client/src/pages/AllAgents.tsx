@@ -54,14 +54,36 @@ export default function AllAgents() {
       setAgents([
         {
           id: 1,
-          name: "Levan Wood Eclipse Recruiting",
-          type: "Single Prompt",
-          voice: "Levan RE/MAX",
-          phone: "+1(248)283-4183",
-          editedBy: "Levan Wood",
+          name: "Madison Receptionist Agent",
+          type: "Inbound Receptionist",
+          voice: "Madison Professional",
+          phone: "+1(248)283-4180",
+          editedBy: "System",
           editedAt: "07/03/2025, 19:43",
-          avatar: "LW",
-          description: "Cosmic Recruiter"
+          avatar: "MR",
+          description: "Professional inbound receptionist"
+        },
+        {
+          id: 2,
+          name: "Levan Outbound Recruiting Agent",
+          type: "Outbound Recruiting",
+          voice: "Levan RE/MAX",
+          phone: "+1(248)283-4181",
+          editedBy: "System",
+          editedAt: "07/03/2025, 19:43",
+          avatar: "LR",
+          description: "Outbound recruiting specialist"
+        },
+        {
+          id: 3,
+          name: "Levan Outbound Listing Agent",
+          type: "Outbound Listing",
+          voice: "Levan RE/MAX",
+          phone: "+1(248)283-4182",
+          editedBy: "System",
+          editedAt: "07/03/2025, 19:43",
+          avatar: "LL",
+          description: "Outbound listing specialist"
         }
       ]);
     } finally {
