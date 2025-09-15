@@ -153,36 +153,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const retellClient = createRetellClient();
       let agent = null;
 
-      if (retellClient && !isNaN(parseInt(agentId))) {
-        try {
-          // If it's a numeric ID, try local storage first, then Retell
-          const localAgent = await storage.getAgent(parseInt(agentId));
-          if (localAgent && localAgent.retellAgentId) {
-            // Get detailed info from Retell
-            const retellAgent = await retellClient.getAgent(localAgent.retellAgentId);
-            agent = { ...localAgent, ...retellAgent };
-          } else {
+      // Check if it's a Retell agent ID format (starts with 'agent_')
+      if (agentId.startsWith('agent_')) {
+        // Try to find local agent by Retell ID first
+        const localAgent = await storage.getAgentByRetellId(agentId);
+        
+        if (retellClient) {
+          try {
+            const retellAgent = await retellClient.getAgent(agentId);
+            agent = localAgent ? { ...localAgent, ...retellAgent } : retellAgent;
+          } catch (retellError) {
+            console.warn("Failed to fetch from Retell API:", retellError);
             agent = localAgent;
           }
-        } catch (retellError) {
-          console.warn("Failed to fetch from Retell API:", retellError);
-          agent = await storage.getAgent(parseInt(agentId));
+        } else {
+          agent = localAgent;
         }
-      } else if (retellClient) {
-        try {
-          // Try to get directly from Retell with the provided ID
-          agent = await retellClient.getAgent(agentId);
-        } catch (retellError) {
-          console.warn("Failed to fetch from Retell API:", retellError);
-          return res.status(404).json({ error: "Agent not found" });
+      } else if (!isNaN(parseInt(agentId))) {
+        // Numeric ID - local database lookup
+        const localAgent = await storage.getAgent(parseInt(agentId));
+        
+        if (localAgent && localAgent.retellAgentId && retellClient) {
+          try {
+            const retellAgent = await retellClient.getAgent(localAgent.retellAgentId);
+            agent = { ...localAgent, ...retellAgent };
+          } catch (retellError) {
+            console.warn("Failed to fetch from Retell API:", retellError);
+            agent = localAgent;
+          }
+        } else {
+          agent = localAgent;
         }
-      } else {
-        // No API key, use local storage
-        const id = parseInt(agentId);
-        if (isNaN(id)) {
-          return res.status(400).json({ error: "Invalid agent ID" });
-        }
-        agent = await storage.getAgent(id);
       }
 
       if (!agent) {

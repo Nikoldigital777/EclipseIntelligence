@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 interface Agent {
   id?: number;
   agent_id?: string;
+  retellAgentId?: string;
   agent_name?: string;
   name?: string;
   voice_id?: string;
@@ -54,6 +55,7 @@ export default function AllAgents() {
       setAgents([
         {
           id: 1,
+          retellAgentId: "agent_madison_receptionist_001",
           name: "Madison Receptionist Agent",
           type: "Inbound Receptionist",
           voice: "Madison Professional",
@@ -65,6 +67,7 @@ export default function AllAgents() {
         },
         {
           id: 2,
+          retellAgentId: "agent_levan_recruiting_001",
           name: "Levan Outbound Recruiting Agent",
           type: "Outbound Recruiting",
           voice: "Levan RE/MAX",
@@ -76,6 +79,7 @@ export default function AllAgents() {
         },
         {
           id: 3,
+          retellAgentId: "agent_levan_listing_001",
           name: "Levan Outbound Listing Agent",
           type: "Outbound Listing",
           voice: "Levan RE/MAX",
@@ -93,7 +97,7 @@ export default function AllAgents() {
 
   const getAgentDisplayData = (agent: Agent, index: number) => {
     return {
-      id: agent.agent_id || agent.id?.toString() || index.toString(),
+      id: agent.agent_id || agent.retellAgentId || agent.id?.toString() || index.toString(),
       name: agent.agent_name || agent.name || "Unnamed Agent",
       type: agent.type || "Single Prompt",
       voice: agent.voice_id || agent.voice || "Default Voice",
@@ -102,7 +106,8 @@ export default function AllAgents() {
       editedAt: agent.editedAt || (agent.last_modification_timestamp ? 
         new Date(agent.last_modification_timestamp).toLocaleDateString() : "Unknown"),
       avatar: agent.avatar || agent.name?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || "AG",
-      description: agent.description || "AI Agent"
+      description: agent.description || "AI Agent",
+      retellAgentId: agent.agent_id || agent.retellAgentId
     };
   };
 

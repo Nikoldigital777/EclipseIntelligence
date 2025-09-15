@@ -16,6 +16,7 @@ export const users = pgTable("users", {
 
 export const agents = pgTable("agents", {
   id: serial("id").primaryKey(),
+  retellAgentId: text("retell_agent_id").unique(),
   name: text("name").notNull(),
   type: text("type").notNull().default("Single Prompt"),
   voice: text("voice").notNull(),

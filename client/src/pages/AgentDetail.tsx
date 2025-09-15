@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 
 interface Agent {
   id: number;
+  retellAgentId?: string;
   name: string;
   type: string;
   voice: string;
@@ -72,6 +73,7 @@ export default function AgentDetail() {
       // Fallback to mock data
       const mockAgent: Agent = {
         id: parseInt(agentId),
+        retellAgentId: agentId.startsWith('agent_') ? agentId : "agent_madison_receptionist_001",
         name: "Madison Receptionist Agent",
         type: "Inbound Receptionist",
         voice: "Madison Professional",
@@ -110,7 +112,7 @@ Remember to always be helpful, patient, and represent the company professionally
     setIsTestingAudio(true);
     try {
       const token = localStorage.getItem('auth_token');
-      const agentId = agent.id?.toString() || params?.id;
+      const agentId = agent.retellAgentId || params?.id;
       
       const response = await fetch('/api/web-calls', {
         method: 'POST',
