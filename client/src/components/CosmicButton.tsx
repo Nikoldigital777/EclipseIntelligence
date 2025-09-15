@@ -54,13 +54,16 @@ export default function CosmicButton({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "rounded-full font-semibold transition-all duration-300",
+        "rounded-full font-semibold smooth-transition relative overflow-hidden group",
+        "before:absolute before:inset-0 before:bg-gradient-to-r before:from-white/20 before:via-white/10 before:to-white/20",
+        "before:translate-x-[-100%] group-hover:before:translate-x-[100%] before:transition-transform before:duration-700",
+        "active:scale-95 hover:scale-105",
         getVariantStyles(),
         getSizeStyles(),
         className
       )}
     >
-      {children}
+      <span className="relative z-10">{children}</span>
     </Button>
   );
 }

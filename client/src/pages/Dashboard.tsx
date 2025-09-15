@@ -118,7 +118,7 @@ export default function Dashboard() {
 
       {/* Enhanced Stats Cards */}
       <div className="p-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 cosmic-grid">
           {/* Today's Leads */}
           <GlassmorphicCard className={`group hover:scale-102 relative overflow-hidden transition-all duration-300 border border-[hsl(var(--primary-blue))]/20 hover:border-[hsl(var(--primary-blue))]/40 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
             <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--primary-blue))]/8 to-[hsl(var(--eclipse-glow))]/4 group-hover:from-[hsl(var(--primary-blue))]/12 group-hover:to-[hsl(var(--eclipse-glow))]/6 transition-all duration-300" />
@@ -278,7 +278,7 @@ export default function Dashboard() {
           </GlassmorphicCard>
         </div>
 
-        
+
       </div>
     </div>
   );

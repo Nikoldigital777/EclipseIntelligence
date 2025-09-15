@@ -22,7 +22,13 @@ export default function GlassmorphicCard({
 }: GlassmorphicCardProps) {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const getBorderStyles = () => {
     switch (borderColor) {
@@ -93,10 +99,12 @@ export default function GlassmorphicCard({
     <div
       ref={cardRef}
       className={cn(
-        intense ? "glassmorphism-intense" : "glassmorphism",
-        "rounded-xl p-6 relative overflow-hidden",
-        hover && "hover-glow",
+        intense ? "glassmorphism-intense premium-shadow" : "glassmorphism",
+        "rounded-xl p-6 relative overflow-hidden smooth-transition",
+        hover && "enhanced-hover",
         tiltEffect && "transition-transform duration-200 ease-out",
+        !isVisible && "opacity-0 translate-y-4",
+        isVisible && "animate-fade-in-scale",
         getBorderStyles(),
         className
       )}
@@ -116,14 +124,21 @@ export default function GlassmorphicCard({
         />
       )}
       
-      {/* Subtle floating particles for intense cards */}
+      {/* Enhanced floating particles for intense cards */}
       {intense && (
         <>
-          <div className="absolute top-4 right-4 w-1 h-1 bg-[hsl(var(--eclipse-glow))] rounded-full animate-twinkle" />
-          <div className="absolute bottom-6 left-8 w-0.5 h-0.5 bg-[hsl(var(--lunar-mist))] rounded-full animate-twinkle" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-1/2 right-8 w-1.5 h-1.5 bg-[hsl(var(--gold-manifest))] rounded-full animate-twinkle" style={{ animationDelay: '2s' }} />
+          <div className="absolute top-4 right-4 w-2 h-2 bg-[hsl(var(--eclipse-glow))] rounded-full animate-twinkle opacity-60" />
+          <div className="absolute bottom-6 left-8 w-1 h-1 bg-[hsl(var(--lunar-mist))] rounded-full animate-twinkle opacity-40" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/2 right-8 w-1.5 h-1.5 bg-[hsl(var(--gold-manifest))] rounded-full animate-twinkle opacity-70" style={{ animationDelay: '2s' }} />
+          <div className="absolute top-1/4 left-1/4 w-0.5 h-0.5 bg-white rounded-full animate-twinkle opacity-30" style={{ animationDelay: '3s' }} />
+          
+          {/* Ambient glow overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--eclipse-glow))]/5 via-transparent to-[hsl(var(--lunar-mist))]/5 pointer-events-none" />
         </>
       )}
+      
+      {/* Enhanced border accent */}
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-20 pointer-events-none" style={{ height: '1px' }} />
       
       <div className="relative z-10">
         {children}
