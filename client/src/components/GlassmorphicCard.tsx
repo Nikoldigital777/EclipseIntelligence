@@ -1,4 +1,3 @@
-
 import { ReactNode, useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
@@ -58,7 +57,7 @@ export default function GlassmorphicCard({
     const rect = cardRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
+
     setMousePosition({ x, y });
   };
 
@@ -77,7 +76,7 @@ export default function GlassmorphicCard({
     const rect = cardRef.current.getBoundingClientRect();
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
-    
+
     const rotateX = (mousePosition.y - centerY) / centerY * -1.5;
     const rotateY = (mousePosition.x - centerX) / centerX * 1.5;
 
@@ -91,7 +90,7 @@ export default function GlassmorphicCard({
     if (!tiltEffect || !isHovered || !cardRef.current) return {};
 
     const rect = cardRef.current.getBoundingClientRect();
-    
+
     const glowX = (mousePosition.x / rect.width) * 100;
     const glowY = (mousePosition.y / rect.height) * 100;
 
@@ -128,7 +127,7 @@ export default function GlassmorphicCard({
           style={getGlowStyles()}
         />
       )}
-      
+
       {/* Enhanced floating particles for intense cards */}
       {intense && (
         <>
@@ -136,15 +135,15 @@ export default function GlassmorphicCard({
           <div className="absolute bottom-6 left-8 w-1 h-1 bg-[#6C63FF] rounded-full animate-twinkle opacity-40" style={{ animationDelay: '1s' }} />
           <div className="absolute top-1/2 right-8 w-1.5 h-1.5 bg-[#D4AF37] rounded-full animate-twinkle opacity-70" style={{ animationDelay: '2s' }} />
           <div className="absolute top-1/4 left-1/4 w-0.5 h-0.5 bg-[#E8E9F3] rounded-full animate-twinkle opacity-30" style={{ animationDelay: '3s' }} />
-          
+
           {/* Ambient glow overlay */}
           <div className="absolute inset-0 bg-gradient-to-br from-[#00D9FF]/3 via-transparent to-[#6C63FF]/3 pointer-events-none" />
         </>
       )}
-      
+
       {/* Enhanced border accent with cosmic silver shimmer */}
       <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-[#E8E9F3]/15 to-transparent opacity-30 pointer-events-none" style={{ height: '1px' }} />
-      
+
       <div className="relative z-10">
         {children}
       </div>

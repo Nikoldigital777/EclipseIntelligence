@@ -61,39 +61,19 @@ export default function Dashboard() {
     <div className="min-h-screen">
       {/* Header with sophisticated design */}
       <div className="p-8 border-b border-[#E8E9F3]/10 relative overflow-hidden">
-        {/* Sophisticated background gradients */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#1A1B26]/80 via-[#2E3A59]/60 to-[#1A1B26]/80 backdrop-blur-sm"></div>
+        {/* Subtle sophisticated background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1A1B26]/70 via-[#1c1d28]/80 to-[#1A1B26]/70 backdrop-blur-sm"></div>
         
-        {/* Subtle geometric patterns */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_25%_25%,#00D9FF_0%,transparent_50%)]"></div>
-          <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_75%_25%,#D4AF37_0%,transparent_50%)]"></div>
-          <div className="absolute bottom-0 left-0 w-full h-full bg-[radial-gradient(circle_at_25%_75%,#6C63FF_0%,transparent_50%)]"></div>
+        {/* Very subtle accent hints */}
+        <div className="absolute inset-0 opacity-2">
+          <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_20%,#00D9FF_0%,transparent_60%)]"></div>
+          <div className="absolute bottom-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_80%,#D4AF37_0%,transparent_60%)]"></div>
         </div>
 
-        {/* Elegant mesh background */}
-        <div className="absolute inset-0 opacity-3">
-          <svg className="w-full h-full" viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style={{stopColor: '#00D9FF', stopOpacity: 0.15}} />
-                <stop offset="50%" style={{stopColor: '#E8E9F3', stopOpacity: 0.08}} />
-                <stop offset="100%" style={{stopColor: '#D4AF37', stopOpacity: 0.15}} />
-              </linearGradient>
-            </defs>
-            <path d="M0,100 Q100,50 200,100 T400,100 L400,200 L0,200 Z" fill="url(#grad1)" />
-            <path d="M0,150 Q150,120 300,150 T400,150 L400,200 L0,200 Z" fill="url(#grad1)" opacity="0.3" />
-          </svg>
-        </div>
-
-        {/* Floating cosmic elements */}
-        <div className="absolute top-4 right-4 w-16 h-16 bg-gradient-to-br from-[#00D9FF]/20 to-[#6C63FF]/15 rounded-full blur-xl opacity-20 animate-float" />
-        <div className="absolute bottom-4 left-8 w-12 h-12 bg-gradient-to-br from-[#D4AF37]/20 to-[#00D9FF]/15 rounded-full blur-2xl opacity-15" />
-
-        {/* Refined grid pattern */}
-        <div className="absolute inset-0 opacity-2" style={{
-          backgroundImage: `radial-gradient(circle at 1px 1px, rgba(232,233,243,0.1) 1px, transparent 0)`,
-          backgroundSize: '24px 24px'
+        {/* Minimal grid pattern */}
+        <div className="absolute inset-0 opacity-1" style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, rgba(232,233,243,0.05) 1px, transparent 0)`,
+          backgroundSize: '32px 32px'
         }}></div>
 
         <div className="flex items-center justify-between relative z-10">

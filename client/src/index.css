@@ -59,9 +59,8 @@
     @apply font-sans antialiased text-foreground;
     background: linear-gradient(135deg, 
       var(--deep-space-charcoal) 0%, 
-      #1e1f2e 25%,
-      var(--quantum-blue) 50%,
-      #1e1f2e 75%,
+      #1c1d28 30%,
+      #1f2030 70%,
       var(--deep-space-charcoal) 100%);
     background-attachment: fixed;
     min-height: 100vh;
