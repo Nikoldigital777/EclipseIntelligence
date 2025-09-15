@@ -77,9 +77,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAgent(insertAgent: InsertAgent): Promise<Agent> {
+    const agentData = {
+      ...insertAgent,
+      editedAt: new Date().toISOString()
+    };
     const [agent] = await db
       .insert(agents)
-      .values(insertAgent)
+      .values(agentData)
       .returning();
     return agent;
   }
@@ -87,7 +91,7 @@ export class DatabaseStorage implements IStorage {
   async updateAgent(id: number, updateData: Partial<InsertAgent>): Promise<Agent | undefined> {
     const [agent] = await db
       .update(agents)
-      .set({ ...updateData, editedAt: new Date() })
+      .set({ ...updateData, editedAt: new Date().toISOString() })
       .where(eq(agents.id, id))
       .returning();
     return agent || undefined;
