@@ -1,0 +1,391 @@
+import React, { useState, useEffect } from "react";
+import { Sparkles, TrendingUp, UserPlus, Clock3, ArrowUpRight, Phone, Calendar, Target, Moon, Building2, Zap, Star } from "lucide-react";
+
+// Mock components - replace with your actual imports
+const GlassmorphicCard = ({ children, borderColor, intense, tiltEffect, hover, className, ...props }) => (
+  <div 
+    className={`rounded-xl p-6 relative overflow-hidden ${
+      intense ? 'bg-gradient-to-br from-slate-700/50 via-purple-700/30 to-slate-800/50 backdrop-blur-xl border border-cyan-400/40 shadow-2xl' : 'bg-gradient-to-br from-slate-600/40 via-blue-600/20 to-slate-700/40 backdrop-blur-lg border border-slate-400/50 shadow-xl'
+    } ${
+      tiltEffect ? 'transform-gpu transition-transform duration-300 hover:scale-[1.02] hover:rotate-1' : ''
+    } ${
+      hover ? 'hover:bg-gradient-to-br hover:from-slate-600/60 hover:via-purple-600/40 hover:to-slate-700/60 transition-all duration-300' : ''
+    } ${
+      borderColor === 'eclipse' ? 'border-l-4 border-l-cyan-400 shadow-cyan-400/20' :
+      borderColor === 'gold' ? 'border-l-4 border-l-yellow-400 shadow-yellow-400/20' :
+      borderColor === 'green' ? 'border-l-4 border-l-green-400 shadow-green-400/20' :
+      borderColor === 'blue' ? 'border-l-4 border-l-blue-400 shadow-blue-400/20' :
+      borderColor === 'red' ? 'border-l-4 border-l-red-400 shadow-red-400/20' : ''
+    } ${className}`}
+    style={{
+      background: 'linear-gradient(135deg, rgba(71, 85, 105, 0.5) 0%, rgba(88, 28, 135, 0.3) 30%, rgba(30, 64, 175, 0.2) 60%, rgba(71, 85, 105, 0.5) 100%)',
+      backdropFilter: 'blur(20px)',
+      borderTop: '1px solid rgba(34, 211, 238, 0.3)',
+      borderLeft: '1px solid rgba(34, 211, 238, 0.2)',
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+      ...props.style
+    }}
+    {...props}
+  >
+    {/* Floating particles */}
+    <div className="absolute top-2 right-2 w-1 h-1 bg-cyan-400 rounded-full animate-pulse opacity-60" />
+    <div className="absolute bottom-4 left-3 w-0.5 h-0.5 bg-yellow-400 rounded-full animate-pulse opacity-40" style={{ animationDelay: '1s' }} />
+    <div className="absolute top-1/2 right-6 w-0.5 h-0.5 bg-green-400 rounded-full animate-pulse opacity-50" style={{ animationDelay: '2s' }} />
+    {children}
+  </div>
+);
+
+const CosmicButton = ({ children, variant = "primary", size = "md", className, ...props }) => {
+  const baseStyles = "rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 shadow-lg relative overflow-hidden group";
+  const variants = {
+    primary: "bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white border border-slate-500/30",
+    eclipse: "bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-500 hover:to-blue-600 text-slate-900 font-bold shadow-xl shadow-cyan-400/25",
+    secondary: "bg-gradient-to-r from-slate-700/60 to-purple-700/40 hover:from-slate-600/80 hover:to-purple-600/60 text-slate-200 border border-cyan-400/40 backdrop-blur-md shadow-lg"
+  };
+  const sizes = {
+    sm: "px-3 py-2 text-sm",
+    md: "px-6 py-3 text-base",
+    lg: "px-8 py-4 text-lg"
+  };
+  
+  return (
+    <button 
+      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
+      {...props}
+    >
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform -skew-x-12" />
+      <span className="relative z-10">{children}</span>
+    </button>
+  );
+};
+
+export default function Dashboard() {
+  const [stats, setStats] = useState({
+    leads: 42,
+    conversions: 18,
+    successRate: 78,
+    avgResponseTime: "12m",
+    activeCalls: 3,
+    scheduledCalls: 8
+  });
+
+  const [recentActivity] = useState([
+    { id: 1, type: "call", contact: "Sarah Johnson", time: "2 min ago", status: "completed", outcome: "positive", mood: "excited" },
+    { id: 2, type: "lead", contact: "Michael Chen", time: "8 min ago", status: "new", outcome: "pending", mood: "curious" },
+    { id: 3, type: "call", contact: "Emma Davis", time: "15 min ago", status: "completed", outcome: "follow-up", mood: "interested" },
+    { id: 4, type: "lead", contact: "Alex Rivera", time: "23 min ago", status: "qualified", outcome: "positive", mood: "enthusiastic" }
+  ]);
+
+  const [quickActions] = useState([
+    { icon: Phone, label: "Make Call", color: "blue", action: "call", glow: "blue" },
+    { icon: UserPlus, label: "Add Lead", color: "green", action: "lead", glow: "green" },
+    { icon: Calendar, label: "Schedule", color: "cyan", action: "schedule", glow: "cyan" },
+    { icon: Target, label: "Follow Up", color: "gold", action: "followup", glow: "yellow" }
+  ]);
+
+  useEffect(() => {
+    // Simulate data updates
+    setTimeout(() => {
+      setStats({
+        leads: 57,
+        conversions: 22,
+        successRate: 83,
+        avgResponseTime: "8m",
+        activeCalls: 2,
+        scheduledCalls: 12
+      });
+    }, 800);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-800 p-8 space-y-8 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-20 left-10 w-32 h-32 bg-cyan-400/5 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute top-40 right-20 w-24 h-24 bg-purple-400/5 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute bottom-40 left-32 w-20 h-20 bg-yellow-400/5 rounded-full blur-xl animate-pulse" style={{ animationDelay: '4s' }} />
+        <div className="absolute bottom-20 right-40 w-28 h-28 bg-green-400/5 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '6s' }} />
+      </div>
+
+      {/* Header */}
+      <div className="bg-gradient-to-r from-slate-800 via-purple-800/30 to-slate-900 rounded-xl p-6 shadow-2xl border border-cyan-400/30 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/5 via-purple-400/5 to-cyan-400/5 animate-pulse" />
+        <div className="flex items-center justify-between relative z-10">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center shadow-xl border border-yellow-300/50 relative">
+              <Building2 className="w-6 h-6 text-slate-800" />
+              <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/30 to-transparent rounded-lg" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-white via-cyan-200 to-white bg-clip-text text-transparent">RE/MAX ECLIPSE</h1>
+              <p className="text-slate-300 text-sm flex items-center gap-1">
+                <Zap className="w-3 h-3 text-cyan-400" />
+                AI Dashboard
+              </p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-slate-300 text-sm">Welcome back</p>
+            <p className="text-white font-semibold flex items-center gap-1">
+              <Star className="w-4 h-4 text-yellow-400" />
+              Levan Wood
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Welcome Header */}
+      <GlassmorphicCard
+        borderColor="eclipse"
+        intense
+        className="relative overflow-hidden"
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-blue-500/10 animate-pulse" />
+        
+        <div className="relative z-10 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+              <Moon className="w-8 h-8 text-cyan-400 animate-pulse" />
+              Welcome back, Levan
+            </h1>
+            <p className="text-slate-300 mt-2 text-lg">
+              You've received <span className="font-semibold text-cyan-400 animate-pulse">{stats.leads} new leads</span> this week
+              <span className="ml-2 text-yellow-400">✨</span>
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <CosmicButton variant="secondary" size="md">
+              <TrendingUp className="w-4 h-4" />
+              View Reports
+            </CosmicButton>
+            <CosmicButton variant="eclipse" size="md">
+              <Sparkles className="w-4 h-4" />
+              + New Campaign
+            </CosmicButton>
+          </div>
+        </div>
+      </GlassmorphicCard>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        
+        {/* Left Column - Stats */}
+        <div className="xl:col-span-2 space-y-6">
+          
+          {/* Key Metrics */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <GlassmorphicCard borderColor="eclipse" tiltEffect className="group cursor-pointer hover:scale-105 transition-all duration-300">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/40 via-blue-500/20 to-cyan-600/40 shadow-inner border border-cyan-400/50 relative overflow-hidden">
+                  <UserPlus className="text-cyan-300 w-6 h-6 relative z-10" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-300/20 to-transparent" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-300">Total Leads</p>
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-cyan-200 bg-clip-text text-transparent">{stats.leads}</h2>
+                </div>
+              </div>
+            </GlassmorphicCard>
+
+            <GlassmorphicCard borderColor="blue" tiltEffect className="group cursor-pointer hover:scale-105 transition-all duration-300">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-lg bg-gradient-to-br from-blue-500/40 via-purple-500/20 to-blue-600/40 shadow-inner border border-blue-400/50 relative overflow-hidden">
+                  <TrendingUp className="text-blue-300 w-6 h-6 relative z-10" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-300/20 to-transparent" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-300">Conversions</p>
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">{stats.conversions}</h2>
+                </div>
+              </div>
+            </GlassmorphicCard>
+
+            <GlassmorphicCard borderColor="green" tiltEffect className="group cursor-pointer hover:scale-105 transition-all duration-300">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-lg bg-gradient-to-br from-green-500/40 via-emerald-500/20 to-green-600/40 shadow-inner border border-green-400/50 relative overflow-hidden">
+                  <Sparkles className="text-green-300 w-6 h-6 relative z-10" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-green-300/20 to-transparent" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-300">Success Rate</p>
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-green-200 bg-clip-text text-transparent">{stats.successRate}%</h2>
+                </div>
+              </div>
+            </GlassmorphicCard>
+
+            <GlassmorphicCard borderColor="gold" tiltEffect className="group cursor-pointer hover:scale-105 transition-all duration-300">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-lg bg-gradient-to-br from-yellow-500/40 via-orange-500/20 to-yellow-600/40 shadow-inner border border-yellow-400/50 relative overflow-hidden">
+                  <Clock3 className="text-yellow-300 w-6 h-6 relative z-10" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/20 to-transparent" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-300">Avg Response</p>
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-yellow-200 bg-clip-text text-transparent">{stats.avgResponseTime}</h2>
+                </div>
+              </div>
+            </GlassmorphicCard>
+          </div>
+
+          {/* Recent Activity */}
+          <GlassmorphicCard className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Zap className="w-5 h-5 text-cyan-400" />
+                Recent Activity
+              </h3>
+              <CosmicButton variant="secondary" size="sm">
+                View All <ArrowUpRight className="w-4 h-4" />
+              </CosmicButton>
+            </div>
+            
+            <div className="space-y-3">
+              {recentActivity.map((activity, index) => (
+                <div key={activity.id} className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-slate-700/50 via-purple-700/20 to-slate-700/50 hover:from-slate-600/60 hover:via-purple-600/30 hover:to-slate-600/60 transition-all duration-300 shadow-lg border border-slate-500/40 backdrop-blur-sm relative overflow-hidden group"
+                     style={{ animationDelay: `${index * 0.1}s` }}>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="flex items-center gap-3 relative z-10">
+                    <div className={`w-3 h-3 rounded-full shadow-lg animate-pulse ${
+                      activity.outcome === 'positive' ? 'bg-green-400 shadow-green-400/50' :
+                      activity.outcome === 'pending' ? 'bg-yellow-400 shadow-yellow-400/50' :
+                      'bg-blue-400 shadow-blue-400/50'
+                    }`}></div>
+                    <div>
+                      <p className="text-white font-medium">{activity.contact}</p>
+                      <p className="text-sm text-slate-300 capitalize flex items-center gap-1">
+                        {activity.type} • {activity.status}
+                        <span className="text-xs text-cyan-400">({activity.mood})</span>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right relative z-10">
+                    <p className="text-sm text-slate-300">{activity.time}</p>
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium backdrop-blur-sm ${
+                      activity.outcome === 'positive' ? 'bg-green-500/30 text-green-300 border border-green-400/50 shadow-green-400/20' :
+                      activity.outcome === 'pending' ? 'bg-yellow-500/30 text-yellow-300 border border-yellow-400/50 shadow-yellow-400/20' :
+                      'bg-blue-500/30 text-blue-300 border border-blue-400/50 shadow-blue-400/20'
+                    }`}>
+                      {activity.outcome}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </GlassmorphicCard>
+
+        </div>
+
+        {/* Right Sidebar */}
+        <div className="space-y-6">
+          
+          {/* Quick Actions */}
+          <GlassmorphicCard>
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <Star className="w-5 h-5 text-yellow-400" />
+              Quick Actions
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              {quickActions.map((action, index) => {
+                const Icon = action.icon;
+                return (
+                  <button
+                    key={index}
+                    className="p-4 rounded-lg bg-gradient-to-br from-slate-700/50 via-purple-700/20 to-slate-700/50 hover:from-slate-600/60 hover:via-purple-600/30 hover:to-slate-600/60 transition-all duration-300 group text-center hover:scale-105 shadow-lg border border-slate-500/40 backdrop-blur-sm relative overflow-hidden"
+                  >
+                    <div className={`absolute inset-0 bg-gradient-to-br ${
+                      action.glow === 'blue' ? 'from-blue-400/10 to-transparent' :
+                      action.glow === 'green' ? 'from-green-400/10 to-transparent' :
+                      action.glow === 'cyan' ? 'from-cyan-400/10 to-transparent' :
+                      'from-yellow-400/10 to-transparent'
+                    } opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+                    <Icon className={`w-6 h-6 mx-auto mb-2 relative z-10 ${
+                      action.color === 'blue' ? 'text-blue-400 group-hover:text-blue-300' :
+                      action.color === 'green' ? 'text-green-400 group-hover:text-green-300' :
+                      action.color === 'cyan' ? 'text-cyan-400 group-hover:text-cyan-300' :
+                      action.color === 'gold' ? 'text-yellow-400 group-hover:text-yellow-300' :
+                      'text-slate-300'
+                    }`} />
+                    <p className="text-sm text-slate-200 group-hover:text-white relative z-10">{action.label}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </GlassmorphicCard>
+
+          {/* Active Status */}
+          <GlassmorphicCard borderColor="eclipse">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <Zap className="w-5 h-5 text-cyan-400 animate-pulse" />
+              System Status
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-300">Active Calls</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
+                  <span className="text-white font-semibold">{stats.activeCalls}</span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-300">Scheduled Today</span>
+                <span className="text-white font-semibold">{stats.scheduledCalls}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-300">AI Agents</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-cyan-400 rounded-full shadow-lg shadow-cyan-400/50 animate-pulse"></div>
+                  <span className="text-white font-semibold">Online</span>
+                </div>
+              </div>
+            </div>
+          </GlassmorphicCard>
+
+          {/* AI Insights */}
+          <GlassmorphicCard borderColor="gold">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-yellow-400 animate-pulse" />
+              AI Insights
+            </h3>
+            <div className="space-y-3 text-sm">
+              <div className="p-3 rounded-lg bg-gradient-to-r from-yellow-500/30 via-orange-400/20 to-yellow-500/30 border border-yellow-400/50 shadow-lg backdrop-blur-sm relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-300/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <p className="text-slate-200 relative z-10">
+                  <Target className="w-4 h-4 inline mr-2 text-yellow-400" />
+                  <span className="font-semibold text-white">Peak conversion time:</span> 2-4 PM today
+                </p>
+              </div>
+              <div className="p-3 rounded-lg bg-gradient-to-r from-cyan-500/30 via-blue-400/20 to-cyan-500/30 border border-cyan-400/50 shadow-lg backdrop-blur-sm relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-300/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <p className="text-slate-200 relative z-10">
+                  <Clock3 className="w-4 h-4 inline mr-2 text-cyan-400" />
+                  <span className="font-semibold text-white">Follow up reminder:</span> 3 warm leads waiting
+                </p>
+              </div>
+            </div>
+          </GlassmorphicCard>
+
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="bg-gradient-to-r from-slate-800 via-gray-800/30 to-slate-900 rounded-xl p-4 shadow-2xl border border-cyan-400/30 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/5 via-gray-400/5 to-cyan-400/5 animate-pulse" />
+        <div className="flex items-center justify-between relative z-10">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-green-400/50"></div>
+            <span className="text-slate-300 text-sm">System Online</span>
+          </div>
+          <div className="text-center">
+            <p className="text-slate-400 text-xs flex items-center gap-1 justify-center">
+              <Sparkles className="w-3 h-3 text-cyan-400" />
+              Eclipse AI Dashboard v2.1
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-slate-300 text-sm">Last Updated: Just now</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
