@@ -42,6 +42,22 @@ export const leads = pgTable("leads", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const batchCalls = pgTable("batch_calls", {
+  id: serial("id").primaryKey(),
+  batchCallId: text("batch_call_id").notNull().unique(),
+  name: text("name").notNull(),
+  fromNumber: text("from_number").notNull(),
+  status: text("status").notNull().default("scheduled"),
+  totalTaskCount: integer("total_task_count").notNull(),
+  completedCount: integer("completed_count").notNull().default(0),
+  successfulCount: integer("successful_count").notNull().default(0),
+  scheduledTimestamp: integer("scheduled_timestamp"),
+  agentId: integer("agent_id").references(() => agents.id),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+});
+
 export const calls = pgTable("calls", {
   id: serial("id").primaryKey(),
   sessionId: text("session_id").notNull(),
@@ -56,6 +72,7 @@ export const calls = pgTable("calls", {
   latency: integer("latency"),
   leadId: integer("lead_id").references(() => leads.id),
   agentId: integer("agent_id").references(() => agents.id),
+  batchCallId: integer("batch_call_id").references(() => batchCalls.id),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -77,6 +94,12 @@ export const insertLeadSchema = createInsertSchema(leads).omit({
   updatedAt: true,
 });
 
+export const insertBatchCallSchema = createInsertSchema(batchCalls).omit({
+  id: true,
+  createdAt: true,
+  completedAt: true,
+});
+
 export const insertCallSchema = createInsertSchema(calls).omit({
   id: true,
   createdAt: true,
@@ -90,5 +113,7 @@ export type Agent = typeof agents.$inferSelect;
 export type InsertAgent = z.infer<typeof insertAgentSchema>;
 export type Lead = typeof leads.$inferSelect;
 export type InsertLead = z.infer<typeof insertLeadSchema>;
+export type BatchCall = typeof batchCalls.$inferSelect;
+export type InsertBatchCall = z.infer<typeof insertBatchCallSchema>;
 export type Call = typeof calls.$inferSelect;
 export type InsertCall = z.infer<typeof insertCallSchema>;

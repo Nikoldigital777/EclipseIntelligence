@@ -2,10 +2,39 @@ import { Plus, Download } from "lucide-react";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
 import CosmicButton from "@/components/CosmicButton";
 import { Badge } from "@/components/ui/badge";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/lib/auth";
+import { type BatchCall } from "@shared/schema";
 
 export default function BatchCalls() {
+  const { data: batchCalls, isLoading, error } = useQuery<BatchCall[]>({
+    queryKey: ['/api/batch-calls'],
+    queryFn: () => apiClient.get('/api/batch-calls')
+  });
+
+  const formatDateTime = (dateString: Date | null) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleString();
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusColors = {
+      'scheduled': 'bg-blue-500',
+      'registered': 'bg-yellow-500',
+      'in_progress': 'bg-orange-500',
+      'completed': 'bg-green-500',
+      'failed': 'bg-red-500'
+    };
+    return statusColors[status.toLowerCase() as keyof typeof statusColors] || 'bg-gray-500';
+  };
+
+  const getSuccessRate = (completed: number, successful: number) => {
+    if (completed === 0) return 'N/A';
+    return `${Math.round((successful / completed) * 100)}%`;
+  };
+
   return (
-    <div className="min-h-screen p-8">
+    <div className="min-h-screen p-8" data-testid="page-batch-calls">
       {/* Header with stunning design background */}
       <div className="p-8 border-b border-white/10 relative overflow-hidden bg-gradient-to-br from-black/70 via-black/50 to-black/30 backdrop-blur-sm rounded-lg">
         {/* Abstract geometric background pattern */}
@@ -47,11 +76,11 @@ export default function BatchCalls() {
             <p className="text-gray-200 text-xl drop-shadow-lg [text-shadow:_1px_1px_4px_rgb(0_0_0_/_50%)]">Mass AI phone campaigns - Scale your outreach efficiently</p>
           </div>
           <div className="flex items-center space-x-4">
-            <CosmicButton variant="primary" className="flex items-center space-x-2 hover:scale-105 transition-transform duration-200">
+            <CosmicButton variant="primary" className="flex items-center space-x-2 hover:scale-105 transition-transform duration-200" data-testid="button-export">
               <Download className="w-4 h-4" />
               <span>Export</span>
             </CosmicButton>
-            <CosmicButton variant="eclipse" className="flex items-center space-x-2 hover:scale-105 transition-transform duration-200">
+            <CosmicButton variant="eclipse" className="flex items-center space-x-2 hover:scale-105 transition-transform duration-200" data-testid="button-new-batch">
               <Plus className="w-4 h-4" />
               <span>New Batch</span>
             </CosmicButton>
@@ -59,43 +88,82 @@ export default function BatchCalls() {
         </div>
       </div>
 
-      {/* Empty State */}
-      <GlassmorphicCard className="text-center py-16 border border-white/10 hover:border-white/20 transition-colors duration-300">
-        <div className="w-16 h-16 bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full flex items-center justify-center mx-auto mb-4 eclipse-shadow">
-          <span className="text-2xl">📞</span>
-        </div>
-        <h3 className="text-xl font-semibold text-white mb-2">No batch calls found</h3>
-        <p className="text-[hsl(var(--soft-gray))] mb-6">
-          Ready to manifest multiple connections at once? Create your first batch call campaign.
-        </p>
-        <CosmicButton variant="remax" className="flex items-center space-x-2">
-          <Plus className="w-4 h-4" />
-          <span>Create Batch Campaign</span>
-        </CosmicButton>
-      </GlassmorphicCard>
-
-      {/* Table Headers (for reference) */}
-      <div className="mt-8 opacity-50">
-        <GlassmorphicCard>
+      {/* Batch Calls Table */}
+      <div className="mt-6">
+        <GlassmorphicCard className="border border-white/10 hover:border-white/20 transition-colors duration-300">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-[hsl(var(--lunar-mist))]/20">
                 <tr>
-                  <th className="text-left py-4 px-6 font-semibold text-white">Batch Call Name</th>
+                  <th className="text-left py-4 px-6 font-semibold text-white">Campaign Name</th>
                   <th className="text-left py-4 px-6 font-semibold text-white">Status</th>
                   <th className="text-left py-4 px-6 font-semibold text-white">Recipients</th>
-                  <th className="text-left py-4 px-6 font-semibold text-white">Sent</th>
-                  <th className="text-left py-4 px-6 font-semibold text-white">Picked Up</th>
+                  <th className="text-left py-4 px-6 font-semibold text-white">Completed</th>
                   <th className="text-left py-4 px-6 font-semibold text-white">Successful</th>
-                  <th className="text-left py-4 px-6 font-semibold text-white">Last sent by</th>
+                  <th className="text-left py-4 px-6 font-semibold text-white">Success Rate</th>
+                  <th className="text-left py-4 px-6 font-semibold text-white">Created</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td className="py-8 px-6 text-center text-[hsl(var(--soft-gray))]" colSpan={7}>
-                    No batch calls yet. Time to manifest some cosmic connections!
-                  </td>
-                </tr>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-8 text-[hsl(var(--soft-gray))]" data-testid="loading-message">
+                      Loading batch calls...
+                    </td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-8 text-red-400" data-testid="error-message">
+                      Failed to load batch calls: {error instanceof Error ? error.message : 'Unknown error'}
+                    </td>
+                  </tr>
+                ) : !batchCalls || batchCalls.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-8" data-testid="no-batch-calls-message">
+                      <div className="flex flex-col items-center py-8">
+                        <div className="w-16 h-16 bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full flex items-center justify-center mb-4 eclipse-shadow">
+                          <span className="text-2xl">📞</span>
+                        </div>
+                        <h3 className="text-xl font-semibold text-white mb-2">No batch calls found</h3>
+                        <p className="text-[hsl(var(--soft-gray))] mb-6">
+                          Ready to manifest multiple connections at once? Create your first batch call campaign.
+                        </p>
+                        <CosmicButton variant="remax" className="flex items-center space-x-2" data-testid="button-create-batch">
+                          <Plus className="w-4 h-4" />
+                          <span>Create Batch Campaign</span>
+                        </CosmicButton>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  batchCalls.map((batchCall) => (
+                    <tr key={batchCall.id} className="border-b border-white/5 hover:bg-white/5 transition-colors" data-testid={`batch-call-row-${batchCall.id}`}>
+                      <td className="py-4 px-6 text-white font-medium" data-testid={`batch-name-${batchCall.id}`}>
+                        {batchCall.name}
+                      </td>
+                      <td className="py-4 px-6" data-testid={`batch-status-${batchCall.id}`}>
+                        <Badge className={`${getStatusBadge(batchCall.status)} text-white border-0`}>
+                          {batchCall.status}
+                        </Badge>
+                      </td>
+                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`batch-recipients-${batchCall.id}`}>
+                        {batchCall.totalTaskCount}
+                      </td>
+                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`batch-completed-${batchCall.id}`}>
+                        {batchCall.completedCount}
+                      </td>
+                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`batch-successful-${batchCall.id}`}>
+                        {batchCall.successfulCount}
+                      </td>
+                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`batch-success-rate-${batchCall.id}`}>
+                        {getSuccessRate(batchCall.completedCount, batchCall.successfulCount)}
+                      </td>
+                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`batch-created-${batchCall.id}`}>
+                        {formatDateTime(batchCall.createdAt)}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

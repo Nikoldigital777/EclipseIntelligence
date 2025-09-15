@@ -167,6 +167,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Batch calls routes
+  app.get("/api/batch-calls", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const batchCalls = await storage.getBatchCalls();
+      res.json(batchCalls);
+    } catch (error) {
+      console.error("Failed to get batch calls:", error);
+      res.status(500).json({ error: "Failed to retrieve batch calls" });
+    }
+  });
+
   // Lead routes (protected)
   app.get("/api/leads", authenticateToken, async (req: AuthRequest, res) => {
     try {
@@ -394,6 +405,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       }
 
+      // First create the batch call record
+      const batchCallData = {
+        batchCallId: retellResponse.batch_call_id,
+        name: name.trim(),
+        fromNumber: from_number,
+        status: trigger_timestamp ? "scheduled" : "registered",
+        totalTaskCount: tasks.length,
+        completedCount: 0,
+        successfulCount: 0,
+        scheduledTimestamp: trigger_timestamp,
+        agentId: parseInt(override_agent_id),
+        createdBy: req.user!.id
+      };
+
+      const batchCall = await storage.createBatchCall(batchCallData);
+
       // Store individual calls for each task
       const createdCalls = [];
       for (let i = 0; i < tasks.length; i++) {
@@ -404,6 +431,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           toNumber: task.to_number,
           status: trigger_timestamp ? "scheduled" : "registered",
           agentId: parseInt(override_agent_id),
+          batchCallId: batchCall.id,
           endReason: null,
           sentiment: null,
           outcome: null,
@@ -418,8 +446,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.status(201).json({ 
-        ...retellResponse, 
-        created_calls: createdCalls.map(call => call.id),
+        ...retellResponse,
+        batch_id: batchCall.id,
+        created_calls: createdCalls.map(call => ({ id: call.id, session_id: call.sessionId })),
         message: `Batch call "${name.trim()}" created successfully with ${tasks.length} tasks`,
         success: true
       });

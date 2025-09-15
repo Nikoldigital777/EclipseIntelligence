@@ -1,4 +1,4 @@
-import { users, agents, leads, calls, type User, type Agent, type Lead, type Call, type InsertUser, type InsertAgent, type InsertLead, type InsertCall } from "@shared/schema";
+import { users, agents, leads, calls, batchCalls, type User, type Agent, type Lead, type Call, type BatchCall, type InsertUser, type InsertAgent, type InsertLead, type InsertCall, type InsertBatchCall } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -29,6 +29,14 @@ export interface IStorage {
   createCall(call: InsertCall): Promise<Call>;
   getCallsByLead(leadId: number): Promise<Call[]>;
   getCallsByAgent(agentId: number): Promise<Call[]>;
+  
+  // Batch call operations
+  getBatchCalls(): Promise<BatchCall[]>;
+  getBatchCall(id: number): Promise<BatchCall | undefined>;
+  getBatchCallByBatchId(batchCallId: string): Promise<BatchCall | undefined>;
+  createBatchCall(batchCall: InsertBatchCall): Promise<BatchCall>;
+  updateBatchCall(id: number, batchCall: Partial<InsertBatchCall>): Promise<BatchCall | undefined>;
+  getCallsByBatch(batchCallId: number): Promise<Call[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -144,6 +152,42 @@ export class DatabaseStorage implements IStorage {
 
   async getCallsByAgent(agentId: number): Promise<Call[]> {
     return await db.select().from(calls).where(eq(calls.agentId, agentId));
+  }
+  
+  // Batch call operations
+  async getBatchCalls(): Promise<BatchCall[]> {
+    return await db.select().from(batchCalls).orderBy(batchCalls.createdAt);
+  }
+
+  async getBatchCall(id: number): Promise<BatchCall | undefined> {
+    const [batchCall] = await db.select().from(batchCalls).where(eq(batchCalls.id, id));
+    return batchCall || undefined;
+  }
+
+  async getBatchCallByBatchId(batchCallId: string): Promise<BatchCall | undefined> {
+    const [batchCall] = await db.select().from(batchCalls).where(eq(batchCalls.batchCallId, batchCallId));
+    return batchCall || undefined;
+  }
+
+  async createBatchCall(insertBatchCall: InsertBatchCall): Promise<BatchCall> {
+    const [batchCall] = await db
+      .insert(batchCalls)
+      .values(insertBatchCall)
+      .returning();
+    return batchCall;
+  }
+
+  async updateBatchCall(id: number, updates: Partial<InsertBatchCall>): Promise<BatchCall | undefined> {
+    const [batchCall] = await db
+      .update(batchCalls)
+      .set(updates)
+      .where(eq(batchCalls.id, id))
+      .returning();
+    return batchCall || undefined;
+  }
+
+  async getCallsByBatch(batchCallId: number): Promise<Call[]> {
+    return await db.select().from(calls).where(eq(calls.batchCallId, batchCallId));
   }
 }
 
