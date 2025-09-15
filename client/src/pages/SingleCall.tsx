@@ -128,12 +128,13 @@ export default function SingleCall() {
       const callData = {
         from_number: formData.fromNumber,
         to_number: formData.toNumber,
-        override_agent_id: formData.selectedAgent,
+        override_agent_id: formData.selectedAgent, // This will be the real agent ID
         metadata: {
           ...formData.metadata,
           custom_message: formData.customMessage || undefined,
           initiated_from: "single_call_interface",
-          initiated_at: new Date().toISOString()
+          initiated_at: new Date().toISOString(),
+          agent_name: selectedAgentData?.name || "Unknown Agent"
         },
         retell_llm_dynamic_variables: formData.customMessage ? {
           custom_intro: formData.customMessage

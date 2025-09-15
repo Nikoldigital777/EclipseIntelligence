@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, varchar, decimal } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -59,20 +59,22 @@ export const batchCalls = pgTable("batch_calls", {
 
 export const calls = pgTable("calls", {
   id: serial("id").primaryKey(),
-  sessionId: text("session_id").notNull(),
-  fromNumber: text("from_number").notNull(),
-  toNumber: text("to_number").notNull(),
+  sessionId: varchar("session_id", { length: 255 }).notNull(),
+  fromNumber: varchar("from_number", { length: 50 }),
+  toNumber: varchar("to_number", { length: 50 }),
+  status: varchar("status", { length: 50 }),
+  agentId: integer("agent_id").references(() => agents.id),
+  retellAgentId: varchar("retell_agent_id", { length: 255 }), // Store Retell agent ID
+  endReason: varchar("end_reason", { length: 100 }),
+  sentiment: varchar("sentiment", { length: 50 }),
+  outcome: varchar("outcome", { length: 100 }),
   duration: integer("duration"),
-  cost: text("cost"),
-  status: text("status").notNull(),
-  endReason: text("end_reason"),
-  sentiment: text("sentiment"),
-  outcome: text("outcome"),
+  cost: decimal("cost", { precision: 10, scale: 4 }),
   latency: integer("latency"),
   leadId: integer("lead_id").references(() => leads.id),
-  agentId: integer("agent_id").references(() => agents.id),
-  batchCallId: integer("batch_call_id").references(() => batchCalls.id),
-  createdAt: timestamp("created_at").defaultNow(),
+  batchCallId: integer("batch_call_id").references(() => batchCalls.id), // For batch call tracking
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
