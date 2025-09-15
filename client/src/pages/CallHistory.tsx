@@ -79,22 +79,103 @@ export default function CallHistory() {
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td className="py-12 px-6 text-center" colSpan={8}>
-                    <div className="flex flex-col items-center space-y-4">
-                      <div className="w-16 h-16 bg-gradient-to-br from-[hsl(var(--lunar-mist))] to-[hsl(var(--eclipse-glow))] rounded-full flex items-center justify-center lunar-shadow">
-                        <span className="text-2xl">📱</span>
-                      </div>
-                      <div className="text-center">
-                        <h3 className="text-xl font-semibold text-white mb-2">No call history in this cycle</h3>
-                        <p className="text-[hsl(var(--soft-gray))] mb-6">
-                          Your AI phone agent call records will appear here once calls are made.
-                        </p>
-                        <CosmicButton variant="primary">View All Cycles</CosmicButton>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
+                {[
+                  {
+                    time: "2024-01-15 14:32",
+                    duration: "3m 45s",
+                    channelType: "Phone Call",
+                    cost: "$0.12",
+                    status: "Completed",
+                    sentiment: "Positive",
+                    from: "+1 (555) 123-4567",
+                    to: "+1 (555) 987-6543"
+                  },
+                  {
+                    time: "2024-01-15 13:18",
+                    duration: "7m 22s",
+                    channelType: "Phone Call",
+                    cost: "$0.24",
+                    status: "Completed",
+                    sentiment: "Neutral",
+                    from: "+1 (555) 123-4567",
+                    to: "+1 (555) 456-7890"
+                  },
+                  {
+                    time: "2024-01-15 12:05",
+                    duration: "2m 15s",
+                    channelType: "Phone Call",
+                    cost: "$0.08",
+                    status: "Completed",
+                    sentiment: "Positive",
+                    from: "+1 (555) 123-4567",
+                    to: "+1 (555) 234-5678"
+                  },
+                  {
+                    time: "2024-01-15 11:42",
+                    duration: "5m 33s",
+                    channelType: "Phone Call",
+                    cost: "$0.18",
+                    status: "Completed",
+                    sentiment: "Negative",
+                    from: "+1 (555) 123-4567",
+                    to: "+1 (555) 345-6789"
+                  },
+                  {
+                    time: "2024-01-15 10:28",
+                    duration: "1m 48s",
+                    channelType: "Phone Call",
+                    cost: "$0.06",
+                    status: "No Answer",
+                    sentiment: "N/A",
+                    from: "+1 (555) 123-4567",
+                    to: "+1 (555) 567-8901"
+                  },
+                  {
+                    time: "2024-01-15 09:15",
+                    duration: "4m 12s",
+                    channelType: "Phone Call",
+                    cost: "$0.14",
+                    status: "Completed",
+                    sentiment: "Positive",
+                    from: "+1 (555) 123-4567",
+                    to: "+1 (555) 678-9012"
+                  }
+                ].map((call, index) => (
+                  <tr key={index} className="border-b border-white/5 hover:bg-[hsl(var(--lunar-mist))]/10 transition-all duration-200">
+                    <td className="py-4 px-6 text-white">{call.time}</td>
+                    <td className="py-4 px-6 text-white">{call.duration}</td>
+                    <td className="py-4 px-6">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[hsl(var(--primary-blue))]/20 text-[hsl(var(--primary-blue))] border border-[hsl(var(--primary-blue))]/30">
+                        {call.channelType}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-white font-medium">{call.cost}</td>
+                    <td className="py-4 px-6">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                        call.status === "Completed" 
+                          ? "bg-[hsl(var(--success-green))]/20 text-[hsl(var(--success-green))] border border-[hsl(var(--success-green))]/30"
+                          : "bg-[hsl(var(--remax-red))]/20 text-[hsl(var(--remax-red))] border border-[hsl(var(--remax-red))]/30"
+                      }`}>
+                        {call.status}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                        call.sentiment === "Positive" 
+                          ? "bg-[hsl(var(--success-green))]/20 text-[hsl(var(--success-green))] border border-[hsl(var(--success-green))]/30"
+                          : call.sentiment === "Negative"
+                          ? "bg-[hsl(var(--remax-red))]/20 text-[hsl(var(--remax-red))] border border-[hsl(var(--remax-red))]/30"
+                          : call.sentiment === "Neutral"
+                          ? "bg-[hsl(var(--eclipse-glow))]/20 text-[hsl(var(--eclipse-glow))] border border-[hsl(var(--eclipse-glow))]/30"
+                          : "bg-[hsl(var(--soft-gray))]/20 text-[hsl(var(--soft-gray))] border border-[hsl(var(--soft-gray))]/30"
+                      }`}>
+                        {call.sentiment}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-[hsl(var(--soft-gray))] font-mono text-sm">{call.from}</td>
+                    <td className="py-4 px-6 text-[hsl(var(--soft-gray))] font-mono text-sm">{call.to}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
