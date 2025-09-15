@@ -14,6 +14,8 @@ interface AuthResponse {
 export class AuthService {
   private static TOKEN_KEY = 'auth_token';
   private static USER_KEY = 'auth_user';
+  private static REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes
+  private static refreshTimer: NodeJS.Timeout | null = null;
 
   static getToken(): string | null {
     return localStorage.getItem(this.TOKEN_KEY);
@@ -21,11 +23,53 @@ export class AuthService {
 
   static setToken(token: string): void {
     localStorage.setItem(this.TOKEN_KEY, token);
+    this.startTokenRefresh();
   }
 
   static removeToken(): void {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
+    this.stopTokenRefresh();
+  }
+
+  private static startTokenRefresh(): void {
+    this.stopTokenRefresh();
+    this.refreshTimer = setInterval(() => {
+      this.refreshToken().catch(() => {
+        // If refresh fails, logout the user
+        this.logout();
+      });
+    }, this.REFRESH_INTERVAL);
+  }
+
+  private static stopTokenRefresh(): void {
+    if (this.refreshTimer) {
+      clearInterval(this.refreshTimer);
+      this.refreshTimer = null;
+    }
+  }
+
+  private static async refreshToken(): Promise<void> {
+    const currentToken = this.getToken();
+    if (!currentToken) return;
+
+    try {
+      const response = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${currentToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        this.setToken(data.token);
+      }
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      throw error;
+    }
   }
 
   static getUser(): any | null {
@@ -67,6 +111,7 @@ export class AuthService {
   }
 
   static async logout(): Promise<void> {
+    this.stopTokenRefresh();
     try {
       await fetch('/api/auth/logout', {
         method: 'POST',
@@ -100,6 +145,12 @@ export class AuthService {
     this.setToken(data.token);
     this.setUser(data.user);
     return data;
+  }
+
+  static initializeAuth(): void {
+    if (this.isAuthenticated()) {
+      this.startTokenRefresh();
+    }
   }
 }
 

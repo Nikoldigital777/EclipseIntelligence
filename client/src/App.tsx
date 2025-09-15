@@ -26,6 +26,7 @@ function Router() {
     const checkAuth = () => {
       if (AuthService.isAuthenticated()) {
         setIsAuthenticated(true);
+        AuthService.initializeAuth();
       }
       setIsLoading(false);
     };

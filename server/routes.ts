@@ -4,18 +4,21 @@ import { storage } from "./storage";
 import { insertAgentSchema, insertLeadSchema, insertCallSchema } from "@shared/schema";
 import { z } from "zod";
 import { createRetellClient } from "./retell-client";
-import { 
-  hashPassword, 
-  comparePassword, 
-  generateToken, 
-  authenticateToken, 
+import {
+  hashPassword,
+  comparePassword,
+  generateToken,
+  authenticateToken,
   createSafeUser,
-  type AuthRequest 
+  type AuthRequest
 } from "./auth";
+import { Router } from "express";
+
+const router = Router();
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
-  app.post("/api/auth/login", async (req, res) => {
+  router.post('/auth/login', async (req, res) => {
     try {
       const { email, password } = req.body;
 
@@ -36,10 +39,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const token = generateToken(user.id);
       const safeUser = createSafeUser(user);
 
-      res.json({ 
-        token, 
+      res.json({
+        token,
         user: safeUser,
-        message: "Login successful" 
+        message: "Login successful"
       });
     } catch (error) {
       console.error("Login error:", error);
@@ -47,13 +50,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/auth/register", async (req, res) => {
+  router.post('/auth/register', async (req, res) => {
     try {
       const { username, email, password, displayName } = req.body;
 
       if (!username || !email || !password || !displayName) {
-        return res.status(400).json({ 
-          error: "Username, email, password, and display name are required" 
+        return res.status(400).json({
+          error: "Username, email, password, and display name are required"
         });
       }
 
@@ -81,10 +84,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const token = generateToken(user.id);
       const safeUser = createSafeUser(user);
 
-      res.status(201).json({ 
-        token, 
+      res.status(201).json({
+        token,
         user: safeUser,
-        message: "Registration successful" 
+        message: "Registration successful"
       });
     } catch (error) {
       console.error("Registration error:", error);
@@ -92,17 +95,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/auth/me", authenticateToken, async (req: AuthRequest, res) => {
+  router.get("/auth/me", authenticateToken, async (req: AuthRequest, res) => {
     res.json({ user: req.user });
   });
 
-  app.post("/api/auth/logout", (req, res) => {
+  router.post("/auth/logout", (req, res) => {
     // With JWT, logout is handled client-side by removing the token
     res.json({ message: "Logout successful" });
   });
 
+  // Token refresh endpoint
+  router.post('/auth/refresh', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'User not found' });
+      }
+
+      const newToken = generateToken(req.user.id);
+      res.json({ token: newToken });
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      res.status(500).json({ error: 'Failed to refresh token' });
+    }
+  });
+
   // Agent routes (protected)
-  app.get("/api/agents", authenticateToken, async (req: AuthRequest, res) => {
+  router.get("/agents", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const retellClient = createRetellClient();
       let agents = [];
@@ -129,7 +147,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/agents/:id", authenticateToken, async (req: AuthRequest, res) => {
+  router.get("/agents/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const agentId = req.params.id;
       const retellClient = createRetellClient();
@@ -177,7 +195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/agents", authenticateToken, async (req: AuthRequest, res) => {
+  router.post("/agents", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const agentData = insertAgentSchema.parse(req.body);
       const agent = await storage.createAgent(agentData);
@@ -190,7 +208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/agents/:id", authenticateToken, async (req: AuthRequest, res) => {
+  router.put("/agents/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const updateData = insertAgentSchema.partial().parse(req.body);
@@ -207,7 +225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/agents/:id", authenticateToken, async (req: AuthRequest, res) => {
+  router.delete("/agents/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteAgent(id);
@@ -221,7 +239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Batch calls routes
-  app.get("/api/batch-calls", authenticateToken, async (req: AuthRequest, res) => {
+  router.get("/batch-calls", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const batchCalls = await storage.getBatchCalls();
       res.json(batchCalls);
@@ -232,7 +250,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Lead routes (protected)
-  app.get("/api/leads", authenticateToken, async (req: AuthRequest, res) => {
+  router.get("/leads", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const leads = await storage.getLeads();
       res.json(leads);
@@ -241,7 +259,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/leads/:id", authenticateToken, async (req: AuthRequest, res) => {
+  router.get("/leads/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const lead = await storage.getLead(id);
@@ -254,7 +272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/leads", authenticateToken, async (req: AuthRequest, res) => {
+  router.post("/leads", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const leadData = insertLeadSchema.parse(req.body);
       const lead = await storage.createLead(leadData);
@@ -267,7 +285,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/leads/:id", authenticateToken, async (req: AuthRequest, res) => {
+  router.put("/leads/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const updateData = insertLeadSchema.partial().parse(req.body);
@@ -284,7 +302,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/leads/:id", authenticateToken, async (req: AuthRequest, res) => {
+  router.delete("/leads/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteLead(id);
@@ -298,7 +316,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Call routes (protected)
-  app.get("/api/calls", authenticateToken, async (req: AuthRequest, res) => {
+  router.get("/calls", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const calls = await storage.getCalls();
       res.json(calls);
@@ -307,7 +325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/calls/:id", authenticateToken, async (req: AuthRequest, res) => {
+  router.get("/calls/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const call = await storage.getCall(id);
@@ -320,7 +338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/calls", authenticateToken, async (req: AuthRequest, res) => {
+  router.post("/calls", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const callData = insertCallSchema.parse(req.body);
       const call = await storage.createCall(callData);
@@ -334,10 +352,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Outbound calls routes (protected)
-  app.post("/api/outbound-calls/single", authenticateToken, async (req: AuthRequest, res) => {
+  router.post("/outbound-calls/single", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const { from_number, to_number, override_agent_id, metadata, retell_llm_dynamic_variables } = req.body;
-      
+
       if (!from_number || !to_number) {
         return res.status(400).json({ error: "from_number and to_number are required" });
       }
@@ -399,10 +417,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/outbound-calls/batch", authenticateToken, async (req: AuthRequest, res) => {
+  router.post("/outbound-calls/batch", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const { from_number, tasks, name, trigger_timestamp, override_agent_id } = req.body;
-      
+
       if (!from_number || !tasks || !Array.isArray(tasks) || tasks.length === 0) {
         return res.status(400).json({ error: "from_number and tasks array are required" });
       }
@@ -498,7 +516,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdCalls.push(call);
       }
 
-      res.status(201).json({ 
+      res.status(201).json({
         ...retellResponse,
         batch_id: batchCall.id,
         created_calls: createdCalls.map(call => ({ id: call.id, session_id: call.sessionId })),
@@ -512,10 +530,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Web call creation for testing (protected)
-  app.post("/api/web-calls", authenticateToken, async (req: AuthRequest, res) => {
+  router.post("/web-calls", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const { agent_id } = req.body;
-      
+
       if (!agent_id) {
         return res.status(400).json({ error: "agent_id is required" });
       }
@@ -548,7 +566,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Simple agents endpoint for dropdowns (protected)
-  app.get("/api/agents/simple", authenticateToken, async (req: AuthRequest, res) => {
+  router.get("/agents/simple", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const retellClient = createRetellClient();
       let agents = [];
@@ -572,7 +590,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         voice: agent.voice_id || agent.voice || "Default",
         avatar: (agent.agent_name || agent.name || "AG").split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
       }));
-      
+
       res.json(simpleAgents);
     } catch (error) {
       console.error("Failed to fetch simple agents:", error);
@@ -581,7 +599,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Analytics routes (protected)
-  app.get("/api/analytics/stats", authenticateToken, async (req: AuthRequest, res) => {
+  router.get("/analytics/stats", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const leads = await storage.getLeads();
       const calls = await storage.getCalls();
@@ -602,6 +620,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to fetch analytics" });
     }
   });
+
+  app.use("/api", router);
 
   const httpServer = createServer(app);
   return httpServer;
