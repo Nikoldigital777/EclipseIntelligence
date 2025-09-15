@@ -28,6 +28,48 @@ export default function Dashboard() {
   });
   const [recentCalls, setRecentCalls] = useState([]);
   const [activeAgents, setActiveAgents] = useState([]);
+  const [greeting, setGreeting] = useState("Welcome");
+  const [currentTime, setCurrentTime] = useState("");
+
+  // Function to get greeting based on time
+  const getGreeting = () => {
+    const now = new Date();
+    const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
+    const hour = easternTime.getHours();
+    
+    // Determine if it's EDT or EST
+    const isEDT = now.getTimezoneOffset() !== easternTime.getTimezoneOffset();
+    const timezone = isEDT ? "EDT" : "EST";
+    
+    // Format time
+    const timeString = easternTime.toLocaleTimeString("en-US", {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+    
+    setCurrentTime(`${timeString} ${timezone}`);
+    
+    if (hour < 12) {
+      return "Good morning, Levan";
+    } else if (hour < 17) {
+      return "Good afternoon, Levan";
+    } else {
+      return "Good evening, Levan";
+    }
+  };
+
+  useEffect(() => {
+    // Set initial greeting
+    setGreeting(getGreeting());
+    
+    // Update greeting every minute
+    const greetingInterval = setInterval(() => {
+      setGreeting(getGreeting());
+    }, 60000);
+
+    return () => clearInterval(greetingInterval);
+  }, []);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -121,9 +163,15 @@ export default function Dashboard() {
         <div className="flex items-center justify-between relative z-10">
           <div className={`transition-all duration-500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
             <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-[#E8E9F3] via-[#00D9FF] to-[#B8BCC8] bg-clip-text text-transparent drop-shadow-2xl tracking-tight">
-              Eclipse AI Dashboard
+              {greeting}
             </h1>
-            <p className="text-[#B8BCC8] text-xl drop-shadow-lg font-medium tracking-wide">Welcome to your sophisticated command center</p>
+            <div className="flex items-center space-x-4">
+              <p className="text-[#B8BCC8] text-xl drop-shadow-lg font-medium tracking-wide">Welcome to your sophisticated command center</p>
+              <div className="flex items-center space-x-2 bg-[#1A1B26]/40 backdrop-blur-sm rounded-lg px-3 py-1 border border-[#E8E9F3]/10">
+                <div className="w-2 h-2 bg-[#00D9FF] rounded-full animate-pulse"></div>
+                <span className="text-[#E8E9F3] text-sm font-medium">{currentTime}</span>
+              </div>
+            </div>
           </div>
           <div className="flex items-center space-x-4">
             <div className="group relative ai-avatar">
