@@ -99,7 +99,7 @@ export default function GlassmorphicCard({
     <div
       ref={cardRef}
       className={cn(
-        intense ? "glassmorphism-intense premium-shadow" : "glassmorphism",
+        intense ? "glassmorphism-intense premium-shadow" : "glassmorphism enhanced-card",
         "rounded-xl p-6 relative overflow-hidden smooth-transition",
         hover && "enhanced-hover",
         tiltEffect && "transition-transform duration-200 ease-out",

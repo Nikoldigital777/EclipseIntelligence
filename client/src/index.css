@@ -46,9 +46,12 @@
 
   body {
     @apply font-sans antialiased text-foreground;
-    background: linear-gradient(135deg, hsl(var(--deep-night)) 0%, hsl(var(--lunar-glass)) 100%);
-    background-size: 400% 400%;
-    animation: cosmic-gradient 15s ease infinite;
+    background: linear-gradient(135deg, 
+      hsl(var(--deep-night)) 0%, 
+      hsl(var(--lunar-glass)) 35%,
+      hsl(var(--deep-night)) 70%,
+      #0a0a0f 100%);
+    background-attachment: fixed;
     min-height: 100vh;
   }
 
@@ -171,36 +174,45 @@
 
 @layer components {
   .glassmorphism {
-    background: rgba(35, 41, 67, 0.85);
-    backdrop-filter: blur(20px) saturate(200%);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: linear-gradient(135deg, 
+      rgba(35, 41, 67, 0.9) 0%,
+      rgba(45, 51, 77, 0.85) 50%,
+      rgba(25, 31, 57, 0.9) 100%);
+    backdrop-filter: blur(25px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 
-      0 8px 32px 0 rgba(31, 38, 135, 0.4),
-      0 4px 16px 0 rgba(0, 0, 0, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.15),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+      0 12px 40px 0 rgba(0, 0, 0, 0.5),
+      0 6px 20px 0 rgba(31, 38, 135, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.2);
   }
 
   .glassmorphism-intense {
-    background: rgba(35, 41, 67, 0.6);
-    backdrop-filter: blur(30px) saturate(220%);
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: linear-gradient(135deg, 
+      rgba(35, 41, 67, 0.95) 0%,
+      rgba(45, 51, 77, 0.9) 30%,
+      rgba(55, 61, 87, 0.85) 70%,
+      rgba(25, 31, 57, 0.95) 100%);
+    backdrop-filter: blur(35px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     box-shadow: 
-      0 16px 50px 0 rgba(31, 38, 135, 0.6),
-      0 8px 25px 0 rgba(0, 0, 0, 0.3),
-      inset 0 2px 0 rgba(255, 255, 255, 0.25),
-      inset 0 -2px 0 rgba(0, 0, 0, 0.15);
+      0 20px 60px 0 rgba(0, 0, 0, 0.6),
+      0 10px 30px 0 rgba(31, 38, 135, 0.5),
+      0 4px 15px 0 rgba(62, 243, 255, 0.1),
+      inset 0 2px 0 rgba(255, 255, 255, 0.3),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.2);
   }
 
   .hover-glow:hover {
     box-shadow: 
-      0 0 20px rgba(62, 243, 255, 0.2),
-      0 0 40px rgba(62, 243, 255, 0.1),
-      0 8px 25px rgba(0, 0, 0, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    transform: translateY(-1px) scale(1.005);
+      0 0 30px rgba(62, 243, 255, 0.3),
+      0 0 50px rgba(62, 243, 255, 0.15),
+      0 12px 35px rgba(0, 0, 0, 0.3),
+      0 4px 15px rgba(62, 243, 255, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border-color: rgba(62, 243, 255, 0.3);
+    border-color: rgba(62, 243, 255, 0.4);
   }
 
   .hover-glow {
@@ -365,9 +377,49 @@
 
   .premium-shadow {
     box-shadow: 
-      0 20px 60px rgba(0, 0, 0, 0.3),
-      0 8px 30px rgba(31, 38, 135, 0.2),
+      0 25px 80px rgba(0, 0, 0, 0.4),
+      0 12px 40px rgba(31, 38, 135, 0.3),
+      0 6px 20px rgba(62, 243, 255, 0.1),
+      inset 0 2px 0 rgba(255, 255, 255, 0.25),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  .enhanced-card {
+    background: linear-gradient(135deg, 
+      rgba(40, 46, 72, 0.95) 0%,
+      rgba(50, 56, 82, 0.9) 50%,
+      rgba(30, 36, 62, 0.95) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 
+      0 15px 50px rgba(0, 0, 0, 0.4),
+      0 8px 25px rgba(31, 38, 135, 0.3),
       inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  .text-gradient-primary {
+    background: linear-gradient(135deg, 
+      hsl(var(--eclipse-glow)) 0%,
+      hsl(var(--lunar-mist)) 50%,
+      hsl(var(--primary-blue)) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-gold {
+    background: linear-gradient(135deg, 
+      hsl(var(--accent-gold)) 0%,
+      hsl(var(--gold-manifest)) 50%,
+      #ffb347 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .border-gradient {
+    border: 2px solid transparent;
+    background: linear-gradient(135deg, rgba(40, 46, 72, 0.95), rgba(30, 36, 62, 0.95)) padding-box,
+                linear-gradient(135deg, rgba(62, 243, 255, 0.3), rgba(111, 114, 255, 0.3)) border-box;
   }
 
   .cosmic-grid {

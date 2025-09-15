@@ -94,13 +94,11 @@ export default function Dashboard() {
 
         <div className="flex items-center justify-between relative z-10">
           <div className={`transition-all duration-500 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <h1 className="text-5xl font-bold text-white mb-3 drop-shadow-2xl">
-              Good Morning, Levan!
-            </h1>
-            <p className="text-gray-200 text-xl drop-shadow-lg">
-              Your AI phone agents are performing exceptionally. Here's today's activity:
-            </p>
-          </div>
+            <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-[hsl(var(--eclipse-glow))] via-white to-[hsl(var(--lunar-mist))] bg-clip-text text-transparent drop-shadow-2xl tracking-tight">
+            Eclipse AI Dashboard
+          </h1>
+          <p className="text-gray-100 text-xl drop-shadow-lg font-medium tracking-wide [text-shadow:_2px_2px_8px_rgb(0_0_0_/_60%)]">Welcome to your AI-powered command center</p>
+        </div>
           <div className="flex items-center space-x-4">
             <div className="relative group">
               <div className="w-14 h-14 bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--lunar-mist))] rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer border border-white/10 group-hover:scale-105">

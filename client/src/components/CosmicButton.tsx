@@ -22,17 +22,17 @@ export default function CosmicButton({
   const getVariantStyles = () => {
     switch (variant) {
       case "primary":
-        return "bg-[hsl(var(--primary-blue))] hover:bg-[hsl(var(--primary-blue))]/80 text-white lunar-shadow hover-glow";
+        return "bg-gradient-to-r from-[hsl(var(--primary-blue))] to-[hsl(var(--manifest-blue))] hover:from-[hsl(var(--primary-blue))]/90 hover:to-[hsl(var(--manifest-blue))]/90 text-white lunar-shadow hover-glow border border-[hsl(var(--primary-blue))]/30";
       case "secondary":
-        return "bg-[hsl(var(--lunar-mist))] hover:bg-[hsl(var(--lunar-mist))]/80 text-white lunar-shadow hover-glow";
+        return "bg-gradient-to-r from-[hsl(var(--lunar-mist))] to-[hsl(var(--soft-gray))] hover:from-[hsl(var(--lunar-mist))]/90 hover:to-[hsl(var(--soft-gray))]/90 text-white lunar-shadow hover-glow border border-[hsl(var(--lunar-mist))]/30";
       case "accent":
-        return "bg-[hsl(var(--accent-gold))] hover:bg-[hsl(var(--accent-gold))]/80 text-black accent-shadow accent-glow";
+        return "bg-gradient-to-r from-[hsl(var(--accent-gold))] to-[hsl(var(--gold-manifest))] hover:from-[hsl(var(--accent-gold))]/90 hover:to-[hsl(var(--gold-manifest))]/90 text-black accent-shadow accent-glow border border-[hsl(var(--accent-gold))]/40";
       case "remax":
-        return "bg-[hsl(var(--remax-red))] hover:bg-[hsl(var(--remax-red))]/80 text-white remax-shadow remax-glow";
+        return "bg-gradient-to-r from-[hsl(var(--remax-red))] to-[#c73650] hover:from-[hsl(var(--remax-red))]/90 hover:to-[#c73650]/90 text-white remax-shadow remax-glow border border-[hsl(var(--remax-red))]/30";
       case "eclipse":
-        return "bg-[hsl(var(--eclipse-glow))] hover:bg-[hsl(var(--eclipse-glow))]/80 text-black eclipse-shadow hover-glow";
+        return "bg-gradient-to-r from-[hsl(var(--eclipse-glow))] to-[#4dd8ff] hover:from-[hsl(var(--eclipse-glow))]/90 hover:to-[#4dd8ff]/90 text-black eclipse-shadow hover-glow border border-[hsl(var(--eclipse-glow))]/40";
       default:
-        return "bg-[hsl(var(--primary-blue))] hover:bg-[hsl(var(--primary-blue))]/80 text-white lunar-shadow hover-glow";
+        return "bg-gradient-to-r from-[hsl(var(--primary-blue))] to-[hsl(var(--manifest-blue))] hover:from-[hsl(var(--primary-blue))]/90 hover:to-[hsl(var(--manifest-blue))]/90 text-white lunar-shadow hover-glow border border-[hsl(var(--primary-blue))]/30";
     }
   };
 
@@ -54,16 +54,16 @@ export default function CosmicButton({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "rounded-full font-semibold smooth-transition relative overflow-hidden group",
-        "before:absolute before:inset-0 before:bg-gradient-to-r before:from-white/20 before:via-white/10 before:to-white/20",
-        "before:translate-x-[-100%] group-hover:before:translate-x-[100%] before:transition-transform before:duration-700",
-        "active:scale-95 hover:scale-105",
+        "rounded-full font-semibold smooth-transition relative overflow-hidden group shadow-lg",
+        "before:absolute before:inset-0 before:bg-gradient-to-r before:from-white/25 before:via-white/15 before:to-white/25 before:opacity-0 group-hover:before:opacity-100",
+        "after:absolute after:inset-0 after:rounded-full after:border after:border-white/20",
+        "active:scale-95 hover:scale-[1.02] hover:shadow-xl",
         getVariantStyles(),
         getSizeStyles(),
         className
       )}
     >
-      <span className="relative z-10">{children}</span>
+      <span className="relative z-10 font-medium">{children}</span>
     </Button>
   );
 }
