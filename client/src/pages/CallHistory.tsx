@@ -10,37 +10,38 @@ import { Phone, Clock, User, TrendingUp, Play } from "lucide-react";
 
 export default function CallHistory() {
   const [isVisible, setIsVisible] = useState(false);
-  const [calls, setCalls] = useState([]);
   const [selectedCall, setSelectedCall] = useState(null);
+
+  const { data: calls = [], isLoading, error } = useQuery<Call[]>({
+    queryKey: ['/api/calls'],
+    queryFn: async () => {
+      try {
+        // First try to get detailed call data
+        const callsData = await apiClient.post('/api/calls/list', {
+          filter_criteria: {},
+          sort_order: 'descending',
+          limit: 50
+        });
+        return Array.isArray(callsData) ? callsData : [];
+      } catch (error) {
+        console.error('Failed to fetch detailed calls, trying fallback:', error);
+        // Fallback to basic calls endpoint
+        try {
+          const fallbackCalls = await apiClient.get('/api/calls');
+          return Array.isArray(fallbackCalls) ? fallbackCalls : [];
+        } catch (fallbackError) {
+          console.error('Failed to fetch fallback calls:', fallbackError);
+          return [];
+        }
+      }
+    }
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(true);
     }, 100);
     return () => clearTimeout(timer);
-
-    // Fetch calls with detailed data
-    const fetchCalls = async () => {
-      try {
-        const callsData = await apiClient.post('/api/calls/list', {
-          filter_criteria: {},
-          sort_order: 'descending',
-          limit: 50
-        });
-        setCalls(Array.isArray(callsData) ? callsData : []);
-      } catch (error) {
-        console.error('Failed to fetch calls:', error);
-        // Fallback to basic calls
-        try {
-          const fallbackCalls = await apiClient.get('/api/calls');
-          setCalls(fallbackCalls);
-        } catch (fallbackError) {
-          console.error('Failed to fetch fallback calls:', fallbackError);
-        }
-      }
-    };
-
-    fetchCalls();
   }, []);
 
   const formatDuration = (durationMs) => {
