@@ -2,6 +2,7 @@ import { Plus, Star, Phone, TrendingUp, Sparkles, History, Lightbulb, Crown, Tar
 import GlassmorphicCard from "@/components/GlassmorphicCard";
 import CosmicButton from "@/components/CosmicButton";
 import { useEffect, useState } from "react";
+import { AuthService } from "@/lib/auth";
 
 export default function Dashboard() {
   const [isVisible, setIsVisible] = useState(false);
@@ -74,23 +75,19 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const token = localStorage.getItem('auth_token');
-        const headers = {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        };
+        // Import AuthService dynamically to avoid circular imports
+        const { AuthService } = await import('@/lib/auth');
 
         // Fetch analytics stats
-        const statsResponse = await fetch('/api/analytics/stats', { headers });
+        const statsResponse = await AuthService.makeAuthenticatedRequest('/api/analytics/stats');
         if (statsResponse.ok) {
           const statsData = await statsResponse.json();
           setStats(statsData);
         }
 
         // Fetch recent calls
-        const callsResponse = await fetch('/api/calls/list', {
+        const callsResponse = await AuthService.makeAuthenticatedRequest('/api/calls/list', {
           method: 'POST',
-          headers,
           body: JSON.stringify({
             filter_criteria: {},
             sort_order: 'descending',
@@ -114,7 +111,7 @@ export default function Dashboard() {
         }
 
         // Fetch agents
-        const agentsResponse = await fetch('/api/agents/simple', { headers });
+        const agentsResponse = await AuthService.makeAuthenticatedRequest('/api/agents/simple');
         if (agentsResponse.ok) {
           const agentsData = await agentsResponse.json();
           const formattedAgents = agentsData.slice(0, 3).map((agent, index) => ({
@@ -131,6 +128,7 @@ export default function Dashboard() {
 
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
+        // If authentication fails, user will be redirected to login
       }
     };
 
