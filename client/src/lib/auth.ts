@@ -10,6 +10,13 @@ interface AuthResponse {
   message: string;
 }
 
+interface RegisterUser {
+  username: string;
+  email: string;
+  password: string;
+  displayName: string;
+}
+
 // Define interfaces for user data for better type safety
 interface LoginUser {
   email: string;
@@ -162,6 +169,25 @@ export class AuthService {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.message || 'Login failed');
+    }
+
+    const data: AuthResponse = await response.json();
+    this.setAuth(data.token, data.user);
+    return data;
+  }
+
+  static async register(userData: RegisterUser): Promise<AuthResponse> {
+    const response = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(userData)
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Registration failed');
     }
 
     const data: AuthResponse = await response.json();

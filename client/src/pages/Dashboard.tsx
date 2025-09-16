@@ -13,6 +13,8 @@ interface StatsData {
     successfulCalls: number;
     activeAgents: number;
     conversionRate: number;
+    todaysCalls: number;
+    positivesentimentCalls: number;
     averageCallDuration?: number;
     totalCost?: number;
     callSuccessRate?: number;

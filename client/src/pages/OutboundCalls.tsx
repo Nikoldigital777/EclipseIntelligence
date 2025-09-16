@@ -44,7 +44,7 @@ export default function OutboundCalls() {
   // Fetch agents using authenticated API
   const { data: agents = [], isLoading: isLoadingAgents, error: agentsError } = useQuery<Agent[]>({
     queryKey: ['/api/agents/simple'],
-    queryFn: () => apiClient.get('/api/agents/simple'),
+    queryFn: () => apiClient.get<Agent[]>('/api/agents/simple'),
     retry: 1,
     refetchOnWindowFocus: false
   });
@@ -52,7 +52,7 @@ export default function OutboundCalls() {
   // Create batch campaign mutation
   const createBatchCampaignMutation = useMutation({
     mutationFn: (payload: any) => apiClient.post('/api/outbound-calls/batch', payload),
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       toast({
         title: "Campaign Launched! 🚀",
         description: data.message || `Successfully created batch call with ${recipients.length} recipients. Batch ID: ${data.batch_call_id}`,
