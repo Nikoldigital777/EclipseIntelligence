@@ -26,7 +26,7 @@ export default function Analytics() {
     setIsVisible(true);
   }, []);
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount: number | null | undefined): string => {
     return new Intl.NumberFormat('en-US', { 
       style: 'currency', 
       currency: 'USD',
@@ -35,7 +35,8 @@ export default function Analytics() {
     }).format(amount || 0);
   };
 
-  const formatDuration = (seconds) => {
+  const formatDuration = (seconds: number | null | undefined): string => {
+    if (!seconds) return '0s';
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = Math.floor(seconds % 60);

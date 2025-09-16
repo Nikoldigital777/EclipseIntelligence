@@ -10,7 +10,7 @@ import { Phone, Clock, User, TrendingUp, Play } from "lucide-react";
 
 export default function CallHistory() {
   const [isVisible, setIsVisible] = useState(false);
-  const [selectedCall, setSelectedCall] = useState(null);
+  const [selectedCall, setSelectedCall] = useState<Call | null>(null);
 
   const { data: calls = [], isLoading, error } = useQuery<Call[]>({
     queryKey: ['/api/calls'],
@@ -44,31 +44,31 @@ export default function CallHistory() {
     return () => clearTimeout(timer);
   }, []);
 
-  const formatDuration = (durationMs) => {
+  const formatDuration = (durationMs: number | null | undefined): string => {
     if (!durationMs) return 'N/A';
     const seconds = Math.floor(durationMs / 1000);
     const minutes = Math.floor(seconds / 60);
     return `${minutes}:${(seconds % 60).toString().padStart(2, '0')}`;
   };
 
-  const formatDateTime = (dateString) => {
+  const formatDateTime = (dateString: string | null | undefined): string => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleString();
   };
 
-  const getStatusBadge = (status) => {
-    const statusColors = {
+  const getStatusBadge = (status: string): string => {
+    const statusColors: Record<string, string> = {
       'completed': 'bg-green-500',
       'failed': 'bg-red-500',
       'in_progress': 'bg-yellow-500',
       'registered': 'bg-blue-500'
     };
-    return statusColors[status.toLowerCase()] || 'bg-gray-500';
+    return statusColors[status?.toLowerCase()] || 'bg-gray-500';
   };
 
-  const getSentimentEmoji = (sentiment) => {
+  const getSentimentEmoji = (sentiment: string | null | undefined): string => {
     if (!sentiment) return '😐';
-    const sentimentEmojis = {
+    const sentimentEmojis: Record<string, string> = {
       'positive': '😊',
       'negative': '😞',
       'neutral': '😐',
@@ -78,7 +78,7 @@ export default function CallHistory() {
     return sentimentEmojis[sentiment.toLowerCase()] || '😐';
   };
 
-  const getSentimentColor = (sentiment) => {
+  const getSentimentColor = (sentiment: string | null | undefined): string => {
     switch (sentiment) {
       case 'Positive': return 'text-green-400';
       case 'Negative': return 'text-red-400';
@@ -194,7 +194,7 @@ export default function CallHistory() {
                         Phone Call
                       </td>
                       <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`call-cost-${call.id}`}>
-                        {call.cost || 'N/A'}
+                        {call.cost ? `$${call.cost}` : 'N/A'}
                       </td>
                       <td className="py-4 px-6" data-testid={`call-status-${call.id}`}>
                         <Badge className={`${getStatusBadge(call.status)} text-white border-0`}>
@@ -205,10 +205,10 @@ export default function CallHistory() {
                         {getSentimentEmoji(call.sentiment)}
                       </td>
                       <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`call-from-${call.id}`}>
-                        {call.fromNumber}
+                        {call.fromNumber || call.from_number}
                       </td>
                       <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`call-to-${call.id}`}>
-                        {call.toNumber}
+                        {call.toNumber || call.to_number}
                       </td>
                     </tr>
                   ))
@@ -222,7 +222,7 @@ export default function CallHistory() {
         <div className="grid grid-cols-1 gap-6 mt-6">
           {calls.length > 0 ? (
             calls.map((call, index) => (
-              <GlassmorphicCard key={call.call_id || call.id || index} className="hover:scale-[1.01] transition-all duration-300 border border-white/10 hover:border-white/20">
+              <GlassmorphicCard key={call.sessionId || call.id || index} className="hover:scale-[1.01] transition-all duration-300 border border-white/10 hover:border-white/20">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-[hsl(var(--primary-blue))] to-[hsl(var(--eclipse-glow))] rounded-full flex items-center justify-center shadow-lg">
@@ -230,14 +230,14 @@ export default function CallHistory() {
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-white">
-                        {call.direction === 'inbound' ? call.from_number : call.to_number || `+1 (555) ${100 + index}-${1000 + index}`}
+                        {call.fromNumber || call.toNumber || `+1 (555) ${100 + index}-${1000 + index}`}
                       </h3>
                       <p className="text-gray-300 text-sm">
-                        {call.direction || 'Unknown'} Call • Agent: {call.agent_id || 'AI Agent'}
+                        Phone Call • Agent: {call.agentId || call.retellAgentId || 'AI Agent'}
                       </p>
                       <p className="text-gray-400 text-xs">
-                        {call.start_timestamp ? new Date(call.start_timestamp).toLocaleTimeString() : 'Time N/A'} • 
-                        {formatDuration(call.duration_ms)} duration
+                        {call.createdAt ? new Date(call.createdAt).toLocaleTimeString() : 'Time N/A'} • 
+                        {formatDuration(call.duration)} duration
                       </p>
                     </div>
                   </div>
@@ -245,30 +245,20 @@ export default function CallHistory() {
                   <div className="flex items-center space-x-4">
                     <div className="text-center">
                       <div className="flex items-center space-x-1 mb-1">
-                        <TrendingUp className={`w-4 h-4 ${getSentimentColor(call.call_analysis?.user_sentiment)}`} />
-                        <span className={`text-sm font-medium ${getSentimentColor(call.call_analysis?.user_sentiment)}`}>
-                          {call.call_analysis?.user_sentiment || 'Unknown'}
+                        <TrendingUp className={`w-4 h-4 ${getSentimentColor(call.sentiment)}`} />
+                        <span className={`text-sm font-medium ${getSentimentColor(call.sentiment)}`}>
+                          {call.sentiment || 'Unknown'}
                         </span>
                       </div>
                       <p className="text-xs text-gray-400">Sentiment</p>
                     </div>
 
                     <div className="text-center">
-                      <p className={`text-lg font-bold ${call.call_analysis?.call_successful ? 'text-green-400' : 'text-red-400'}`}>
-                        {call.call_analysis?.call_successful ? '✓' : '✗'}
+                      <p className={`text-lg font-bold ${call.status === 'completed' ? 'text-green-400' : 'text-red-400'}`}>
+                        {call.status === 'completed' ? '✓' : '✗'}
                       </p>
                       <p className="text-xs text-gray-400">Success</p>
                     </div>
-
-                    {call.recording_url && (
-                      <CosmicButton 
-                        variant="lunar" 
-                        size="sm"
-                        onClick={() => window.open(call.recording_url, '_blank')}
-                      >
-                        <Play className="w-4 h-4" />
-                      </CosmicButton>
-                    )}
 
                     <CosmicButton 
                       variant="eclipse" 
@@ -280,11 +270,11 @@ export default function CallHistory() {
                   </div>
                 </div>
 
-                {call.call_analysis?.call_summary && (
+                {call.outcome && (
                   <div className="mt-4 p-3 bg-white/5 rounded-lg border border-white/10">
                     <p className="text-sm text-gray-300">
-                      <span className="font-medium text-white">Summary: </span>
-                      {call.call_analysis.call_summary}
+                      <span className="font-medium text-white">Outcome: </span>
+                      {call.outcome}
                     </p>
                   </div>
                 )}
