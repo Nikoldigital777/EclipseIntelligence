@@ -12,7 +12,7 @@ export default function CallHistory() {
   const [isVisible, setIsVisible] = useState(false);
   const [selectedCall, setSelectedCall] = useState<Call | null>(null);
 
-  const { data: calls = [], isLoading, error } = useQuery<Call[]>({
+  const { data: calls = [], isLoading, error } = useQuery<any[]>({
     queryKey: ['/api/calls'],
     queryFn: async () => {
       try {
@@ -53,7 +53,7 @@ export default function CallHistory() {
 
   const formatDateTime = (dateString: string | null | undefined): string => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleString();
+    return new Date(dateString.toString()).toLocaleString();
   };
 
   const getStatusBadge = (status: string): string => {
@@ -114,7 +114,7 @@ export default function CallHistory() {
         </div>
 
         {/* Enhanced floating cosmic elements */}
-        <div className="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-[hsl(var(--lunar-mist))] to-[hsl(var(--eclipse-glow))] rounded-full blur-xl opacity-20 animate-pulse" />
+        <div className="absolute top-4 right-8 w-20 h-20 bg-gradient-to-br from-[hsl(var(--lunar-mist))] to-[hsl(var(--eclipse-glow))] rounded-full blur-xl opacity-20 animate-pulse" />
         <div className="absolute top-8 right-8 w-12 h-12 bg-gradient-to-br from-[hsl(var(--manifest-blue))] to-[hsl(var(--gold-manifest))] rounded-full blur-lg opacity-15 animate-float" />
         <div className="absolute bottom-4 left-8 w-16 h-16 bg-gradient-to-br from-[hsl(var(--eclipse-glow))] to-[hsl(var(--remax-red))] rounded-full blur-2xl opacity-10" />
 
@@ -205,10 +205,10 @@ export default function CallHistory() {
                         {getSentimentEmoji(call.sentiment)}
                       </td>
                       <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`call-from-${call.id}`}>
-                        {call.fromNumber}
+                        {call.fromNumber || 'N/A'}
                       </td>
                       <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`call-to-${call.id}`}>
-                        {call.toNumber}
+                        {call.toNumber || 'N/A'}
                       </td>
                     </tr>
                   ))
@@ -236,7 +236,7 @@ export default function CallHistory() {
                         Phone Call • Agent: {call.agentId || call.retellAgentId || 'AI Agent'}
                       </p>
                       <p className="text-gray-400 text-xs">
-                        {call.createdAt ? new Date(call.createdAt).toLocaleTimeString() : 'Time N/A'} • 
+                        {call.createdAt ? new Date(call.createdAt.toString()).toLocaleTimeString() : 'Time N/A'} • 
                         {formatDuration(call.duration)} duration
                       </p>
                     </div>

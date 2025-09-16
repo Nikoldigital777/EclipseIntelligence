@@ -3,10 +3,53 @@ import GlassmorphicCard from "@/components/GlassmorphicCard";
 import CosmicButton from "@/components/CosmicButton";
 import { useEffect, useState } from "react";
 import { AuthService } from "@/lib/auth";
+import { useQuery } from '@tanstack/react-query';
+
+interface StatsData {
+    totalLeads: number;
+    hotLeads: number;
+    callbacksDue: number;
+    totalCalls: number;
+    successfulCalls: number;
+    activeAgents: number;
+    conversionRate: number;
+    averageCallDuration?: number;
+    totalCost?: number;
+    callSuccessRate?: number;
+    sentimentBreakdown?: {
+      positive: number;
+      neutral: number;
+      negative: number;
+      frustrated: number;
+      satisfied: number;
+    };
+    weeklyTrends?: { date: string; value: number }[];
+    topPerformingAgents?: { id: string; name: string; avatar: string; callsToday: number; successRate: number; lastActivity: string }[];
+  }
+
+interface CallData {
+  id: string;
+  name: string;
+  phone: string;
+  duration: string;
+  status: string;
+  sentiment: string;
+  time: string;
+}
+
+interface AgentData {
+  id: string;
+  name: string;
+  avatar: string;
+  status: string;
+  callsToday: number;
+  successRate: number;
+  lastActivity: string;
+}
 
 export default function Dashboard() {
   const [isVisible, setIsVisible] = useState(false);
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<StatsData>({
     totalLeads: 0,
     hotLeads: 0,
     callbacksDue: 0,
@@ -27,30 +70,42 @@ export default function Dashboard() {
     weeklyTrends: [],
     topPerformingAgents: []
   });
-  const [recentCalls, setRecentCalls] = useState([]);
-  const [activeAgents, setActiveAgents] = useState([]);
+  const [recentCalls, setRecentCalls] = useState<CallData[]>([]);
+  const [activeAgents, setActiveAgents] = useState<AgentData[]>([]);
   const [greeting, setGreeting] = useState("Welcome");
   const [currentTime, setCurrentTime] = useState("");
 
+  const formatCurrency = (value: number): string => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(value);
+  };
+
+  const formatPercentage = (value: number): string => {
+    return `${Math.round(value)}%`;
+  };
+
+
   // Function to get greeting based on time
-  const getGreeting = () => {
+  const getGreeting = (): string => {
     const now = new Date();
     const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
     const hour = easternTime.getHours();
-    
+
     // Determine if it's EDT or EST
     const isEDT = now.getTimezoneOffset() !== easternTime.getTimezoneOffset();
     const timezone = isEDT ? "EDT" : "EST";
-    
+
     // Format time
     const timeString = easternTime.toLocaleTimeString("en-US", {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true
     });
-    
+
     setCurrentTime(`${timeString} ${timezone}`);
-    
+
     if (hour < 12) {
       return "Good morning, Levan";
     } else if (hour < 17) {
@@ -63,7 +118,7 @@ export default function Dashboard() {
   useEffect(() => {
     // Set initial greeting
     setGreeting(getGreeting());
-    
+
     // Update greeting every minute
     const greetingInterval = setInterval(() => {
       setGreeting(getGreeting());
@@ -95,9 +150,9 @@ export default function Dashboard() {
           })
         });
         if (callsResponse.ok) {
-          const callsData = await callsResponse.json();
+          const callsData: { calls: any[] } = await callsResponse.json();
           if (callsData.calls) {
-            const formattedCalls = callsData.calls.map(call => ({
+            const formattedCalls: CallData[] = callsData.calls.map(call => ({
               id: call.call_id,
               name: call.metadata?.customer_name || "Unknown Caller",
               phone: call.to_number || call.from_number,
@@ -113,8 +168,8 @@ export default function Dashboard() {
         // Fetch agents
         const agentsResponse = await AuthService.makeAuthenticatedRequest('/api/agents/simple');
         if (agentsResponse.ok) {
-          const agentsData = await agentsResponse.json();
-          const formattedAgents = agentsData.slice(0, 3).map((agent, index) => ({
+          const agentsData: AgentData[] = await agentsResponse.json();
+          const formattedAgents: AgentData[] = agentsData.slice(0, 3).map((agent, index) => ({
             id: agent.id,
             name: agent.name,
             avatar: agent.avatar,
@@ -241,7 +296,7 @@ export default function Dashboard() {
                   <TrendingUp className="w-6 h-6 text-[#1A1B26]" />
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold text-[#E8E9F3] bg-gradient-to-r from-[hsl(var(--success-green))] to-[#4ade80] bg-clip-text text-transparent">{stats.conversionRate}%</p>
+                  <p className="text-3xl font-bold text-[#E8E9F3] bg-gradient-to-r from-[hsl(var(--success-green))] to-[#4ade80] bg-clip-text text-transparent">{formatPercentage(stats.conversionRate)}</p>
                   <p className="text-[#B8BCC8] text-sm">Conversion Rate</p>
                 </div>
               </div>
@@ -262,7 +317,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-3xl font-bold text-[#E8E9F3] bg-gradient-to-r from-[#00D9FF] to-[#2E3A59] bg-clip-text text-transparent">
-                    {stats.successfulCalls > 0 ? ((stats.successfulCalls / stats.totalCalls) * 100).toFixed(0) : 0}%
+                    {stats.successfulCalls > 0 ? formatPercentage(stats.successfulCalls / stats.totalCalls * 100) : 0}
                   </p>
                   <p className="text-[#B8BCC8] text-sm">Success Rate</p>
                 </div>
