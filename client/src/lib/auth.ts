@@ -120,6 +120,41 @@ export class AuthService {
     throw new Error('Invalid refresh response');
   }
 
+  static initializeAuth(): void {
+    // Check if we have valid authentication
+    if (this.isAuthenticated()) {
+      console.log('Authentication initialized successfully');
+    } else {
+      console.log('No valid authentication found');
+      this.clearAuth();
+    }
+  }
+
+  static logout(): void {
+    this.clearAuth();
+    // Redirect to login page after logout
+    window.location.href = '/login';
+  }
+
+  static async login(email: string, password: string): Promise<AuthResponse> {
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Login failed');
+    }
+
+    const data: AuthResponse = await response.json();
+    this.setAuth(data.token, data.user);
+    return data;
+  }
+
   static async makeAuthenticatedRequest(url: string, options: RequestInit = {}): Promise<Response> {
     const token = await this.getValidToken();
 
@@ -129,10 +164,10 @@ export class AuthService {
       throw new Error('Authentication required');
     }
 
-    const headers = {
+    const headers: HeadersInit = {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
-      ...options.headers
+      ...(options.headers as Record<string, string>)
     };
 
     const response = await fetch(url, {
@@ -141,7 +176,7 @@ export class AuthService {
     });
 
     // If we get a 401/403, try refreshing token once more
-    if ((response.status === 401 || response.status === 403) && !options.headers?.['X-Retry-Auth']) {
+    if ((response.status === 401 || response.status === 403) && !(options.headers as any)?.['X-Retry-Auth']) {
       console.log('Auth failed, attempting token refresh...');
 
       const newToken = await this.getValidToken();
@@ -152,7 +187,7 @@ export class AuthService {
             'Authorization': `Bearer ${newToken}`,
             'Content-Type': 'application/json',
             'X-Retry-Auth': 'true',
-            ...options.headers
+            ...(options.headers as Record<string, string>)
           }
         });
       }

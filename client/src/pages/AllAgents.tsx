@@ -96,18 +96,21 @@ export default function AllAgents() {
   };
 
   const getAgentDisplayData = (agent: Agent, index: number) => {
+    const displayName = agent.agent_name || agent.name || "Unnamed Agent";
+    const agentId = agent.agent_id || agent.retellAgentId || (agent.id ? agent.id.toString() : index.toString());
+    
     return {
-      id: agent.agent_id || agent.retellAgentId || agent.id?.toString() || index.toString(),
-      name: agent.agent_name || agent.name || "Unnamed Agent",
+      id: agentId,
+      name: displayName,
       type: agent.type || "Single Prompt",
       voice: agent.voice_id || agent.voice || "Default Voice",
       phone: agent.phone || "+1(555)000-0000",
       editedBy: agent.editedBy || "System",
       editedAt: agent.editedAt || (agent.last_modification_timestamp ? 
         new Date(agent.last_modification_timestamp).toLocaleDateString() : "Unknown"),
-      avatar: agent.avatar || agent.name?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || "AG",
+      avatar: agent.avatar || displayName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() || "AG",
       description: agent.description || "AI Agent",
-      retellAgentId: agent.agent_id || agent.retellAgentId
+      retellAgentId: agent.agent_id || agent.retellAgentId || agentId
     };
   };
 

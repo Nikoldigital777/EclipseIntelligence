@@ -338,7 +338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const simpleAgents = (agents as RetellAgent[]).map((agent: RetellAgent, index: number) => ({
-        id: agent.agent_id || agent.id,
+        id: agent.agent_id || agent.id?.toString() || index.toString(),
         name: agent.agent_name || agent.name || "Unnamed Agent",
         phone: agent.phone || "+1(555)000-0000",
         voice: agent.voice_id || agent.voice || "Default",

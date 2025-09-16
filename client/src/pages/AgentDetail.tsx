@@ -31,8 +31,23 @@ interface Agent {
     version?: number;
   };
   llm_details?: {
-    general_prompt?: string;
+    llm_id?: string;
+    version?: string;
+    is_published?: boolean;
     model?: string;
+    s2s_model?: string;
+    model_temperature?: number;
+    model_high_priority?: boolean;
+    tool_call_strict_mode?: boolean;
+    general_prompt?: string;
+    general_tools?: any[];
+    states?: any[];
+    starting_state?: string;
+    begin_message?: string;
+    default_dynamic_variables?: Record<string, any>;
+    knowledge_base_ids?: string[];
+    kb_config?: any;
+    last_modification_timestamp?: string;
     temperature?: number;
     max_tokens?: number;
     first_message?: string;
@@ -133,7 +148,7 @@ export default function AgentDetail() {
         editedBy: "System",
         editedAt: agentData.last_modification_timestamp ? 
           new Date(agentData.last_modification_timestamp).toLocaleDateString() : "Unknown",
-        avatar: (agentData.agent_name || agentData.name || "AG").split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase(),
+        avatar: (agentData.agent_name || agentData.name || "AG").split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase(),
         prompt: agentData.llm_details?.general_prompt || agentData.general_prompt || agentData.prompt || "",
         general_prompt: agentData.llm_details?.general_prompt || agentData.general_prompt,
         response_engine: agentData.response_engine,
