@@ -10,6 +10,20 @@ interface AuthResponse {
   message: string;
 }
 
+// Define interfaces for user data for better type safety
+interface LoginUser {
+  email: string;
+  password: string;
+}
+
+interface SafeUser {
+  id: number;
+  username: string;
+  email: string;
+  displayName: string;
+  role: string;
+}
+
 export class AuthService {
   private static TOKEN_KEY = 'auth_token';
   private static USER_KEY = 'auth_user';
@@ -20,12 +34,12 @@ export class AuthService {
     return localStorage.getItem(this.TOKEN_KEY);
   }
 
-  static getUser(): any {
+  static getUser(): SafeUser | null {
     const userStr = localStorage.getItem(this.USER_KEY);
     return userStr ? JSON.parse(userStr) : null;
   }
 
-  static setAuth(token: string, user: any): void {
+  static setAuth(token: string, user: SafeUser): void {
     localStorage.setItem(this.TOKEN_KEY, token);
     localStorage.setItem(this.USER_KEY, JSON.stringify(user));
 
@@ -155,7 +169,7 @@ export class AuthService {
     return data;
   }
 
-  static async makeAuthenticatedRequest(url: string, options: RequestInit = {}): Promise<Response> {
+  static async makeAuthenticatedRequest<T = unknown>(url: string, options: RequestInit = {}): Promise<Response> {
     const token = await this.getValidToken();
 
     if (!token) {
@@ -199,35 +213,35 @@ export class AuthService {
 
 // Axios-like API client with auth headers
 export const apiClient = {
-  get: async (url: string) => {
-    const response = await AuthService.makeAuthenticatedRequest(url);
+  get: async <T = unknown>(url: string): Promise<T> => {
+    const response = await AuthService.makeAuthenticatedRequest<Response>(url);
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return response.json();
+    return response.json() as Promise<T>;
   },
 
-  post: async (url: string, data: any) => {
-    const response = await AuthService.makeAuthenticatedRequest(url, {
+  post: async <T = unknown>(url: string, data: Record<string, unknown>): Promise<T> => {
+    const response = await AuthService.makeAuthenticatedRequest<Response>(url, {
       method: 'POST',
       body: JSON.stringify(data),
     });
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return response.json();
+    return response.json() as Promise<T>;
   },
 
-  put: async (url: string, data: any) => {
-    const response = await AuthService.makeAuthenticatedRequest(url, {
+  put: async <T = unknown>(url: string, data: Record<string, unknown>): Promise<T> => {
+    const response = await AuthService.makeAuthenticatedRequest<Response>(url, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return response.json();
+    return response.json() as Promise<T>;
   },
 
-  delete: async (url: string) => {
-    const response = await AuthService.makeAuthenticatedRequest(url, {
+  delete: async <T = unknown>(url: string): Promise<T> => {
+    const response = await AuthService.makeAuthenticatedRequest<Response>(url, {
       method: 'DELETE',
     });
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return response.json();
+    return response.json() as Promise<T>;
   },
 };

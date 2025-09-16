@@ -205,10 +205,10 @@ export default function CallHistory() {
                         {getSentimentEmoji(call.sentiment)}
                       </td>
                       <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`call-from-${call.id}`}>
-                        {call.fromNumber || call.from_number}
+                        {call.fromNumber}
                       </td>
                       <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`call-to-${call.id}`}>
-                        {call.toNumber || call.to_number}
+                        {call.toNumber}
                       </td>
                     </tr>
                   ))

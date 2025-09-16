@@ -10,15 +10,54 @@ export default function Analytics() {
   const [isVisible, setIsVisible] = useState(false);
   const [timeframe, setTimeframe] = useState('30d');
 
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  interface StatsData {
+    totalCalls: number;
+    callSuccessRate: number;
+    averageCallDuration: number;
+    totalCost: number;
+    sentimentBreakdown: Record<string, number>;
+    topPerformingAgents: Array<{
+      agent_id: string;
+      total_calls: number;
+      success_rate: number;
+      avg_duration: number;
+      sentiment_rate: number;
+    }>;
+  }
+
+  interface DetailedAnalyticsData {
+    call_volume: {
+      by_direction: {
+        inbound: number;
+        outbound: number;
+      };
+    };
+    summary: {
+      total_duration_hours: number;
+    };
+    performance: {
+      latency_stats: {
+        avg_latency: number;
+      };
+      cost_analysis: {
+        cost_per_call: number;
+        cost_per_minute: number;
+      };
+    };
+    quality_metrics: {
+      resolution_rate: number;
+    };
+  }
+
+  const { data: stats, isLoading: statsLoading } = useQuery<StatsData>({
     queryKey: ['/api/analytics/stats'],
-    queryFn: () => apiClient.get('/api/analytics/stats'),
+    queryFn: () => apiClient.get<StatsData>('/api/analytics/stats'),
     refetchInterval: 30000 // Refresh every 30 seconds
   });
 
-  const { data: detailedAnalytics, isLoading: detailedLoading } = useQuery({
+  const { data: detailedAnalytics, isLoading: detailedLoading } = useQuery<DetailedAnalyticsData>({
     queryKey: ['/api/analytics/detailed', timeframe],
-    queryFn: () => apiClient.get(`/api/analytics/detailed?timeframe=${timeframe}`),
+    queryFn: () => apiClient.get<DetailedAnalyticsData>(`/api/analytics/detailed?timeframe=${timeframe}`),
     refetchInterval: 60000 // Refresh every minute
   });
 
