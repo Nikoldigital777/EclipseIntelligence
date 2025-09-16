@@ -77,9 +77,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAgent(insertAgent: InsertAgent): Promise<Agent> {
-    const agentData = {
+    const agentData: typeof agents.$inferInsert = {
       ...insertAgent,
-      editedAt: new Date().toISOString()
+      editedAt: new Date().toLocaleString('en-US', { 
+        month: '2-digit', 
+        day: '2-digit', 
+        year: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        hour12: true 
+      })
     };
     const [agent] = await db
       .insert(agents)
@@ -89,9 +96,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateAgent(id: number, updateData: Partial<InsertAgent>): Promise<Agent | undefined> {
+    const updateFields: Partial<typeof agents.$inferInsert> = {
+      ...updateData,
+      editedAt: new Date().toLocaleString('en-US', { 
+        month: '2-digit', 
+        day: '2-digit', 
+        year: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        hour12: true 
+      })
+    };
     const [agent] = await db
       .update(agents)
-      .set({ ...updateData, editedAt: new Date().toISOString() })
+      .set(updateFields)
       .where(eq(agents.id, id))
       .returning();
     return agent || undefined;

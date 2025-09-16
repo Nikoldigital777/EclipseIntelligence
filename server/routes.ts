@@ -23,7 +23,44 @@ interface RetellAgent {
   voice?: string;
   id?: string;
   name?: string;
-  [key: string]: any;
+  response_engine?: {
+    llm_id?: string;
+  };
+  voice_model?: string;
+  voice_temperature?: number;
+  voice_speed?: number;
+  fallback_voice_ids?: string[];
+  volume?: number;
+  normalize_for_speech?: boolean;
+  pronunciation_dictionary?: Record<string, string>;
+  language?: string;
+  responsiveness?: number;
+  interruption_sensitivity?: number;
+  enable_backchannel?: boolean;
+  backchannel_frequency?: number;
+  backchannel_words?: string[];
+  reminder_trigger_ms?: number;
+  reminder_max_count?: number;
+  end_call_after_silence_ms?: number;
+  max_call_duration_ms?: number;
+  webhook_url?: string;
+  webhook_timeout_ms?: number;
+  begin_message_delay_ms?: number;
+  ring_duration_ms?: number;
+  voicemail_option?: any;
+  ambient_sound?: string;
+  ambient_sound_volume?: number;
+  stt_mode?: string;
+  vocab_specialization?: any;
+  boosted_keywords?: string[];
+  allow_user_dtmf?: boolean;
+  user_dtmf_options?: any;
+  denoising_mode?: string;
+  data_storage_setting?: string;
+  opt_in_signed_url?: string;
+  post_call_analysis_data?: any;
+  post_call_analysis_model?: string;
+  pii_config?: any;
 }
 
 interface RetellCall {
@@ -38,7 +75,6 @@ interface RetellCall {
   start_timestamp?: string;
   agent_id?: string;
   call_status?: string;
-  [key: string]: any;
 }
 
 interface SentimentCounts {
@@ -50,13 +86,108 @@ interface SentimentCounts {
   [key: string]: number;
 }
 
+interface WeeklyTrendData {
+  date: string;
+  calls: number;
+  successful: number;
+  duration: number;
+  cost: number;
+}
+
+interface AgentPerformanceData {
+  agent_id: string;
+  total_calls: number;
+  successful_calls: number;
+  total_duration: number;
+  positive_sentiment: number;
+  success_rate: number;
+  avg_duration: number;
+  sentiment_rate: number;
+}
+
+interface LlmDetails {
+  llm_id?: string;
+  version?: string;
+  is_published?: boolean;
+  model?: string;
+  s2s_model?: string;
+  model_temperature?: number;
+  model_high_priority?: boolean;
+  tool_call_strict_mode?: boolean;
+  general_prompt?: string;
+  general_tools?: any[];
+  states?: any[];
+  starting_state?: string;
+  begin_message?: string;
+  default_dynamic_variables?: Record<string, any>;
+  knowledge_base_ids?: string[];
+  kb_config?: any;
+  last_modification_timestamp?: string;
+  temperature?: number;
+  max_tokens?: number;
+  first_message?: string;
+  system_message?: string;
+  tools?: any[];
+}
+
+interface VoiceConfig {
+  voice_id?: string;
+  voice_model?: string;
+  voice_temperature?: number;
+  voice_speed?: number;
+  fallback_voice_ids?: string[];
+  volume?: number;
+  normalize_for_speech?: boolean;
+  pronunciation_dictionary?: Record<string, string>;
+}
+
+interface ConversationConfig {
+  language?: string;
+  responsiveness?: number;
+  interruption_sensitivity?: number;
+  enable_backchannel?: boolean;
+  backchannel_frequency?: number;
+  backchannel_words?: string[];
+  reminder_trigger_ms?: number;
+  reminder_max_count?: number;
+  end_call_after_silence_ms?: number;
+  max_call_duration_ms?: number;
+}
+
+interface CallConfig {
+  webhook_url?: string;
+  webhook_timeout_ms?: number;
+  begin_message_delay_ms?: number;
+  ring_duration_ms?: number;
+  voicemail_option?: any;
+  ambient_sound?: string;
+  ambient_sound_volume?: number;
+}
+
+interface SpeechConfig {
+  stt_mode?: string;
+  vocab_specialization?: any;
+  boosted_keywords?: string[];
+  allow_user_dtmf?: boolean;
+  user_dtmf_options?: any;
+  denoising_mode?: string;
+}
+
+interface AnalyticsConfig {
+  data_storage_setting?: string;
+  opt_in_signed_url?: string;
+  post_call_analysis_data?: any;
+  post_call_analysis_model?: string;
+  pii_config?: any;
+}
+
 interface ComprehensiveAgentData {
-  llm_details?: any;
-  voice_config?: any;
-  conversation_config?: any;
-  call_config?: any;
-  speech_config?: any;
-  analytics_config?: any;
+  llm_details?: LlmDetails;
+  voice_config?: VoiceConfig;
+  conversation_config?: ConversationConfig;
+  call_config?: CallConfig;
+  speech_config?: SpeechConfig;
+  analytics_config?: AnalyticsConfig;
 }
 
 const router = Router();
@@ -998,8 +1129,8 @@ Remember to be knowledgeable about the market, professional, and focused on help
           frustrated: 0,
           satisfied: 0
         },
-        weeklyTrends: [] as any[],
-        topPerformingAgents: [] as any[]
+        weeklyTrends: [] as WeeklyTrendData[],
+        topPerformingAgents: [] as AgentPerformanceData[]
       };
 
       // If Retell client is available, get comprehensive analytics
@@ -1084,7 +1215,7 @@ Remember to be knowledgeable about the market, professional, and focused on help
                 cost: dayCalls.reduce((sum: number, call: RetellCall) => sum + parseFloat(call.call_cost_breakdown?.total_cost || '0'), 0)
               });
             }
-            enhancedStats.weeklyTrends = weeklyData as any;
+            enhancedStats.weeklyTrends = weeklyData;
 
             // Top performing agents
             const agentPerformance: Record<string, {
@@ -1115,13 +1246,13 @@ Remember to be knowledgeable about the market, professional, and focused on help
             });
 
             enhancedStats.topPerformingAgents = Object.values(agentPerformance)
-              .map((agent: any) => ({
+              .map((agent): AgentPerformanceData => ({
                 ...agent,
                 success_rate: agent.total_calls > 0 ? Math.round((agent.successful_calls / agent.total_calls) * 100) : 0,
                 avg_duration: agent.total_calls > 0 ? Math.round(agent.total_duration / agent.total_calls / 1000) : 0,
                 sentiment_rate: agent.total_calls > 0 ? Math.round((agent.positive_sentiment / agent.total_calls) * 100) : 0
               }))
-              .sort((a: any, b: any) => b.success_rate - a.success_rate)
+              .sort((a: AgentPerformanceData, b: AgentPerformanceData) => b.success_rate - a.success_rate)
               .slice(0, 5);
 
           }
