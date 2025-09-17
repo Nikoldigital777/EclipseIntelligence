@@ -76,13 +76,13 @@ export default function BatchCalls() {
             <p className="text-gray-200 text-xl drop-shadow-lg [text-shadow:_1px_1px_4px_rgb(0_0_0_/_50%)]">Mass AI phone campaigns - Scale your outreach efficiently</p>
           </div>
           <div className="flex items-center space-x-4">
-            <CosmicButton variant="primary" className="flex items-center space-x-2 hover:scale-105 transition-transform duration-200" data-testid="button-export">
-              <Download className="w-4 h-4" />
-              <span>Export</span>
+            <CosmicButton variant="primary" className="flex items-center space-x-2 hover:scale-105 transition-transform duration-200 px-6 py-3 whitespace-nowrap" data-testid="button-export">
+              <Download className="w-4 h-4 flex-shrink-0" />
+              <span>Export Data</span>
             </CosmicButton>
-            <CosmicButton variant="eclipse" className="flex items-center space-x-2 hover:scale-105 transition-transform duration-200" data-testid="button-new-batch">
-              <Plus className="w-4 h-4" />
-              <span>New Batch</span>
+            <CosmicButton variant="eclipse" className="flex items-center space-x-2 hover:scale-105 transition-transform duration-200 px-6 py-3 whitespace-nowrap" data-testid="button-new-batch">
+              <Plus className="w-4 h-4 flex-shrink-0" />
+              <span>New Campaign</span>
             </CosmicButton>
           </div>
         </div>
@@ -92,16 +92,16 @@ export default function BatchCalls() {
       <div className="mt-6">
         <GlassmorphicCard className="border border-white/10 hover:border-white/20 transition-colors duration-300">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[1200px]">
               <thead className="bg-[hsl(var(--lunar-mist))]/20">
                 <tr>
-                  <th className="text-left py-4 px-6 font-semibold text-white">Campaign Name</th>
-                  <th className="text-left py-4 px-6 font-semibold text-white">Status</th>
-                  <th className="text-left py-4 px-6 font-semibold text-white">Recipients</th>
-                  <th className="text-left py-4 px-6 font-semibold text-white">Completed</th>
-                  <th className="text-left py-4 px-6 font-semibold text-white">Successful</th>
-                  <th className="text-left py-4 px-6 font-semibold text-white">Success Rate</th>
-                  <th className="text-left py-4 px-6 font-semibold text-white">Created</th>
+                  <th className="text-left py-4 px-6 font-semibold text-white min-w-[200px]">Campaign Name</th>
+                  <th className="text-left py-4 px-6 font-semibold text-white min-w-[120px]">Status</th>
+                  <th className="text-left py-4 px-6 font-semibold text-white min-w-[100px]">Recipients</th>
+                  <th className="text-left py-4 px-6 font-semibold text-white min-w-[100px]">Completed</th>
+                  <th className="text-left py-4 px-6 font-semibold text-white min-w-[100px]">Successful</th>
+                  <th className="text-left py-4 px-6 font-semibold text-white min-w-[120px]">Success Rate</th>
+                  <th className="text-left py-4 px-6 font-semibold text-white min-w-[180px]">Created</th>
                 </tr>
               </thead>
               <tbody>
@@ -138,28 +138,34 @@ export default function BatchCalls() {
                 ) : (
                   batchCalls.map((batchCall) => (
                     <tr key={batchCall.id} className="border-b border-white/5 hover:bg-white/5 transition-colors" data-testid={`batch-call-row-${batchCall.id}`}>
-                      <td className="py-4 px-6 text-white font-medium" data-testid={`batch-name-${batchCall.id}`}>
-                        {batchCall.name}
+                      <td className="py-4 px-6 text-white font-medium min-w-[200px]" data-testid={`batch-name-${batchCall.id}`}>
+                        <div className="break-words max-w-[200px]" title={batchCall.name}>
+                          {batchCall.name}
+                        </div>
                       </td>
-                      <td className="py-4 px-6" data-testid={`batch-status-${batchCall.id}`}>
-                        <Badge className={`${getStatusBadge(batchCall.status)} text-white border-0`}>
+                      <td className="py-4 px-6 min-w-[120px]" data-testid={`batch-status-${batchCall.id}`}>
+                        <Badge className={`${getStatusBadge(batchCall.status)} text-white border-0 whitespace-nowrap`}>
                           {batchCall.status}
                         </Badge>
                       </td>
-                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`batch-recipients-${batchCall.id}`}>
-                        {batchCall.totalTaskCount}
+                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))] text-center min-w-[100px]" data-testid={`batch-recipients-${batchCall.id}`}>
+                        {batchCall.totalTaskCount.toLocaleString()}
                       </td>
-                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`batch-completed-${batchCall.id}`}>
-                        {batchCall.completedCount}
+                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))] text-center min-w-[100px]" data-testid={`batch-completed-${batchCall.id}`}>
+                        {batchCall.completedCount.toLocaleString()}
                       </td>
-                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`batch-successful-${batchCall.id}`}>
-                        {batchCall.successfulCount}
+                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))] text-center min-w-[100px]" data-testid={`batch-successful-${batchCall.id}`}>
+                        {batchCall.successfulCount.toLocaleString()}
                       </td>
-                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`batch-success-rate-${batchCall.id}`}>
-                        {getSuccessRate(batchCall.completedCount, batchCall.successfulCount)}
+                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))] text-center min-w-[120px]" data-testid={`batch-success-rate-${batchCall.id}`}>
+                        <span className="font-medium">
+                          {getSuccessRate(batchCall.completedCount, batchCall.successfulCount)}
+                        </span>
                       </td>
-                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`batch-created-${batchCall.id}`}>
-                        {formatDateTime(batchCall.createdAt)}
+                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))] min-w-[180px]" data-testid={`batch-created-${batchCall.id}`}>
+                        <div className="whitespace-nowrap" title={formatDateTime(batchCall.createdAt)}>
+                          {formatDateTime(batchCall.createdAt)}
+                        </div>
                       </td>
                     </tr>
                   ))
