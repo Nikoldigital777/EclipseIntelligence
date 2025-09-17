@@ -113,6 +113,9 @@ export default function AgentDetail() {
   const [prompt, setPrompt] = useState("");
   const [isTestingAudio, setIsTestingAudio] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [callStatus, setCallStatus] = useState<'idle' | 'connecting' | 'connected' | 'ended'>('idle');
+  const [callData, setCallData] = useState<any>(null);
+  const [transcript, setTranscript] = useState<string[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -278,9 +281,14 @@ Remember to always be helpful, patient, and represent the company professionally
     if (!agent) return;
     
     setIsTestingAudio(true);
+    setCallStatus('connecting');
+    setTranscript([]);
+    
     try {
       const token = localStorage.getItem('auth_token');
       const agentId = agent.retellAgentId || params?.id;
+      
+      console.log(`🎙️ Starting test call with agent: ${agent.name} (${agentId})`);
       
       const response = await fetch('/api/web-calls', {
         method: 'POST',
@@ -298,19 +306,56 @@ Remember to always be helpful, patient, and represent the company professionally
       }
 
       const webCallData = await response.json();
-      console.log('Web call created:', webCallData);
+      console.log('✅ Web call created:', webCallData);
       
-      // In a real implementation, you would use the access_token 
-      // to initialize the Retell web call widget here
-      alert(`Test call initiated! Web Call ID: ${webCallData.web_call_id}`);
+      setCallData(webCallData);
+      setCallStatus('connected');
       
-    } catch (error) {
-      console.error('Error creating test call:', error);
-      alert('Failed to start test call. Please try again.');
+      // Add initial transcript message
+      setTranscript(prev => [...prev, `📞 Call started with ${agent.name}`, '🤖 Agent is ready to speak...']);
+      
+      if (webCallData.web_call_link) {
+        // Open the web call in a popup window for better UX
+        const callWindow = window.open(
+          webCallData.web_call_link, 
+          'retell_call',
+          'width=400,height=600,scrollbars=no,resizable=no,status=no,location=no,toolbar=no,menubar=no'
+        );
+
+        // Monitor if the call window is closed
+        if (callWindow) {
+          const checkClosed = setInterval(() => {
+            if (callWindow.closed) {
+              clearInterval(checkClosed);
+              handleEndCall();
+            }
+          }, 1000);
+        }
+      }
+    } catch (error: any) {
+      console.error('❌ Error creating test call:', error);
+      setCallStatus('ended');
+      toast({
+        title: "Call Failed",
+        description: error.message || "Failed to start test call with agent",
+        variant: "destructive"
+      });
     } finally {
-      // Keep testing state for a bit longer for visual feedback
-      setTimeout(() => setIsTestingAudio(false), 2000);
+      setIsTestingAudio(false);
     }
+  };
+
+  const handleEndCall = () => {
+    console.log('📞 Ending test call');
+    setCallStatus('ended');
+    setTranscript(prev => [...prev, '📞 Call ended', '💭 How did the conversation go?']);
+    
+    // Reset after a few seconds
+    setTimeout(() => {
+      setCallStatus('idle');
+      setCallData(null);
+      setTranscript([]);
+    }, 5000);
   };
 
   if (!agent) {
@@ -738,17 +783,6 @@ Remember to always be helpful, patient, and represent the company professionally
                   )}
                 </CosmicButton>
                 
-                {isTestingAudio && (
-                  <div className="bg-[hsl(var(--remax-red))]/10 border border-[hsl(var(--remax-red))]/30 rounded-lg p-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-3 h-3 bg-[hsl(var(--remax-red))] rounded-full animate-pulse"></div>
-                      <span className="text-white text-sm">Test call in progress...</span>
-                    </div>
-                    <p className="text-gray-300 text-xs mt-2">
-                      You can speak with your AI agent to test the conversation flow.
-                    </p>
-                  </div>
-                )}
                 
                 <div className="text-gray-400 text-xs">
                   <p>• Test calls are simulated and don't count toward usage</p>
