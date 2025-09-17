@@ -8,6 +8,7 @@ import CosmicButton from "@/components/CosmicButton";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 interface Agent {
   id: number;
@@ -112,6 +113,7 @@ export default function AgentDetail() {
   const [prompt, setPrompt] = useState("");
   const [isTestingAudio, setIsTestingAudio] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (params?.id) {
@@ -209,9 +211,67 @@ Remember to always be helpful, patient, and represent the company professionally
 
   const handleSave = async () => {
     setIsSaving(true);
-    // Simulate save
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsSaving(false);
+    try {
+      if (!agent) {
+        console.error('No agent to save');
+        return;
+      }
+
+      // Prepare the update payload
+      const updates: any = {
+        general_prompt: prompt,
+        llm_id: agent.llm_details?.llm_id
+      };
+
+      // Add agent name if it has been modified
+      if (agent.name) {
+        updates.agent_name = agent.name;
+      }
+
+      console.log('💾 Saving agent changes to Retell:', { agentId: agent.retellAgentId || agent.agent_id, updates });
+
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`/api/agents/${agent.retellAgentId || agent.agent_id}/sync`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save agent changes');
+      }
+
+      const result = await response.json();
+      console.log('✅ Successfully saved agent to Retell:', result);
+
+      // Show success message
+      toast({
+        title: "Success!",
+        description: result.message || "Agent successfully synced to Retell dashboard",
+        variant: "default"
+      });
+
+      // Optionally refresh agent data from Retell to get the latest version
+      if (params?.id) {
+        await fetchAgentData(params.id);
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Error saving agent:', error);
+      
+      // Show error message
+      toast({
+        title: "Save Failed",
+        description: error.message || "Failed to save agent changes to Retell dashboard",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleTestAudio = async () => {

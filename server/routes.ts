@@ -975,7 +975,7 @@ Remember to be knowledgeable about the market, professional, and focused on help
       // If updating LLM-related fields, update the LLM first
       if (updates.general_prompt && updates.llm_id) {
         try {
-          const llmUpdates = {
+          const llmUpdates: any = {
             general_prompt: updates.general_prompt
           };
           
@@ -993,14 +993,14 @@ Remember to be knowledgeable about the market, professional, and focused on help
           if (updates.knowledge_base_ids !== undefined) llmUpdates.knowledge_base_ids = updates.knowledge_base_ids;
 
           llmUpdateResult = await retellClient.updateLlm(updates.llm_id, llmUpdates);
-        } catch (llmError) {
+        } catch (llmError: any) {
           console.error("Failed to update LLM:", llmError);
           return res.status(500).json({ error: "Failed to update LLM prompt", details: llmError.message });
         }
       }
 
       // Update agent-level settings (voice, conversation, etc.)
-      const agentUpdates = {};
+      const agentUpdates: any = {};
       
       // Voice configuration updates
       if (updates.voice_id !== undefined) agentUpdates.voice_id = updates.voice_id;
@@ -1053,7 +1053,7 @@ Remember to be knowledgeable about the market, professional, and focused on help
       if (Object.keys(agentUpdates).length > 0) {
         try {
           result = await retellClient.updateAgent(agentId, agentUpdates);
-        } catch (agentError) {
+        } catch (agentError: any) {
           console.error("Failed to update agent:", agentError);
           return res.status(500).json({ error: "Failed to update agent", details: agentError.message });
         }
@@ -1066,7 +1066,7 @@ Remember to be knowledgeable about the market, professional, and focused on help
         llm: llmUpdateResult,
         message: "Agent successfully synced to Retell dashboard" 
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to sync agent to Retell:", error);
       res.status(500).json({ error: "Failed to sync agent to Retell", details: error.message });
     }
