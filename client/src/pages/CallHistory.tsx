@@ -1,4 +1,4 @@
-import { Download, Filter, MessageCircle, Volume2 } from "lucide-react";
+import { Download, Filter, MessageCircle, Volume2, X } from "lucide-react";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
 import CosmicButton from "@/components/CosmicButton";
 import TranscriptViewer from "@/components/TranscriptViewer";
@@ -7,6 +7,8 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { type Call } from "@shared/schema";
 import { useState, useEffect } from "react";
 import { Phone, Clock, User, TrendingUp, Play } from "lucide-react";
@@ -18,24 +20,58 @@ export default function CallHistory() {
   const [showAudioPlayer, setShowAudioPlayer] = useState(false);
   const [transcriptCall, setTranscriptCall] = useState<Call | null>(null);
   const [audioCall, setAudioCall] = useState<Call | null>(null);
+  
+  // Filter state
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    sentiment: 'all',
+    callType: 'all',
+    successStatus: 'all',
+    direction: 'all',
+    callStatus: 'all'
+  });
 
   const { data: calls = [], isLoading, error } = useQuery<any[]>({
-    queryKey: ['/api/calls'],
+    queryKey: ['/api/calls', filters],
     queryFn: async () => {
       try {
-        // First try to get detailed call data
+        // First try to get detailed call data with filters
+        const filterCriteria = buildFilterCriteria();
         const callsData = await apiClient.post('/api/calls/list', {
-          filter_criteria: {},
+          filter_criteria: filterCriteria,
           sort_order: 'descending',
           limit: 50
         });
         return Array.isArray(callsData) ? callsData : [];
       } catch (error) {
         console.error('Failed to fetch detailed calls, trying fallback:', error);
-        // Fallback to basic calls endpoint
+        // Fallback to basic calls endpoint and filter client-side
         try {
           const fallbackCalls = await apiClient.get('/api/calls');
-          return Array.isArray(fallbackCalls) ? fallbackCalls : [];
+          if (Array.isArray(fallbackCalls)) {
+            // Apply client-side filtering for fallback data
+            return fallbackCalls.filter((call: any) => {
+              if (filters.sentiment !== 'all' && call.sentiment !== filters.sentiment && call.userSentiment !== filters.sentiment) {
+                return false;
+              }
+              if (filters.callType !== 'all' && call.callType !== filters.callType) {
+                return false;
+              }
+              if (filters.successStatus !== 'all') {
+                const isSuccessful = call.callSuccessful || call.status === 'completed';
+                if (filters.successStatus === 'successful' && !isSuccessful) return false;
+                if (filters.successStatus === 'failed' && isSuccessful) return false;
+              }
+              if (filters.direction !== 'all' && call.direction !== filters.direction) {
+                return false;
+              }
+              if (filters.callStatus !== 'all' && call.status !== filters.callStatus && call.callStatus !== filters.callStatus) {
+                return false;
+              }
+              return true;
+            });
+          }
+          return [];
         } catch (fallbackError) {
           console.error('Failed to fetch fallback calls:', fallbackError);
           return [];
@@ -114,6 +150,46 @@ export default function CallHistory() {
     setAudioCall(null);
   };
 
+  // Filter functions
+  const handleFilterChange = (filterType: keyof typeof filters, value: string) => {
+    setFilters(prev => ({ ...prev, [filterType]: value }));
+  };
+
+  const clearAllFilters = () => {
+    setFilters({
+      sentiment: 'all',
+      callType: 'all',
+      successStatus: 'all',
+      direction: 'all',
+      callStatus: 'all'
+    });
+  };
+
+  const hasActiveFilters = Object.values(filters).some(value => value !== 'all');
+
+  // Build filter criteria for API
+  const buildFilterCriteria = () => {
+    const criteria: any = {};
+    
+    if (filters.sentiment !== 'all') {
+      criteria.user_sentiment = filters.sentiment;
+    }
+    if (filters.callType !== 'all') {
+      criteria.call_type = filters.callType;
+    }
+    if (filters.successStatus !== 'all') {
+      criteria.call_successful = filters.successStatus === 'successful';
+    }
+    if (filters.direction !== 'all') {
+      criteria.direction = filters.direction;
+    }
+    if (filters.callStatus !== 'all') {
+      criteria.call_status = filters.callStatus;
+    }
+    
+    return criteria;
+  };
+
   return (
     <div className="min-h-screen p-8" data-testid="page-call-history">
       {/* Header with stunning design background */}
@@ -160,9 +236,21 @@ export default function CallHistory() {
             <p className="text-gray-200 text-xl drop-shadow-lg [text-shadow:_1px_1px_4px_rgb(0_0_0_/_50%)]">Historical AI phone agent performance and call records</p>
           </div>
           <div className="flex items-center space-x-4">
-            <CosmicButton variant="eclipse" className="flex items-center space-x-2 hover:scale-105 transition-transform duration-200">
+            <CosmicButton 
+              variant="eclipse" 
+              className={`flex items-center space-x-2 hover:scale-105 transition-transform duration-200 ${
+                showFilters ? 'bg-[hsl(var(--eclipse-glow))]/30' : ''
+              }`}
+              onClick={() => setShowFilters(!showFilters)}
+              data-testid="button-toggle-filters"
+            >
               <Filter className="w-4 h-4" />
               <span>Filter</span>
+              {hasActiveFilters && (
+                <Badge className="ml-2 bg-[hsl(var(--remax-red))] text-white text-xs px-1.5 py-0.5">
+                  {Object.values(filters).filter(v => v !== 'all').length}
+                </Badge>
+              )}
             </CosmicButton>
             <CosmicButton variant="remax" className="flex items-center space-x-2 hover:scale-105 transition-transform duration-200">
               <Download className="w-4 h-4" />
@@ -171,6 +259,158 @@ export default function CallHistory() {
           </div>
         </div>
       </div>
+
+      {/* Advanced Filters Panel */}
+      {showFilters && (
+        <div className="mt-6">
+          <GlassmorphicCard className="border border-white/10 bg-gradient-to-br from-black/40 via-gray-900/40 to-black/40">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-white flex items-center">
+                  <Filter className="w-5 h-5 mr-2 text-[hsl(var(--eclipse-glow))]" />
+                  Advanced Filters
+                </h3>
+                <div className="flex items-center space-x-3">
+                  {hasActiveFilters && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={clearAllFilters}
+                      className="text-white border-white/20 hover:bg-white/10"
+                      data-testid="button-clear-filters"
+                    >
+                      <X className="w-4 h-4 mr-1" />
+                      Clear All
+                    </Button>
+                  )}
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setShowFilters(false)}
+                    className="text-gray-400 hover:text-white hover:bg-white/10"
+                    data-testid="button-close-filters"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                {/* Sentiment Filter */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">Sentiment</label>
+                  <Select 
+                    value={filters.sentiment} 
+                    onValueChange={(value) => handleFilterChange('sentiment', value)}
+                  >
+                    <SelectTrigger className="bg-black/50 border-white/20 text-white" data-testid="select-sentiment">
+                      <SelectValue placeholder="All Sentiments" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-900 border-white/20">
+                      <SelectItem value="all">All Sentiments</SelectItem>
+                      <SelectItem value="Positive">😊 Positive</SelectItem>
+                      <SelectItem value="Negative">😞 Negative</SelectItem>
+                      <SelectItem value="Neutral">😐 Neutral</SelectItem>
+                      <SelectItem value="Unknown">❓ Unknown</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Call Type Filter */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">Call Type</label>
+                  <Select 
+                    value={filters.callType} 
+                    onValueChange={(value) => handleFilterChange('callType', value)}
+                  >
+                    <SelectTrigger className="bg-black/50 border-white/20 text-white" data-testid="select-call-type">
+                      <SelectValue placeholder="All Types" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-900 border-white/20">
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="phone_call">📞 Phone Call</SelectItem>
+                      <SelectItem value="web_call">🌐 Web Call</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Success Status Filter */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">Success Status</label>
+                  <Select 
+                    value={filters.successStatus} 
+                    onValueChange={(value) => handleFilterChange('successStatus', value)}
+                  >
+                    <SelectTrigger className="bg-black/50 border-white/20 text-white" data-testid="select-success-status">
+                      <SelectValue placeholder="All Status" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-900 border-white/20">
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="successful">✅ Successful</SelectItem>
+                      <SelectItem value="failed">❌ Failed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Direction Filter */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">Direction</label>
+                  <Select 
+                    value={filters.direction} 
+                    onValueChange={(value) => handleFilterChange('direction', value)}
+                  >
+                    <SelectTrigger className="bg-black/50 border-white/20 text-white" data-testid="select-direction">
+                      <SelectValue placeholder="All Directions" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-900 border-white/20">
+                      <SelectItem value="all">All Directions</SelectItem>
+                      <SelectItem value="inbound">📥 Inbound</SelectItem>
+                      <SelectItem value="outbound">📤 Outbound</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Call Status Filter */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">Call Status</label>
+                  <Select 
+                    value={filters.callStatus} 
+                    onValueChange={(value) => handleFilterChange('callStatus', value)}
+                  >
+                    <SelectTrigger className="bg-black/50 border-white/20 text-white" data-testid="select-call-status">
+                      <SelectValue placeholder="All Status" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-900 border-white/20">
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="completed">✅ Completed</SelectItem>
+                      <SelectItem value="failed">❌ Failed</SelectItem>
+                      <SelectItem value="in_progress">🔄 In Progress</SelectItem>
+                      <SelectItem value="registered">📋 Registered</SelectItem>
+                      <SelectItem value="ended">🔚 Ended</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {hasActiveFilters && (
+                <div className="mt-4 pt-4 border-t border-white/10">
+                  <p className="text-sm text-gray-400">
+                    Active filters: 
+                    {Object.entries(filters)
+                      .filter(([_, value]) => value !== 'all')
+                      .map(([key, value]) => (
+                        <Badge key={key} className="ml-2 bg-[hsl(var(--eclipse-glow))]/30 text-white border-0">
+                          {key}: {value}
+                        </Badge>
+                      ))
+                    }
+                  </p>
+                </div>
+              )}
+            </div>
+          </GlassmorphicCard>
+        </div>
+      )}
 
       {/* Call History Table */}
       <div className="mt-6">
