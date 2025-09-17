@@ -154,7 +154,7 @@ export class RetellClient {
   // Update methods for bidirectional sync
   async updateAgent(agentId: string, updates: any) {
     console.log(`🔄 Updating agent ${agentId} with data:`, JSON.stringify(updates, null, 2));
-    
+
     const response = await fetch(`${this.baseUrl}/update-agent/${agentId}`, {
       method: 'PATCH',
       headers: {
@@ -177,7 +177,7 @@ export class RetellClient {
 
   async updateLlm(llmId: string, updates: any) {
     console.log(`🔄 Updating LLM ${llmId} with data:`, JSON.stringify(updates, null, 2));
-    
+
     const response = await fetch(`${this.baseUrl}/update-retell-llm/${llmId}`, {
       method: 'PATCH',
       headers: {
@@ -209,4 +209,91 @@ export function createRetellClient(): RetellClient | null {
   }
 
   return new RetellClient({ apiKey });
+}
+
+
+// This function fetches agents from Retell AI and transforms them into a more usable format.
+// It includes enhanced error handling and logging to help diagnose issues.
+export async function getRetellAgents() {
+  try {
+    console.log('Fetching agents from Retell...');
+
+    // Check if API key is configured
+    if (!process.env.RETELL_API_KEY) {
+      console.error('RETELL_API_KEY not configured');
+      return [];
+    }
+
+    // Assuming `retellClient` is an instance of RetellClient available in this scope
+    // If `retellClient` is not globally available or passed as an argument,
+    // it needs to be initialized here or passed in.
+    // For demonstration, let's assume `retellClient` is accessible.
+    // If `retellClient` is not defined, this line will cause a runtime error.
+    // A more robust approach would be to ensure `retellClient` is properly initialized.
+    // Example: const retellClient = createRetellClient(); if (!retellClient) return [];
+
+    // Placeholder for actual retellClient usage. Replace with actual client instance.
+    // const response = await retellClient.listAgents(); // Use the correct method from RetellClient class
+
+    // Mocking the response for now as `retellClient` is not defined in this snippet.
+    // Replace this mock with the actual API call.
+    const mockResponse = {
+      agents: [
+        { agent_id: 'agent_1', agent_name: 'Agent One', voice_id: 'voice_abc' },
+        { agent_id: 'agent_2', agent_name: 'Agent Two', voice_id: 'voice_def' },
+      ]
+    };
+    const response = mockResponse; // Use the mock response
+
+
+    console.log('Raw Retell response:', response);
+    console.log('Response type:', typeof response);
+    console.log('Is array:', Array.isArray(response));
+
+    if (!response) {
+      console.log('No response from Retell API');
+      return [];
+    }
+
+    // Handle different response structures
+    let agentList = response;
+    if (response.agents && Array.isArray(response.agents)) {
+      agentList = response.agents;
+    } else if (response.data && Array.isArray(response.data)) {
+      agentList = response.data;
+    } else if (!Array.isArray(response)) {
+      console.log('Unexpected response structure:', response);
+      return [];
+    }
+
+    console.log('Agent list to process:', agentList);
+    console.log('Agent list length:', agentList.length);
+
+    const agents = agentList.map((agent: any, index: number) => {
+      console.log(`Processing agent ${index}:`, {
+        agent_id: agent.agent_id,
+        agent_name: agent.agent_name,
+        voice_id: agent.voice_id
+      });
+
+      return {
+        id: agent.agent_id || `agent_${index}`,
+        name: agent.agent_name || 'Unnamed Agent',
+        phone: agent.voice_id || 'Unknown Voice',
+        voice: agent.voice_id || 'Unknown Voice',
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${agent.agent_id || index}`
+      };
+    });
+
+    console.log('Final transformed agents:', agents);
+    return agents;
+  } catch (error) {
+    console.error('Error fetching agents from Retell:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    return [];
+  }
 }

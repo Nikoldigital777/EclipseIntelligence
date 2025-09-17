@@ -195,45 +195,56 @@ export class AuthService {
     return data;
   }
 
-  static async makeAuthenticatedRequest<T = unknown>(url: string, options: RequestInit = {}): Promise<Response> {
-    const token = await this.getValidToken();
-
+  static async makeAuthenticatedRequest<T>(
+    endpoint: string,
+    options: RequestOptions = {}
+  ): Promise<T> {
+    const token = this.getToken();
     if (!token) {
-      // Redirect to login if no valid token
-      window.location.href = '/login';
-      throw new Error('Authentication required');
+      console.error('No authentication token available for request:', endpoint);
+      throw new Error('No authentication token available');
     }
 
-    const headers: HeadersInit = {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string>)
-    };
+    const { method = 'GET', body, headers = {} } = options;
 
-    const response = await fetch(url, {
-      ...options,
-      headers
-    });
+    console.log(`Making authenticated request: ${method} ${endpoint}`);
 
-    // If we get a 401/403, try refreshing token once more
-    if ((response.status === 401 || response.status === 403) && !(options.headers as any)?.['X-Retry-Auth']) {
-      console.log('Auth failed, attempting token refresh...');
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          ...headers,
+        },
+        body: body ? JSON.stringify(body) : undefined,
+      });
 
-      const newToken = await this.getValidToken();
-      if (newToken) {
-        return fetch(url, {
-          ...options,
-          headers: {
-            'Authorization': `Bearer ${newToken}`,
-            'Content-Type': 'application/json',
-            'X-Retry-Auth': 'true',
-            ...(options.headers as Record<string, string>)
-          }
+      console.log(`Response status for ${endpoint}:`, response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Request failed for ${endpoint}:`, {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText
         });
-      }
-    }
 
-    return response;
+        if (response.status === 401) {
+          console.warn('Authentication token expired, logging out');
+          this.logout();
+          throw new Error('Authentication failed');
+        }
+        throw new Error(`Request failed: ${response.statusText} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log(`Successful response for ${endpoint}:`, data);
+      return data;
+    } catch (error) {
+      console.error(`Network error for ${endpoint}:`, error);
+      throw error;
+    }
   }
 }
 
