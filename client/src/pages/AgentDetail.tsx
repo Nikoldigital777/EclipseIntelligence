@@ -767,22 +767,121 @@ Remember to always be helpful, patient, and represent the company professionally
                 <CosmicButton 
                   variant="remax" 
                   onClick={handleTestAudio}
-                  disabled={isTestingAudio}
+                  disabled={isTestingAudio || callStatus !== 'idle'}
                   className="w-full flex items-center justify-center space-x-2"
+                  data-testid="button-test-call"
                 >
                   {isTestingAudio ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       <span>Starting Test Call...</span>
                     </>
-                  ) : (
+                  ) : callStatus === 'idle' ? (
                     <>
                       <Play className="w-4 h-4" />
                       <span>Start Test Call</span>
                     </>
+                  ) : (
+                    <>
+                      <div className="w-3 h-3 bg-[hsl(var(--remax-red))] rounded-full animate-pulse"></div>
+                      <span>Call Active</span>
+                    </>
                   )}
                 </CosmicButton>
                 
+                {/* Enhanced Call Interface */}
+                {callStatus !== 'idle' && (
+                  <div className="space-y-4" data-testid="call-interface">
+                    {/* Call Status Header */}
+                    <div className={`rounded-lg p-4 border ${
+                      callStatus === 'connecting' ? 'bg-yellow-500/10 border-yellow-500/30' :
+                      callStatus === 'connected' ? 'bg-green-500/10 border-green-500/30' :
+                      'bg-gray-500/10 border-gray-500/30'
+                    }`} data-testid="call-status">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          {callStatus === 'connecting' && (
+                            <>
+                              <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse"></div>
+                              <span className="text-white text-sm">Connecting to {agent.name}...</span>
+                            </>
+                          )}
+                          {callStatus === 'connected' && (
+                            <>
+                              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                              <span className="text-white text-sm">🎙️ Live Call with {agent.name}</span>
+                            </>
+                          )}
+                          {callStatus === 'ended' && (
+                            <>
+                              <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+                              <span className="text-white text-sm">Call Ended</span>
+                            </>
+                          )}
+                        </div>
+                        
+                        {callStatus === 'connected' && (
+                          <CosmicButton 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={handleEndCall}
+                            className="flex items-center space-x-2"
+                            data-testid="button-end-call"
+                          >
+                            <span>🔴</span>
+                            <span>End Call</span>
+                          </CosmicButton>
+                        )}
+                      </div>
+                      
+                      {callData && (
+                        <div className="mt-2 text-xs text-gray-400" data-testid="call-data">
+                          Call ID: {callData.call_id}
+                          {callData.access_token && ` • Token Available`}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Live Transcript */}
+                    {transcript.length > 0 && (
+                      <div className="bg-[hsl(var(--lunar-glass))]/20 border border-white/10 rounded-lg p-4" data-testid="call-transcript">
+                        <div className="flex items-center space-x-2 mb-3">
+                          <span className="text-white font-medium">📝 Live Transcript</span>
+                          {callStatus === 'connected' && (
+                            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                          )}
+                        </div>
+                        
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          {transcript.map((message, index) => (
+                            <div key={index} className="text-sm text-gray-300 py-1 border-b border-white/5 last:border-0">
+                              {message}
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {callStatus === 'connected' && (
+                          <div className="mt-3 text-xs text-gray-400">
+                            💡 Speak naturally to test the conversation flow
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Call Instructions */}
+                    {callStatus === 'connected' && (
+                      <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3" data-testid="call-instructions">
+                        <div className="text-blue-300 text-sm font-medium mb-1">Call Instructions:</div>
+                        <div className="text-blue-200 text-xs space-y-1">
+                          <p>• A web call window has opened - allow microphone access</p>
+                          <p>• Speak naturally to test the agent's responses</p>
+                          <p>• The call will end when you close the web call window</p>
+                          <p>• Test different conversation scenarios</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
                 
                 <div className="text-gray-400 text-xs">
                   <p>• Test calls are simulated and don't count toward usage</p>
