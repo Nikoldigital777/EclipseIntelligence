@@ -1,8 +1,9 @@
-import { Download, Filter, MessageCircle, Volume2, X } from "lucide-react";
+import { Download, Filter, MessageCircle, Volume2, X, FileText, Eye } from "lucide-react";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
 import CosmicButton from "@/components/CosmicButton";
 import TranscriptViewer from "@/components/TranscriptViewer";
 import AudioPlayer from "@/components/AudioPlayer";
+import RichCallDetails from "@/components/RichCallDetails";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
@@ -18,8 +19,10 @@ export default function CallHistory() {
   const [selectedCall, setSelectedCall] = useState<Call | null>(null);
   const [showTranscript, setShowTranscript] = useState(false);
   const [showAudioPlayer, setShowAudioPlayer] = useState(false);
+  const [showRichDetails, setShowRichDetails] = useState(false);
   const [transcriptCall, setTranscriptCall] = useState<Call | null>(null);
   const [audioCall, setAudioCall] = useState<Call | null>(null);
+  const [richDetailsCall, setRichDetailsCall] = useState<Call | null>(null);
   
   // Filter state
   const [showFilters, setShowFilters] = useState(false);
@@ -140,6 +143,11 @@ export default function CallHistory() {
     setShowAudioPlayer(true);
   };
 
+  const openRichDetails = (call: Call) => {
+    setRichDetailsCall(call);
+    setShowRichDetails(true);
+  };
+
   const closeTranscript = () => {
     setShowTranscript(false);
     setTranscriptCall(null);
@@ -148,6 +156,11 @@ export default function CallHistory() {
   const closeAudioPlayer = () => {
     setShowAudioPlayer(false);
     setAudioCall(null);
+  };
+
+  const closeRichDetails = () => {
+    setShowRichDetails(false);
+    setRichDetailsCall(null);
   };
 
   // Filter functions
@@ -427,24 +440,25 @@ export default function CallHistory() {
                   <th className="text-left py-4 px-6 font-semibold text-white">User Sentiment</th>
                   <th className="text-left py-4 px-6 font-semibold text-white">From</th>
                   <th className="text-left py-4 px-6 font-semibold text-white">To</th>
+                  <th className="text-left py-4 px-6 font-semibold text-white">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={8} className="text-center py-8 text-[hsl(var(--soft-gray))]" data-testid="loading-message">
+                    <td colSpan={9} className="text-center py-8 text-[hsl(var(--soft-gray))]" data-testid="loading-message">
                       Loading call history...
                     </td>
                   </tr>
                 ) : error ? (
                   <tr>
-                    <td colSpan={8} className="text-center py-8 text-red-400" data-testid="error-message">
+                    <td colSpan={9} className="text-center py-8 text-red-400" data-testid="error-message">
                       Failed to load call history: {error instanceof Error ? error.message : 'Unknown error'}
                     </td>
                   </tr>
                 ) : !calls || calls.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="text-center py-8 text-[hsl(var(--soft-gray))]" data-testid="no-calls-message">
+                    <td colSpan={9} className="text-center py-8 text-[hsl(var(--soft-gray))]" data-testid="no-calls-message">
                       No calls found. Start making some cosmic connections! 🌙
                     </td>
                   </tr>
@@ -476,6 +490,18 @@ export default function CallHistory() {
                       </td>
                       <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`call-to-${call.id}`}>
                         {call.toNumber || 'N/A'}
+                      </td>
+                      <td className="py-4 px-6">
+                        <CosmicButton 
+                          variant="eclipse" 
+                          size="sm"
+                          onClick={() => openRichDetails(call)}
+                          className="flex items-center space-x-1 hover:scale-105 transition-transform duration-200"
+                          data-testid={`view-details-button-${call.id}`}
+                        >
+                          <Eye className="w-4 h-4" />
+                          <span>Details</span>
+                        </CosmicButton>
                       </td>
                     </tr>
                   ))
@@ -529,6 +555,17 @@ export default function CallHistory() {
 
                     <div className="flex space-x-2">
                       <CosmicButton 
+                        variant="manifest" 
+                        size="sm"
+                        onClick={() => openRichDetails(call)}
+                        className="flex items-center space-x-1"
+                        data-testid={`view-details-card-button-${call.id}`}
+                      >
+                        <Eye className="w-4 h-4" />
+                        <span>Details</span>
+                      </CosmicButton>
+
+                      <CosmicButton 
                         variant="eclipse" 
                         size="sm"
                         onClick={() => openTranscript(call)}
@@ -578,6 +615,13 @@ export default function CallHistory() {
         call={transcriptCall}
         isOpen={showTranscript}
         onClose={closeTranscript}
+      />
+
+      {/* Rich Call Details Modal */}
+      <RichCallDetails
+        call={richDetailsCall}
+        isOpen={showRichDetails}
+        onClose={closeRichDetails}
       />
 
       {/* Audio Player Modal */}
