@@ -22,7 +22,7 @@ export default function CallHistory() {
   const [transcriptCall, setTranscriptCall] = useState<Call | null>(null);
   const [audioCall, setAudioCall] = useState<Call | null>(null);
   const [richDetailsCall, setRichDetailsCall] = useState<Call | null>(null);
-  
+
   // Filter state
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -39,7 +39,7 @@ export default function CallHistory() {
       try {
         // Build filter criteria with 30-day default
         const filterCriteria = buildFilterCriteria();
-        
+
         // Always add 30-day filter if no start_timestamp is provided
         if (!filterCriteria.start_timestamp) {
           const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
@@ -47,37 +47,37 @@ export default function CallHistory() {
             lower_threshold: Math.floor(thirtyDaysAgo / 1000) // Convert to seconds for Retell API
           };
         }
-        
+
         console.log('Fetching calls with 30-day filter:', filterCriteria);
-        
+
         const callsResponse = await apiClient.post('/api/calls/list', {
           filter_criteria: filterCriteria,
           sort_order: 'descending',
           limit: 100, // Increase limit to get more recent calls
           includeDetails: true // Request detailed call data including transcripts
         });
-        
+
         // Handle both array response and object with data property
         const callsData = Array.isArray(callsResponse) ? callsResponse : 
                          (callsResponse.data || callsResponse.calls || []);
-        
+
         console.log(`Retrieved ${callsData.length} calls from last 30 days`);
-        
+
         return callsData;
       } catch (error) {
         console.error('Failed to fetch calls with enhanced filter:', error);
-        
+
         // Fallback to basic endpoint with client-side 30-day filtering
         try {
           const fallbackCalls = await apiClient.get('/api/calls');
           if (Array.isArray(fallbackCalls)) {
             const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-            
+
             return fallbackCalls.filter((call: any) => {
               // Apply 30-day filter
               const callDate = new Date(call.createdAt || call.startTimestamp || call.start_timestamp || Date.now()).getTime();
               if (callDate < thirtyDaysAgo) return false;
-              
+
               // Apply other filters
               if (filters.sentiment !== 'all' && call.sentiment !== filters.sentiment && call.userSentiment !== filters.sentiment) {
                 return false;
@@ -119,16 +119,16 @@ export default function CallHistory() {
     // Handle both durationMs (milliseconds) and duration (seconds) fields
     let duration = durationMs;
     if (!duration) return 'N/A';
-    
+
     // If the value is very small, it might be in seconds, convert to ms
     if (duration < 1000 && duration > 0) {
       duration = duration * 1000;
     }
-    
+
     const seconds = Math.floor(duration / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes % 60}m`;
     }
@@ -198,9 +198,9 @@ export default function CallHistory() {
 
   const formatDateTime = (dateString: string | number | null | undefined): string => {
     if (!dateString) return 'N/A';
-    
+
     let date: Date;
-    
+
     // Handle different timestamp formats
     if (typeof dateString === 'number') {
       // If it's a Unix timestamp in seconds, convert to milliseconds
@@ -208,9 +208,9 @@ export default function CallHistory() {
     } else {
       date = new Date(dateString.toString());
     }
-    
+
     if (isNaN(date.getTime())) return 'N/A';
-    
+
     return date.toLocaleString('en-US', {
       year: 'numeric',
       month: 'short', 
@@ -263,7 +263,7 @@ export default function CallHistory() {
                      call.call_analysis?.user_sentiment || 
                      call.sentiment;
     const normalizedSentiment = sentiment?.toLowerCase();
-    
+
     switch (normalizedSentiment) {
       case 'positive':
         return { emoji: '😊', text: 'Positive', color: 'text-green-400' };
@@ -330,7 +330,7 @@ export default function CallHistory() {
   // Build filter criteria for API
   const buildFilterCriteria = () => {
     const criteria: any = {};
-    
+
     if (filters.sentiment !== 'all') {
       // Retell API requires user_sentiment to be an array with capitalized values
       const capitalizedSentiment = filters.sentiment.charAt(0).toUpperCase() + filters.sentiment.slice(1).toLowerCase();
@@ -352,7 +352,7 @@ export default function CallHistory() {
       // Retell API requires call_status to be an array
       criteria.call_status = [filters.callStatus];
     }
-    
+
     return criteria;
   };
 
@@ -460,7 +460,7 @@ export default function CallHistory() {
                   </Button>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 {/* Sentiment Filter */}
                 <div className="space-y-2">
@@ -627,11 +627,12 @@ export default function CallHistory() {
                     const quality = getCallQualityIndicator(call);
                     const hasRec = hasRecordings(call);
                     const hasTrans = hasTranscript(call);
-                    
+                    const callId = call.id || call.sessionId || `temp-${Math.random()}`; // Use id, fallback to sessionId or generate temp ID
+
                     return (
-                      <tr key={call.id} className="border-b border-white/5 hover:bg-white/5 transition-colors" data-testid={`call-row-${call.id}`}>
+                      <tr key={callId} className="border-b border-white/5 hover:bg-white/5 transition-colors" data-testid={`call-row-${callId}`}>
                         {/* Time & Direction */}
-                        <td className="py-4 px-6" data-testid={`call-time-${call.id}`}>
+                        <td className="py-4 px-6" data-testid={`call-time-${callId}`}>
                           <div className="text-white text-sm font-medium">
                             {formatDateTime(call.start_timestamp || call.startTimestamp || call.createdAt)}
                           </div>
@@ -640,15 +641,15 @@ export default function CallHistory() {
                             <span>{call.direction || 'Unknown'}</span>
                           </div>
                         </td>
-                        
+
                         {/* Duration */}
-                        <td className="py-4 px-6" data-testid={`call-duration-${call.id}`}>
+                        <td className="py-4 px-6" data-testid={`call-duration-${callId}`}>
                           <div className="flex items-center text-[hsl(var(--soft-gray))]">
                             <Clock className="w-4 h-4 mr-1" />
                             <span>{formatDuration(call.duration_ms || call.durationMs || call.duration)}</span>
                           </div>
                         </td>
-                        
+
                         {/* Type & Quality */}
                         <td className="py-4 px-6">
                           <div className="text-[hsl(var(--soft-gray))] text-sm">
@@ -659,9 +660,9 @@ export default function CallHistory() {
                             <span>{quality} Quality</span>
                           </div>
                         </td>
-                        
+
                         {/* Cost */}
-                        <td className="py-4 px-6" data-testid={`call-cost-${call.id}`}>
+                        <td className="py-4 px-6" data-testid={`call-cost-${callId}`}>
                           <div className="flex items-center text-[hsl(var(--soft-gray))]">
                             <DollarSign className="w-4 h-4 mr-1" />
                             <span>{formatCost(
@@ -671,9 +672,9 @@ export default function CallHistory() {
                             )}</span>
                           </div>
                         </td>
-                        
+
                         {/* Status */}
-                        <td className="py-4 px-6" data-testid={`call-status-${call.id}`}>
+                        <td className="py-4 px-6" data-testid={`call-status-${callId}`}>
                           <Badge className={`${getStatusBadge(call.call_status || call.callStatus || call.status)} text-white border-0`}>
                             {(call.callSuccessful || call.call_analysis?.call_successful) ? (
                               <span className="flex items-center">
@@ -688,9 +689,9 @@ export default function CallHistory() {
                             )}
                           </Badge>
                         </td>
-                        
+
                         {/* Sentiment */}
-                        <td className="py-4 px-6" data-testid={`call-sentiment-${call.id}`}>
+                        <td className="py-4 px-6" data-testid={`call-sentiment-${callId}`}>
                           <div className="flex items-center">
                             <span className="text-lg mr-2">{sentimentInfo.emoji}</span>
                             <div>
@@ -700,9 +701,9 @@ export default function CallHistory() {
                             </div>
                           </div>
                         </td>
-                        
+
                         {/* Contact Info */}
-                        <td className="py-4 px-6" data-testid={`call-contact-${call.id}`}>
+                        <td className="py-4 px-6" data-testid={`call-contact-${callId}`}>
                           <div className="text-[hsl(var(--soft-gray))] text-sm">
                             <div className="flex items-center mb-1">
                               <span className="text-xs text-gray-500 mr-1">From:</span>
@@ -714,7 +715,7 @@ export default function CallHistory() {
                             </div>
                           </div>
                         </td>
-                        
+
                         {/* Media */}
                         <td className="py-4 px-6">
                           <div className="flex items-center space-x-2">
@@ -733,7 +734,7 @@ export default function CallHistory() {
                             )}
                           </div>
                         </td>
-                        
+
                         {/* Actions */}
                         <td className="py-4 px-6">
                           <div className="flex space-x-1">
@@ -742,30 +743,30 @@ export default function CallHistory() {
                               size="sm"
                               onClick={() => openRichDetails(call)}
                               className="flex items-center space-x-1 hover:scale-105 transition-transform duration-200"
-                              data-testid={`view-details-button-${call.id}`}
+                              data-testid={`view-details-button-${callId}`}
                             >
                               <Eye className="w-3 h-3" />
                             </CosmicButton>
-                            
+
                             {hasTrans && (
                               <CosmicButton 
                                 variant="secondary" 
                                 size="sm"
                                 onClick={() => openTranscript(call)}
                                 className="flex items-center space-x-1 hover:scale-105 transition-transform duration-200"
-                                data-testid={`transcript-button-${call.id}`}
+                                data-testid={`transcript-button-${callId}`}
                               >
                                 <MessageCircle className="w-3 h-3" />
                               </CosmicButton>
                             )}
-                            
+
                             {hasRec && (
                               <CosmicButton 
                                 variant="remax" 
                                 size="sm"
                                 onClick={() => openAudioPlayer(call)}
                                 className="flex items-center space-x-1 hover:scale-105 transition-transform duration-200"
-                                data-testid={`audio-button-${call.id}`}
+                                data-testid={`audio-button-${callId}`}
                               >
                                 <Volume2 className="w-3 h-3" />
                               </CosmicButton>
@@ -789,9 +790,10 @@ export default function CallHistory() {
               const quality = getCallQualityIndicator(call);
               const hasRec = hasRecordings(call);
               const hasTrans = hasTranscript(call);
-              
+              const callId = call.id || call.sessionId || `temp-${Math.random()}`; // Use id, fallback to sessionId or generate temp ID
+
               return (
-                <GlassmorphicCard key={call.sessionId || call.id || index} className="hover:scale-[1.01] transition-all duration-300 border border-white/10 hover:border-white/20">
+                <GlassmorphicCard key={callId} className="hover:scale-[1.01] transition-all duration-300 border border-white/10 hover:border-white/20">
                   <div className="p-6">
                     {/* Header Row */}
                     <div className="flex items-center justify-between mb-4">
@@ -886,7 +888,7 @@ export default function CallHistory() {
                           size="sm"
                           onClick={() => openRichDetails(call)}
                           className="flex items-center space-x-1"
-                          data-testid={`view-details-card-button-${call.id}`}
+                          data-testid={`view-details-card-button-${callId}`}
                         >
                           <Eye className="w-4 h-4" />
                           <span>Full Details</span>
@@ -898,7 +900,7 @@ export default function CallHistory() {
                             size="sm"
                             onClick={() => openTranscript(call)}
                             className="flex items-center space-x-1"
-                            data-testid={`transcript-button-${call.id}`}
+                            data-testid={`transcript-button-${callId}`}
                           >
                             <MessageCircle className="w-4 h-4" />
                             <span>Transcript</span>
@@ -911,7 +913,7 @@ export default function CallHistory() {
                             size="sm"
                             onClick={() => openAudioPlayer(call)}
                             className="flex items-center space-x-1"
-                            data-testid={`audio-button-${call.id}`}
+                            data-testid={`audio-button-${callId}`}
                           >
                             <Volume2 className="w-4 h-4" />
                             <span>Audio</span>
@@ -1022,7 +1024,7 @@ export default function CallHistory() {
                       />
                     </div>
                   )}
-                  
+
                   {audioCall.recordingMultiChannelUrl && (
                     <div className="p-3 bg-white/5 rounded-lg border border-white/10">
                       <div className="flex items-center justify-between mb-2">
@@ -1036,7 +1038,7 @@ export default function CallHistory() {
                       />
                     </div>
                   )}
-                  
+
                   {audioCall.scrubbedRecordingUrl && (
                     <div className="p-3 bg-white/5 rounded-lg border border-white/10">
                       <div className="flex items-center justify-between mb-2">
@@ -1055,7 +1057,7 @@ export default function CallHistory() {
                   )}
                 </div>
               )}
-              
+
               {!audioCall?.recordingUrl && !audioCall?.recordingMultiChannelUrl && !audioCall?.scrubbedRecordingUrl && (
                 <div className="text-center py-8 text-gray-400">
                   <Volume2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
