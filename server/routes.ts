@@ -1409,6 +1409,14 @@ Remember to be knowledgeable about the market, professional, and focused on help
     try {
       const { from_number, tasks, name, trigger_timestamp, override_agent_id } = req.body;
 
+      console.log('📞 Batch call request received:', { 
+        from_number, 
+        task_count: tasks?.length, 
+        name, 
+        override_agent_id,
+        trigger_timestamp 
+      });
+
       if (!from_number || !tasks || !Array.isArray(tasks) || tasks.length === 0) {
         return res.status(400).json({ error: "from_number and tasks array are required" });
       }
@@ -1419,6 +1427,61 @@ Remember to be knowledgeable about the market, professional, and focused on help
 
       if (!override_agent_id) {
         return res.status(400).json({ error: "Agent selection is required" });
+      }
+
+      // Validate phone number format for from_number
+      if (!from_number.startsWith('+') || from_number.replace(/\D/g, '').length < 10) {
+        return res.status(400).json({ error: "from_number must be in E.164 format (e.g., +1234567890)" });
+      }
+
+      // Validate all to_numbers in tasks
+      for (const task of tasks) {
+        if (!task.to_number || !task.to_number.startsWith('+') || task.to_number.replace(/\D/g, '').length < 10) {
+          return res.status(400).json({ error: "All to_numbers must be in E.164 format" });
+        }
+      }
+
+      // Prepare the payload for Retell API
+      const retellPayload: any = {
+        from_number,
+        tasks,
+        name: name.trim(),
+        override_agent_id
+      };
+
+      // Add trigger timestamp if provided
+      if (trigger_timestamp) {
+        retellPayload.trigger_timestamp = trigger_timestamp;
+      }
+
+      console.log('🚀 Sending to Retell API:', retellPayload);
+
+      const retellResponse = await retellClient.batchCall.createBatchCall(retellPayload);
+      
+      console.log('✅ Retell batch call created:', retellResponse);
+
+      res.status(201).json(retellResponse);
+    } catch (error: any) {
+      console.error("❌ Error creating batch call:", error);
+      
+      let errorMessage = "Failed to create batch call";
+      let statusCode = 500;
+
+      if (error.response) {
+        // Handle Retell API errors
+        statusCode = error.response.status || 500;
+        errorMessage = error.response.data?.error || error.response.data?.message || errorMessage;
+        console.error('Retell API error response:', error.response.data);
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      res.status(statusCode).json({ 
+        error: errorMessage,
+        details: error.response?.data || error.message
+      });
+    }
+  });quired" });
       }
 
       // Validate tasks

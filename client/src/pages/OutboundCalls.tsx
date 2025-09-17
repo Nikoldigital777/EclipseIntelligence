@@ -293,6 +293,16 @@ export default function OutboundCalls() {
       return false;
     }
 
+    // Validate from_number format (should be E.164)
+    if (!fromNumber.startsWith('+') || fromNumber.replace(/\D/g, '').length < 10) {
+      toast({
+        title: "Invalid From Number",
+        description: "From number must be in international format (e.g., +1234567890).",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     // Phone number validation
     const invalidPhones = recipients.filter(r => !r.phone || r.phone.replace(/\D/g, '').length < 10);
     if (invalidPhones.length > 0) {
@@ -356,16 +366,20 @@ export default function OutboundCalls() {
       }
     }));
 
-    const payload = {
-      from_number: fromNumber, // Use the selected fromNumber
+    // Build the payload according to Retell API spec
+    const payload: any = {
+      from_number: fromNumber, // Must be in E.164 format
       tasks,
       name: batchName.trim(),
-      override_agent_id: selectedAgent,
-      trigger_timestamp: schedulingMode === "schedule" && scheduledDateTime
-        ? new Date(scheduledDateTime).getTime()
-        : undefined
+      override_agent_id: selectedAgent
     };
 
+    // Add scheduled timestamp if scheduling for later (must be in milliseconds)
+    if (schedulingMode === "schedule" && scheduledDateTime) {
+      payload.trigger_timestamp = new Date(scheduledDateTime).getTime();
+    }
+
+    console.log('Sending batch call payload:', payload);
     createBatchCampaignMutation.mutate(payload);
   };
 
@@ -488,31 +502,31 @@ export default function OutboundCalls() {
                     <SelectValue placeholder="Choose a phone number" />
                   </SelectTrigger>
                   <SelectContent className="bg-[hsl(var(--lunar-glass))] border-white/20">
-                    <SelectItem value="+1 (248) 283-4183" className="text-white">
+                    <SelectItem value="+12482834183" className="text-white">
                       <div className="flex items-center justify-between w-full">
                         <span className="font-mono">+1 (248) 283-4183</span>
                         <span className="text-xs text-gray-300 ml-2">Recruiting</span>
                       </div>
                     </SelectItem>
-                    <SelectItem value="+1(248)653-1643" className="text-white">
+                    <SelectItem value="+12486531643" className="text-white">
                       <div className="flex items-center justify-between w-full">
-                        <span className="font-mono">+1(248)653-1643</span>
+                        <span className="font-mono">+1 (248) 653-1643</span>
                         <span className="text-xs text-gray-300 ml-2">Recruiting Outbound</span>
                       </div>
                     </SelectItem>
-                    <SelectItem value="+1 (248) 599-0019" className="text-white">
+                    <SelectItem value="+12485990019" className="text-white">
                       <div className="flex items-center justify-between w-full">
                         <span className="font-mono">+1 (248) 599-0019</span>
                         <span className="text-xs text-gray-300 ml-2">Test Recruit</span>
                       </div>
                     </SelectItem>
-                    <SelectItem value="+1 (248) 780-0017" className="text-white">
+                    <SelectItem value="+12487800017" className="text-white">
                       <div className="flex items-center justify-between w-full">
                         <span className="font-mono">+1 (248) 780-0017</span>
                         <span className="text-xs text-gray-300 ml-2">Madison Backup</span>
                       </div>
                     </SelectItem>
-                    <SelectItem value="+1 (586) 500-6801" className="text-white">
+                    <SelectItem value="+15865006801" className="text-white">
                       <div className="flex items-center justify-between w-full">
                         <span className="font-mono">+1 (586) 500-6801</span>
                         <span className="text-xs text-gray-300 ml-2">Office</span>
