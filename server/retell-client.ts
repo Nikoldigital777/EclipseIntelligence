@@ -62,7 +62,7 @@ export class RetellClient {
   }
 
   async createBatchCall(request: CreateBatchCallRequest) {
-    return this.makeRequest('/create-batch-call', 'POST', request);
+    return this.makeRequest('/v2/create-batch-call', 'POST', request);
   }
 
   // Get call data with duration, sentiment, transcript etc.
