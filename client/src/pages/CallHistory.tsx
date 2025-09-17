@@ -59,7 +59,7 @@ export default function CallHistory() {
 
         // Handle both array response and object with data property
         const callsData = Array.isArray(callsResponse) ? callsResponse : 
-                         (callsResponse.data || callsResponse.calls || []);
+                         ((callsResponse as any).data || (callsResponse as any).calls || []);
 
         console.log(`Retrieved ${callsData.length} calls from last 30 days`);
 
@@ -151,10 +151,10 @@ export default function CallHistory() {
       call.recordingUrl || 
       call.recordingMultiChannelUrl || 
       call.scrubbedRecordingUrl ||
-      call.recording_url || 
-      call.recording_multi_channel_url || 
-      call.scrubbed_recording_url ||
-      call.scrubbed_recording_multi_channel_url
+      (call as any).recording_url || 
+      (call as any).recording_multi_channel_url || 
+      (call as any).scrubbed_recording_url ||
+      (call as any).scrubbed_recording_multi_channel_url
     );
   };
 
@@ -162,8 +162,8 @@ export default function CallHistory() {
     // Check multiple possible transcript fields
     return !!(
       (call.transcript && call.transcript.trim().length > 0) ||
-      (call.transcript_object && Array.isArray(call.transcript_object) && call.transcript_object.length > 0) ||
-      (call.transcript_with_tool_calls && Array.isArray(call.transcript_with_tool_calls) && call.transcript_with_tool_calls.length > 0)
+      ((call as any).transcript_object && Array.isArray((call as any).transcript_object) && (call as any).transcript_object.length > 0) ||
+      ((call as any).transcript_with_tool_calls && Array.isArray((call as any).transcript_with_tool_calls) && (call as any).transcript_with_tool_calls.length > 0)
     );
   };
 
@@ -260,7 +260,7 @@ export default function CallHistory() {
   const getSentimentDisplay = (call: Call): { emoji: string; text: string; color: string } => {
     // Check multiple possible sentiment fields
     const sentiment = call.userSentiment || 
-                     call.call_analysis?.user_sentiment || 
+                     (call as any).call_analysis?.user_sentiment || 
                      call.sentiment;
     const normalizedSentiment = sentiment?.toLowerCase();
 

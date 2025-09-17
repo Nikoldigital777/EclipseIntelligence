@@ -1461,7 +1461,7 @@ Remember to be knowledgeable about the market, professional, and focused on help
         return res.status(500).json({ error: "Retell API client not available" });
       }
 
-      const retellResponse = await retellClient.batchCall.createBatchCall(retellPayload);
+      const retellResponse = await retellClient.createBatchCall(retellPayload);
       
       console.log('✅ Retell batch call created:', retellResponse);
 
@@ -1487,9 +1487,8 @@ Remember to be knowledgeable about the market, professional, and focused on help
       });
     }
   });
-      }
 
-      
+  
 
   // Web call creation for testing (protected)
   router.post("/web-calls", authenticateToken, async (req: AuthRequest, res) => {
