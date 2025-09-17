@@ -23,10 +23,6 @@ localPort = 44191
 externalPort = 3001
 
 [[ports]]
-localPort = 45005
-externalPort = 3003
-
-[[ports]]
 localPort = 45719
 externalPort = 3000
 
@@ -53,8 +49,3 @@ waitForPort = 5000
 
 [agent]
 integrations = ["javascript_mem_db:1.0.0", "javascript_database:1.0.0"]
-
-[env]
-REPL_SLUG = "rest-express"
-REPL_OWNER = "levanwood"
-RETELL_API_KEY = "key_79fdef89029eceba2a392ec891fb"
