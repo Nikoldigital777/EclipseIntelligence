@@ -1627,7 +1627,7 @@ Remember to be knowledgeable about the market, professional, and focused on help
 
       console.log("Sending analytics stats:", enhancedStats);
       res.json(enhancedStats);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch analytics:", error);
       console.error("Full error details:", {
         message: error.message,
@@ -1878,7 +1878,7 @@ Remember to be knowledgeable about the market, professional, and focused on help
         ...analytics
       });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch detailed analytics:", error);
       res.status(500).json({ error: "Failed to fetch detailed analytics" });
     }
