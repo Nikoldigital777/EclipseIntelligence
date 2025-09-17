@@ -1,9 +1,12 @@
-import { Download, Filter } from "lucide-react";
+import { Download, Filter, MessageCircle, Volume2 } from "lucide-react";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
 import CosmicButton from "@/components/CosmicButton";
+import TranscriptViewer from "@/components/TranscriptViewer";
+import AudioPlayer from "@/components/AudioPlayer";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { type Call } from "@shared/schema";
 import { useState, useEffect } from "react";
 import { Phone, Clock, User, TrendingUp, Play } from "lucide-react";
@@ -11,6 +14,10 @@ import { Phone, Clock, User, TrendingUp, Play } from "lucide-react";
 export default function CallHistory() {
   const [isVisible, setIsVisible] = useState(false);
   const [selectedCall, setSelectedCall] = useState<Call | null>(null);
+  const [showTranscript, setShowTranscript] = useState(false);
+  const [showAudioPlayer, setShowAudioPlayer] = useState(false);
+  const [transcriptCall, setTranscriptCall] = useState<Call | null>(null);
+  const [audioCall, setAudioCall] = useState<Call | null>(null);
 
   const { data: calls = [], isLoading, error } = useQuery<any[]>({
     queryKey: ['/api/calls'],
@@ -85,6 +92,26 @@ export default function CallHistory() {
       case 'Neutral': return 'text-yellow-400';
       default: return 'text-gray-400';
     }
+  };
+
+  const openTranscript = (call: Call) => {
+    setTranscriptCall(call);
+    setShowTranscript(true);
+  };
+
+  const openAudioPlayer = (call: Call) => {
+    setAudioCall(call);
+    setShowAudioPlayer(true);
+  };
+
+  const closeTranscript = () => {
+    setShowTranscript(false);
+    setTranscriptCall(null);
+  };
+
+  const closeAudioPlayer = () => {
+    setShowAudioPlayer(false);
+    setAudioCall(null);
   };
 
   return (
@@ -260,13 +287,29 @@ export default function CallHistory() {
                       <p className="text-xs text-gray-400">Success</p>
                     </div>
 
-                    <CosmicButton 
-                      variant="eclipse" 
-                      size="sm"
-                      onClick={() => setSelectedCall(call)}
-                    >
-                      View Details
-                    </CosmicButton>
+                    <div className="flex space-x-2">
+                      <CosmicButton 
+                        variant="eclipse" 
+                        size="sm"
+                        onClick={() => openTranscript(call)}
+                        className="flex items-center space-x-1"
+                        data-testid={`transcript-button-${call.id}`}
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        <span>Transcript</span>
+                      </CosmicButton>
+
+                      <CosmicButton 
+                        variant="remax" 
+                        size="sm"
+                        onClick={() => openAudioPlayer(call)}
+                        className="flex items-center space-x-1"
+                        data-testid={`audio-button-${call.id}`}
+                      >
+                        <Volume2 className="w-4 h-4" />
+                        <span>Audio</span>
+                      </CosmicButton>
+                    </div>
                   </div>
                 </div>
 
@@ -289,6 +332,34 @@ export default function CallHistory() {
           )}
         </div>
       </div>
+
+      {/* Transcript Viewer Modal */}
+      <TranscriptViewer
+        call={transcriptCall}
+        isOpen={showTranscript}
+        onClose={closeTranscript}
+      />
+
+      {/* Audio Player Modal */}
+      <Dialog open={showAudioPlayer} onOpenChange={closeAudioPlayer}>
+        <DialogContent className="max-w-2xl bg-gradient-to-br from-black/95 via-gray-900/95 to-black/95 border-white/20 text-white">
+          <DialogHeader className="pb-4 border-b border-white/10">
+            <DialogTitle className="text-2xl font-bold text-white">
+              Call Recording
+            </DialogTitle>
+            <p className="text-gray-300 text-sm mt-2">
+              {audioCall?.fromNumber || audioCall?.toNumber || 'Unknown'} • {formatDuration(audioCall?.durationMs || audioCall?.duration)}
+            </p>
+          </DialogHeader>
+          <div className="py-4">
+            <AudioPlayer 
+              audioUrl={audioCall?.recordingUrl || audioCall?.recordingMultiChannelUrl}
+              title={`Call Recording - ${audioCall?.fromNumber || audioCall?.toNumber || 'Unknown'}`}
+              onError={(error) => console.error('Audio player error:', error)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
