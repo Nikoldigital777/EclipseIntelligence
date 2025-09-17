@@ -50,8 +50,8 @@ export class AuthService {
     localStorage.setItem(this.TOKEN_KEY, token);
     localStorage.setItem(this.USER_KEY, JSON.stringify(user));
 
-    // Set expiry time (4 hours from now minus 5 minutes buffer)
-    const expiryTime = Date.now() + (4 * 60 * 60 * 1000) - (5 * 60 * 1000);
+    // Set expiry time (48 hours from now minus 5 minutes buffer)
+    const expiryTime = Date.now() + (48 * 60 * 60 * 1000) - (5 * 60 * 1000);
     localStorage.setItem(this.TOKEN_EXPIRY_KEY, expiryTime.toString());
   }
 

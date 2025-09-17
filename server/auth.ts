@@ -7,7 +7,7 @@ import { db } from './db';
 import { eq } from 'drizzle-orm';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-const JWT_EXPIRES_IN = '4h';
+const JWT_EXPIRES_IN = '48h';
 
 export interface AuthRequest extends Request {
   user?: SafeUser;
