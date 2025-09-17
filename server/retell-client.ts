@@ -118,7 +118,7 @@ export class RetellClient {
   }
 
   async createWebCall(callDetails: any) {
-    const response = await fetch(`${this.baseUrl}/create-web-call`, {
+    const response = await fetch(`${this.baseUrl}/v2/create-web-call`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.apiKey}`,
@@ -128,7 +128,8 @@ export class RetellClient {
     });
 
     if (!response.ok) {
-      throw new Error(`Retell API error: ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`Retell API error: ${response.status} - ${errorText}`);
     }
 
     return await response.json();

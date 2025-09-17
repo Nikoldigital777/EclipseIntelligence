@@ -168,20 +168,40 @@ export default function Dashboard() {
           }
         }
 
-        // Fetch agents
-        const agentsResponse = await AuthService.makeAuthenticatedRequest('/api/agents/simple');
-        if (agentsResponse.ok) {
-          const agentsData: AgentData[] = await agentsResponse.json();
-          const formattedAgents: AgentData[] = agentsData.slice(0, 3).map((agent, index) => ({
-            id: agent.id,
-            name: agent.name,
-            avatar: agent.avatar,
-            status: index === 0 ? "Active" : "Idle",
-            callsToday: Math.floor(Math.random() * 20) + 5,
-            successRate: Math.floor(Math.random() * 20) + 75,
-            lastActivity: index === 0 ? "2 min ago" : `${Math.floor(Math.random() * 60) + 5} min ago`
-          }));
-          setActiveAgents(formattedAgents);
+        // Fetch agents - try to get real data first, fall back to simple endpoint
+        try {
+          const fullAgentsResponse = await AuthService.makeAuthenticatedRequest('/api/agents');
+          if (fullAgentsResponse.ok) {
+            const fullAgentsData = await fullAgentsResponse.json();
+            const formattedAgents: AgentData[] = fullAgentsData.slice(0, 3).map((agent: any, index: number) => ({
+              id: agent.agent_id || agent.retellAgentId || agent.id,
+              name: agent.agent_name || agent.name || "Unnamed Agent",
+              avatar: agent.avatar || (agent.name || "AG").split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase(),
+              status: index === 0 ? "Active" : "Idle",
+              callsToday: Math.floor(Math.random() * 20) + 5,
+              successRate: Math.floor(Math.random() * 20) + 75,
+              lastActivity: index === 0 ? "2 min ago" : `${Math.floor(Math.random() * 60) + 5} min ago`
+            }));
+            setActiveAgents(formattedAgents);
+          } else {
+            // Fallback to simple agents endpoint
+            const agentsResponse = await AuthService.makeAuthenticatedRequest('/api/agents/simple');
+            if (agentsResponse.ok) {
+              const agentsData = await agentsResponse.json();
+              const formattedAgents: AgentData[] = agentsData.slice(0, 3).map((agent: any, index: number) => ({
+                id: agent.id,
+                name: agent.name,
+                avatar: agent.avatar,
+                status: index === 0 ? "Active" : "Idle",
+                callsToday: Math.floor(Math.random() * 20) + 5,
+                successRate: Math.floor(Math.random() * 20) + 75,
+                lastActivity: index === 0 ? "2 min ago" : `${Math.floor(Math.random() * 60) + 5} min ago`
+              }));
+              setActiveAgents(formattedAgents);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching agents for dashboard:', error);
         }
 
       } catch (error) {
