@@ -165,6 +165,8 @@ export class RetellClient {
   }
 
   async createWebCall(callDetails: any) {
+    console.log('🌐 Creating web call with details:', callDetails);
+    
     const response = await fetch(`${this.baseUrl}/v2/create-web-call`, {
       method: 'POST',
       headers: {
@@ -176,10 +178,23 @@ export class RetellClient {
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('❌ Retell API error response:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText
+      });
       throw new Error(`Retell API error: ${response.status} - ${errorText}`);
     }
 
-    return await response.json();
+    const result = await response.json();
+    console.log('✅ Retell web call response:', {
+      call_id: result.call_id,
+      web_call_id: result.web_call_id,
+      access_token_present: !!result.access_token,
+      web_call_link_present: !!result.web_call_link
+    });
+    
+    return result;
   }
 
   async getLlm(llmId: string) {

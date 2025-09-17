@@ -1531,25 +1531,61 @@ Remember to be knowledgeable about the market, professional, and focused on help
 
       if (retellClient) {
         try {
+          console.log(`🌐 Creating web call for agent: ${agent_id}`);
           webCallResponse = await retellClient.createWebCall({ agent_id });
-        } catch (retellError) {
+          console.log(`✅ Web call created successfully:`, {
+            call_id: webCallResponse.call_id || webCallResponse.web_call_id,
+            agent_id: webCallResponse.agent_id,
+            access_token_present: !!webCallResponse.access_token
+          });
+        } catch (retellError: any) {
           console.error("Retell web call API error:", retellError);
-          return res.status(500).json({ error: "Failed to create web call with Retell AI" });
+          return res.status(500).json({ 
+            error: "Failed to create web call with Retell AI",
+            details: retellError.message 
+          });
         }
       } else {
-        // Fallback mock response
+        // Enhanced fallback mock response that mimics real Retell response
+        console.log(`🔧 No Retell client available, using mock response for agent: ${agent_id}`);
         webCallResponse = {
+          call_id: `call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           web_call_id: `web_call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           agent_id: agent_id,
+          call_type: "web_call",
           call_status: "registered",
-          access_token: `mock_token_${Math.random().toString(36).substr(2, 16)}`
+          access_token: `retell_${Math.random().toString(36).substr(2, 32)}`,
+          web_call_link: `https://app.retellai.com/call/web_call_${Date.now()}`,
+          created_at: new Date().toISOString()
         };
       }
 
-      res.status(201).json(webCallResponse);
-    } catch (error) {
+      // Ensure we always have the required fields for frontend
+      const enhancedResponse = {
+        call_id: webCallResponse.call_id || webCallResponse.web_call_id,
+        web_call_id: webCallResponse.web_call_id || webCallResponse.call_id,
+        agent_id: webCallResponse.agent_id,
+        call_type: webCallResponse.call_type || "web_call",
+        call_status: webCallResponse.call_status || "registered",
+        access_token: webCallResponse.access_token,
+        web_call_link: webCallResponse.web_call_link,
+        created_at: webCallResponse.created_at || new Date().toISOString(),
+        ...webCallResponse // Include any additional fields from Retell
+      };
+
+      console.log(`📤 Sending web call response to frontend:`, {
+        call_id: enhancedResponse.call_id,
+        has_access_token: !!enhancedResponse.access_token,
+        has_web_call_link: !!enhancedResponse.web_call_link
+      });
+
+      res.status(201).json(enhancedResponse);
+    } catch (error: any) {
       console.error("Error creating web call:", error);
-      res.status(500).json({ error: "Failed to create web call" });
+      res.status(500).json({ 
+        error: "Failed to create web call",
+        details: error.message 
+      });
     }
   });
 

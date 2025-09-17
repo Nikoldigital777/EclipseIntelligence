@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useRoute } from "wouter";
 import { ArrowLeft, Play, Save, TestTube } from "lucide-react";
@@ -138,14 +137,14 @@ export default function AgentDetail() {
       }
 
       const agentData = await response.json();
-      
+
       // Debug logging to see exactly what data we received
       console.log("📊 Raw Agent Data from API:", agentData);
       console.log("🧠 LLM Details:", agentData.llm_details);
       console.log("📝 General Prompt:", agentData.llm_details?.general_prompt);
       console.log("🎙️ Voice Config:", agentData.voice_config);
       console.log("⚙️ Response Engine:", agentData.response_engine);
-      
+
       // Map comprehensive agent data to our interface
       const mappedAgent: Agent = {
         id: agentData.id || parseInt(agentId),
@@ -262,10 +261,10 @@ Remember to always be helpful, patient, and represent the company professionally
       if (params?.id) {
         await fetchAgentData(params.id);
       }
-      
+
     } catch (error: any) {
       console.error('❌ Error saving agent:', error);
-      
+
       // Show error message
       toast({
         title: "Save Failed",
@@ -279,17 +278,30 @@ Remember to always be helpful, patient, and represent the company professionally
 
   const handleTestAudio = async () => {
     if (!agent) return;
-    
+
+    // Check for microphone permission first
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(track => track.stop()); // Stop the test stream
+    } catch (error) {
+      toast({
+        title: "Microphone Access Required",
+        description: "Please allow microphone access to test the call functionality.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsTestingAudio(true);
     setCallStatus('connecting');
     setTranscript([]);
-    
+
     try {
       const token = localStorage.getItem('auth_token');
       const agentId = agent.retellAgentId || params?.id;
-      
+
       console.log(`🎙️ Starting test call with agent: ${agent.name} (${agentId})`);
-      
+
       const response = await fetch('/api/web-calls', {
         method: 'POST',
         headers: {
@@ -307,49 +319,124 @@ Remember to always be helpful, patient, and represent the company professionally
 
       const webCallData = await response.json();
       console.log('✅ Web call created:', webCallData);
-      
+
       setCallData(webCallData);
       setCallStatus('connected');
-      
-      // Add initial transcript message
-      setTranscript(prev => [...prev, `📞 Call started with ${agent.name}`, '🤖 Agent is ready to speak...']);
-      
-      if (webCallData.web_call_link) {
-        // Open the web call in a popup window for better UX
-        const callWindow = window.open(
-          webCallData.web_call_link, 
-          'retell_call',
-          'width=400,height=600,scrollbars=no,resizable=no,status=no,location=no,toolbar=no,menubar=no'
-        );
 
-        // Monitor if the call window is closed
-        if (callWindow) {
-          const checkClosed = setInterval(() => {
-            if (callWindow.closed) {
-              clearInterval(checkClosed);
-              handleEndCall();
-            }
-          }, 1000);
-        }
+      // Add initial transcript message
+      setTranscript(prev => [...prev, `📞 Call started with ${agent.name}`, '🤖 Agent is ready to speak... You can start talking!']);
+
+      // Initialize Retell Web Call directly in the page
+      if (webCallData.access_token) {
+        initializeRetellWebCall(webCallData.access_token);
+      } else {
+        throw new Error('No access token received from web call creation');
       }
+
     } catch (error: any) {
       console.error('❌ Error creating test call:', error);
       setCallStatus('ended');
       toast({
         title: "Call Failed",
         description: error.message || "Failed to start test call with agent",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsTestingAudio(false);
     }
   };
 
+  const initializeRetellWebCall = (accessToken: string) => {
+    console.log('🎙️ Initializing Retell Web Call with token:', accessToken.substring(0, 10) + '...');
+
+    // Create a container for the web call interface
+    const callContainer = document.getElementById('retell-web-call-container');
+    if (!callContainer) {
+      console.error('Call container not found');
+      return;
+    }
+
+    // Load the Retell Web SDK
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/retell-web-client@1.0.0/dist/index.js';
+    script.onload = () => {
+      try {
+        // Initialize the Retell Web Client
+        const RetellWebClient = (window as any).RetellWebClient;
+        if (!RetellWebClient) {
+          throw new Error('Retell Web Client not loaded');
+        }
+
+        const webClient = new RetellWebClient();
+
+        // Set up event listeners
+        webClient.on('call_started', () => {
+          console.log('📞 Call started successfully');
+          setTranscript(prev => [...prev, '✅ Call connected! You can now speak with the agent.']);
+        });
+
+        webClient.on('call_ended', () => {
+          console.log('📞 Call ended');
+          setTranscript(prev => [...prev, '📞 Call ended']);
+          handleEndCall();
+        });
+
+        webClient.on('error', (error: any) => {
+          console.error('❌ Call error:', error);
+          setTranscript(prev => [...prev, `❌ Call error: ${error.message}`]);
+          toast({
+            title: "Call Error",
+            description: error.message || "An error occurred during the call",
+            variant: "destructive",
+          });
+        });
+
+        webClient.on('update', (update: any) => {
+          console.log('📊 Call update:', update);
+          if (update.transcript) {
+            const newTranscript = update.transcript.map((t: any) => 
+              `${t.role === 'agent' ? '🤖' : '👤'} ${t.content}`
+            );
+            setTranscript(prev => [...prev, ...newTranscript]);
+          }
+        });
+
+        // Start the call
+        webClient.startCall({
+          accessToken: accessToken,
+          callType: 'web_call',
+          customConfig: {
+            audioDeviceId: 'default'
+          }
+        });
+
+      } catch (error: any) {
+        console.error('❌ Error initializing Retell Web Client:', error);
+        toast({
+          title: "Web Call Error",
+          description: "Failed to initialize the web call interface",
+          variant: "destructive",
+        });
+      }
+    };
+
+    script.onerror = () => {
+      console.error('❌ Failed to load Retell Web SDK');
+      toast({
+        title: "SDK Load Error",
+        description: "Failed to load the call interface SDK",
+        variant: "destructive",
+      });
+    };
+
+    document.head.appendChild(script);
+  };
+
   const handleEndCall = () => {
     console.log('📞 Ending test call');
     setCallStatus('ended');
     setTranscript(prev => [...prev, '📞 Call ended', '💭 How did the conversation go?']);
-    
+
     // Reset after a few seconds
     setTimeout(() => {
       setCallStatus('idle');
@@ -456,7 +543,7 @@ Remember to always be helpful, patient, and represent the company professionally
                 Configure how your AI agent communicates. This prompt defines the agent's personality, 
                 objectives, and conversation style.
               </p>
-              
+
               <div className="space-y-4">
                 <Label htmlFor="prompt" className="text-white">Conversation Prompt</Label>
                 <Textarea
@@ -483,20 +570,20 @@ Remember to always be helpful, patient, and represent the company professionally
                 <span className="mr-3 text-[hsl(var(--gold-manifest))]">ℹ️</span>
                 Agent Information
               </h3>
-              
+
               <div className="space-y-4">
                 <div>
                   <Label className="text-gray-300 text-sm">Agent Name</Label>
                   <p className="text-white font-medium">{agent.name}</p>
                 </div>
-                
+
                 <div>
                   <Label className="text-gray-300 text-sm">Agent ID</Label>
                   <p className="text-white font-mono bg-[hsl(var(--lunar-mist))]/20 px-3 py-2 rounded-md text-sm">
                     {agent.agent_id || agent.retellAgentId || agent.id}
                   </p>
                 </div>
-                
+
                 <div>
                   <Label className="text-gray-300 text-sm">Response Engine</Label>
                   <p className="text-[hsl(var(--eclipse-glow))] font-medium">
@@ -504,24 +591,24 @@ Remember to always be helpful, patient, and represent the company professionally
                     {agent.response_engine?.llm_id && ` (${agent.response_engine.llm_id})`}
                   </p>
                 </div>
-                
+
                 <div>
                   <Label className="text-gray-300 text-sm">Language</Label>
                   <p className="text-white">{agent.language || "en-US"}</p>
                 </div>
-                
+
                 <div>
                   <Label className="text-gray-300 text-sm">Version</Label>
                   <p className="text-white">{agent.version || 0} {agent.is_published ? "(Published)" : "(Draft)"}</p>
                 </div>
-                
+
                 <div>
                   <Label className="text-gray-300 text-sm">Phone Number</Label>
                   <p className="text-white font-mono bg-[hsl(var(--lunar-mist))]/20 px-3 py-2 rounded-md text-sm">
                     {agent.phone}
                   </p>
                 </div>
-                
+
                 <div>
                   <Label className="text-gray-300 text-sm">Last Modified</Label>
                   <p className="text-gray-400 text-sm">
@@ -540,20 +627,20 @@ Remember to always be helpful, patient, and represent the company professionally
                   <span className="mr-3 text-[hsl(var(--manifest-blue))]">🎙️</span>
                   Voice Configuration
                 </h3>
-                
+
                 <div className="space-y-4">
                   <div>
                     <Label className="text-gray-300 text-sm">Voice ID</Label>
                     <p className="text-[hsl(var(--manifest-blue))] font-medium">{agent.voice_config.voice_id}</p>
                   </div>
-                  
+
                   {agent.voice_config.voice_model && (
                     <div>
                       <Label className="text-gray-300 text-sm">Voice Model</Label>
                       <p className="text-white">{agent.voice_config.voice_model}</p>
                     </div>
                   )}
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-gray-300 text-sm">Temperature</Label>
@@ -564,12 +651,12 @@ Remember to always be helpful, patient, and represent the company professionally
                       <p className="text-white">{agent.voice_config.voice_speed || 1}</p>
                     </div>
                   </div>
-                  
+
                   <div>
                     <Label className="text-gray-300 text-sm">Volume</Label>
                     <p className="text-white">{agent.voice_config.volume || 1}</p>
                   </div>
-                  
+
                   {agent.voice_config.fallback_voice_ids && agent.voice_config.fallback_voice_ids.length > 0 && (
                     <div>
                       <Label className="text-gray-300 text-sm">Fallback Voices</Label>
@@ -595,7 +682,7 @@ Remember to always be helpful, patient, and represent the company professionally
                   <span className="mr-3 text-[hsl(var(--eclipse-glow))]">🧠</span>
                   LLM Configuration
                 </h3>
-                
+
                 <div className="space-y-4">
                   {agent.llm_details.llm_id && (
                     <div>
@@ -605,7 +692,7 @@ Remember to always be helpful, patient, and represent the company professionally
                       </p>
                     </div>
                   )}
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-gray-300 text-sm">Model</Label>
@@ -620,7 +707,7 @@ Remember to always be helpful, patient, and represent the company professionally
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-gray-300 text-sm">Temperature</Label>
@@ -638,7 +725,7 @@ Remember to always be helpful, patient, and represent the company professionally
                       <p className="text-white">{agent.llm_details.tool_call_strict_mode ? "Enabled" : "Disabled"}</p>
                     </div>
                   )}
-                  
+
                   {(agent.llm_details.begin_message || agent.llm_details.first_message) && (
                     <div>
                       <Label className="text-gray-300 text-sm">Begin Message</Label>
@@ -667,7 +754,7 @@ Remember to always be helpful, patient, and represent the company professionally
                       </div>
                     </div>
                   )}
-                  
+
                   {agent.llm_details.general_tools && agent.llm_details.general_tools.length > 0 && (
                     <div>
                       <Label className="text-gray-300 text-sm">General Tools</Label>
@@ -713,7 +800,7 @@ Remember to always be helpful, patient, and represent the company professionally
                   <span className="mr-3 text-[hsl(var(--gold-manifest))]">💬</span>
                   Conversation Settings
                 </h3>
-                
+
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -725,7 +812,7 @@ Remember to always be helpful, patient, and represent the company professionally
                       <p className="text-white">{agent.conversation_config.interruption_sensitivity || 1}</p>
                     </div>
                   </div>
-                  
+
                   <div>
                     <Label className="text-gray-300 text-sm">Backchannel</Label>
                     <p className="text-white">
@@ -735,7 +822,7 @@ Remember to always be helpful, patient, and represent the company professionally
                       }
                     </p>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-gray-300 text-sm">Reminder Trigger</Label>
@@ -758,11 +845,11 @@ Remember to always be helpful, patient, and represent the company professionally
                 <span className="mr-3 text-[hsl(var(--remax-red))]">🎧</span>
                 Test Audio
               </h3>
-              
+
               <p className="text-gray-300 text-sm mb-6">
                 Test your agent's voice and conversation flow with a simulated web call.
               </p>
-              
+
               <div className="space-y-4">
                 <CosmicButton 
                   variant="remax" 
@@ -788,7 +875,7 @@ Remember to always be helpful, patient, and represent the company professionally
                     </>
                   )}
                 </CosmicButton>
-                
+
                 {/* Enhanced Call Interface */}
                 {callStatus !== 'idle' && (
                   <div className="space-y-4" data-testid="call-interface">
@@ -819,7 +906,7 @@ Remember to always be helpful, patient, and represent the company professionally
                             </>
                           )}
                         </div>
-                        
+
                         {callStatus === 'connected' && (
                           <CosmicButton 
                             variant="remax" 
@@ -833,7 +920,7 @@ Remember to always be helpful, patient, and represent the company professionally
                           </CosmicButton>
                         )}
                       </div>
-                      
+
                       {callData && (
                         <div className="mt-2 text-xs text-gray-400" data-testid="call-data">
                           Call ID: {callData.call_id}
@@ -851,7 +938,7 @@ Remember to always be helpful, patient, and represent the company professionally
                             <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
                           )}
                         </div>
-                        
+
                         <div className="space-y-2 max-h-40 overflow-y-auto">
                           {transcript.map((message, index) => (
                             <div key={index} className="text-sm text-gray-300 py-1 border-b border-white/5 last:border-0">
@@ -859,7 +946,7 @@ Remember to always be helpful, patient, and represent the company professionally
                             </div>
                           ))}
                         </div>
-                        
+
                         {callStatus === 'connected' && (
                           <div className="mt-3 text-xs text-gray-400">
                             💡 Speak naturally to test the conversation flow
@@ -882,7 +969,7 @@ Remember to always be helpful, patient, and represent the company professionally
                     )}
                   </div>
                 )}
-                
+
                 <div className="text-gray-400 text-xs">
                   <p>• Test calls are simulated and don't count toward usage</p>
                   <p>• Changes to the prompt require saving before testing</p>
