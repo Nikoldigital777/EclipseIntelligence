@@ -68,18 +68,172 @@ interface RetellAgent {
   is_published?: boolean;
 }
 
-interface RetellCall {
-  duration_ms?: number;
-  call_cost_breakdown?: { total_cost: string };
-  latency?: { avg_latency_ms: number };
-  call_analysis?: {
-    call_successful?: boolean;
-    user_sentiment?: string;
+// Comprehensive interface covering ALL fields from Retell v2/get-call API
+interface RetellCallData {
+  // Core call identification
+  call_id: string;
+  call_type: 'phone_call' | 'web_call';
+  agent_id: string;
+  agent_version: number;
+  call_status: 'registered' | 'not_connected' | 'ongoing' | 'ended' | 'error';
+
+  // Phone call specific fields
+  from_number?: string;
+  to_number?: string;
+  direction?: 'inbound' | 'outbound';
+  telephony_identifier?: {
+    twilio_call_sid?: string;
   };
-  direction?: string;
-  start_timestamp?: string;
-  agent_id?: string;
-  call_status?: string;
+
+  // Web call specific fields
+  access_token?: string;  // Will be filtered out for security
+
+  // Timing and duration
+  start_timestamp?: number;
+  end_timestamp?: number;
+  duration_ms?: number;
+
+  // Metadata and configuration
+  metadata?: Record<string, any>;
+  retell_llm_dynamic_variables?: Record<string, any>;
+  collected_dynamic_variables?: Record<string, any>;
+  custom_sip_headers?: Record<string, string>;
+  data_storage_setting?: 'everything' | 'everything_except_pii' | 'basic_attributes_only' | null;
+  opt_in_signed_url?: boolean;
+
+  // Transcript data
+  transcript?: string;
+  transcript_object?: Array<{
+    role: 'agent' | 'user' | 'transfer_target';
+    content: string;
+    words?: Array<{
+      word: string;
+      start: number;
+      end: number;
+    }>;
+  }>;
+  transcript_with_tool_calls?: Array<any>;
+  scrubbed_transcript_with_tool_calls?: Array<any>;
+
+  // Recording URLs
+  recording_url?: string;
+  recording_multi_channel_url?: string;
+  scrubbed_recording_url?: string;
+  scrubbed_recording_multi_channel_url?: string;
+
+  // Logs and analysis files
+  public_log_url?: string;
+  knowledge_base_retrieved_contents_url?: string;
+
+  // Comprehensive latency metrics
+  latency?: {
+    // Legacy backward compatibility field
+    avg_latency_ms?: number;
+    
+    // Detailed latency metrics
+    e2e?: {
+      p50?: number;
+      p90?: number;
+      p95?: number;
+      p99?: number;
+      max?: number;
+      min?: number;
+      num?: number;
+      values?: number[];
+    };
+    llm?: {
+      p50?: number;
+      p90?: number;
+      p95?: number;
+      p99?: number;
+      max?: number;
+      min?: number;
+      num?: number;
+      values?: number[];
+    };
+    llm_websocket_network_rtt?: {
+      p50?: number;
+      p90?: number;
+      p95?: number;
+      p99?: number;
+      max?: number;
+      min?: number;
+      num?: number;
+      values?: number[];
+    };
+    tts?: {
+      p50?: number;
+      p90?: number;
+      p95?: number;
+      p99?: number;
+      max?: number;
+      min?: number;
+      num?: number;
+      values?: number[];
+    };
+    knowledge_base?: {
+      p50?: number;
+      p90?: number;
+      p95?: number;
+      p99?: number;
+      max?: number;
+      min?: number;
+      num?: number;
+      values?: number[];
+    };
+    s2s?: {
+      p50?: number;
+      p90?: number;
+      p95?: number;
+      p99?: number;
+      max?: number;
+      min?: number;
+      num?: number;
+      values?: number[];
+    };
+  };
+
+  // Call termination
+  disconnection_reason?: 'user_hangup' | 'agent_hangup' | 'call_transfer' | 'voicemail_reached' | 'inactivity' | 
+    'max_duration_reached' | 'concurrency_limit_reached' | 'no_valid_payment' | 'scam_detected' | 
+    'dial_busy' | 'dial_failed' | 'dial_no_answer' | 'invalid_destination' | 
+    'telephony_provider_permission_denied' | 'telephony_provider_unavailable' | 'sip_routing_error' | 
+    'marked_as_spam' | 'user_declined' | 'error_llm_websocket_open' | 'error_llm_websocket_lost_connection' |
+    'error_llm_websocket_runtime' | 'error_llm_websocket_corrupt_payload' | 'error_no_audio_received' |
+    'error_asr' | 'error_retell' | 'error_unknown' | 'error_user_not_joined' | 'registered_call_timeout';
+
+  // Post-call analysis
+  call_analysis?: {
+    call_summary?: string;
+    in_voicemail?: boolean;
+    user_sentiment?: 'Positive' | 'Negative' | 'Neutral' | 'Frustrated' | 'Satisfied';
+    call_successful?: boolean;
+    custom_analysis_data?: Record<string, any>;
+  };
+
+  // Comprehensive cost breakdown
+  call_cost?: {
+    product_costs?: Array<{
+      product: string;
+      unit_price: number;
+      cost: number;
+    }>;
+    total_duration_seconds?: number;
+    total_duration_unit_price?: number;
+    combined_cost?: number;
+  };
+  
+  // Legacy cost structure for backward compatibility
+  call_cost_breakdown?: {
+    total_cost?: string;
+  };
+
+  // LLM token usage
+  llm_token_usage?: {
+    values?: number[];
+    average?: number;
+    num_requests?: number;
+  };
 }
 
 interface SentimentCounts {
@@ -1401,31 +1555,393 @@ Remember to be knowledgeable about the market, professional, and focused on help
 
 
 
-  // Get detailed call data (protected)
+  // Production-ready call details endpoint with comprehensive data coverage and robust error handling
   router.get("/calls/:callId/details", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const callId = req.params.callId;
+      console.log(`🔍 Fetching comprehensive call details for: ${callId}`);
+      
       const retellClient = createRetellClient();
 
       if (retellClient) {
         try {
-          const callData = await retellClient.getCall(callId);
-          res.json(callData);
-        } catch (retellError) {
-          console.error("Failed to fetch call from Retell:", retellError);
-          res.status(404).json({ error: "Call not found in Retell API" });
+          // Fetch comprehensive call data from Retell API v2/get-call
+          console.log(`📞 Making API call to Retell v2/get-call endpoint for call: ${callId}`);
+          const callData: RetellCallData = await retellClient.getCall(callId);
+          console.log(`✅ Successfully retrieved call data for: ${callId}`);
+          console.log(`📊 Call data fields received: ${Object.keys(callData || {}).join(', ')}`);
+
+          // Explicit security sanitization - remove ALL sensitive credentials
+          const {
+            access_token,
+            // Remove any other potential sensitive fields that might be added in future
+            ...secureCallData
+          } = callData;
+
+          // Comprehensive runtime data integrity with explicit defaults for ALL arrays and objects
+          const safeCallData: RetellCallData = {
+            // Preserve ALL original fields using spread pattern for backward compatibility
+            ...secureCallData,
+            
+            // Core identification fields with defaults
+            call_id: secureCallData.call_id,
+            call_type: secureCallData.call_type,
+            agent_id: secureCallData.agent_id,
+            agent_version: secureCallData.agent_version,
+            call_status: secureCallData.call_status,
+            
+            // Phone call specific fields with defaults
+            from_number: secureCallData.from_number || undefined,
+            to_number: secureCallData.to_number || undefined,
+            direction: secureCallData.direction || undefined,
+            telephony_identifier: secureCallData.telephony_identifier || undefined,
+            
+            // Timing fields with defaults
+            start_timestamp: secureCallData.start_timestamp || undefined,
+            end_timestamp: secureCallData.end_timestamp || undefined,
+            duration_ms: secureCallData.duration_ms || undefined,
+            
+            // Ensure ALL object fields have explicit defaults
+            metadata: secureCallData.metadata || {},
+            retell_llm_dynamic_variables: secureCallData.retell_llm_dynamic_variables || {},
+            collected_dynamic_variables: secureCallData.collected_dynamic_variables || {},
+            custom_sip_headers: secureCallData.custom_sip_headers || {},
+            
+            // Ensure ALL array fields have explicit defaults  
+            transcript_object: secureCallData.transcript_object || [],
+            transcript_with_tool_calls: secureCallData.transcript_with_tool_calls || [],
+            scrubbed_transcript_with_tool_calls: secureCallData.scrubbed_transcript_with_tool_calls || [],
+            
+            // String fields with defaults
+            transcript: secureCallData.transcript || undefined,
+            recording_url: secureCallData.recording_url || undefined,
+            recording_multi_channel_url: secureCallData.recording_multi_channel_url || undefined,
+            scrubbed_recording_url: secureCallData.scrubbed_recording_url || undefined,
+            scrubbed_recording_multi_channel_url: secureCallData.scrubbed_recording_multi_channel_url || undefined,
+            public_log_url: secureCallData.public_log_url || undefined,
+            knowledge_base_retrieved_contents_url: secureCallData.knowledge_base_retrieved_contents_url || undefined,
+            
+            // Privacy and storage settings
+            data_storage_setting: secureCallData.data_storage_setting || undefined,
+            opt_in_signed_url: secureCallData.opt_in_signed_url || undefined,
+            
+            // Call termination
+            disconnection_reason: secureCallData.disconnection_reason || undefined,
+            
+            // Ensure comprehensive nested objects have proper defaults and ALL fields preserved
+            call_analysis: secureCallData.call_analysis ? {
+              call_summary: secureCallData.call_analysis.call_summary || undefined,
+              in_voicemail: secureCallData.call_analysis.in_voicemail || undefined,
+              user_sentiment: secureCallData.call_analysis.user_sentiment || undefined,
+              call_successful: secureCallData.call_analysis.call_successful || undefined,
+              custom_analysis_data: secureCallData.call_analysis.custom_analysis_data || {},
+              ...secureCallData.call_analysis // Preserve any additional fields
+            } : undefined,
+            
+            call_cost: secureCallData.call_cost ? {
+              product_costs: secureCallData.call_cost.product_costs || [],
+              total_duration_seconds: secureCallData.call_cost.total_duration_seconds || undefined,
+              total_duration_unit_price: secureCallData.call_cost.total_duration_unit_price || undefined,
+              combined_cost: secureCallData.call_cost.combined_cost || undefined,
+              ...secureCallData.call_cost // Preserve any additional fields
+            } : undefined,
+            
+            call_cost_breakdown: secureCallData.call_cost_breakdown ? {
+              total_cost: secureCallData.call_cost_breakdown.total_cost || undefined,
+              ...secureCallData.call_cost_breakdown // Preserve any additional fields
+            } : undefined,
+            
+            llm_token_usage: secureCallData.llm_token_usage ? {
+              values: secureCallData.llm_token_usage.values || [],
+              average: secureCallData.llm_token_usage.average || undefined,
+              num_requests: secureCallData.llm_token_usage.num_requests || undefined,
+              ...secureCallData.llm_token_usage // Preserve any additional fields
+            } : undefined,
+            
+            // Comprehensive latency object with ALL sub-objects and their fields
+            latency: secureCallData.latency ? {
+              // Legacy field for backward compatibility
+              avg_latency_ms: secureCallData.latency.avg_latency_ms || undefined,
+              
+              // Detailed latency metrics with ALL fields preserved
+              e2e: secureCallData.latency.e2e ? {
+                p50: secureCallData.latency.e2e.p50 || undefined,
+                p90: secureCallData.latency.e2e.p90 || undefined,
+                p95: secureCallData.latency.e2e.p95 || undefined,
+                p99: secureCallData.latency.e2e.p99 || undefined,
+                max: secureCallData.latency.e2e.max || undefined,
+                min: secureCallData.latency.e2e.min || undefined,
+                num: secureCallData.latency.e2e.num || undefined,
+                values: secureCallData.latency.e2e.values || [],
+                ...secureCallData.latency.e2e // Preserve any additional fields
+              } : undefined,
+              
+              llm: secureCallData.latency.llm ? {
+                p50: secureCallData.latency.llm.p50 || undefined,
+                p90: secureCallData.latency.llm.p90 || undefined,
+                p95: secureCallData.latency.llm.p95 || undefined,
+                p99: secureCallData.latency.llm.p99 || undefined,
+                max: secureCallData.latency.llm.max || undefined,
+                min: secureCallData.latency.llm.min || undefined,
+                num: secureCallData.latency.llm.num || undefined,
+                values: secureCallData.latency.llm.values || [],
+                ...secureCallData.latency.llm // Preserve any additional fields
+              } : undefined,
+              
+              llm_websocket_network_rtt: secureCallData.latency.llm_websocket_network_rtt ? {
+                p50: secureCallData.latency.llm_websocket_network_rtt.p50 || undefined,
+                p90: secureCallData.latency.llm_websocket_network_rtt.p90 || undefined,
+                p95: secureCallData.latency.llm_websocket_network_rtt.p95 || undefined,
+                p99: secureCallData.latency.llm_websocket_network_rtt.p99 || undefined,
+                max: secureCallData.latency.llm_websocket_network_rtt.max || undefined,
+                min: secureCallData.latency.llm_websocket_network_rtt.min || undefined,
+                num: secureCallData.latency.llm_websocket_network_rtt.num || undefined,
+                values: secureCallData.latency.llm_websocket_network_rtt.values || [],
+                ...secureCallData.latency.llm_websocket_network_rtt // Preserve any additional fields
+              } : undefined,
+              
+              tts: secureCallData.latency.tts ? {
+                p50: secureCallData.latency.tts.p50 || undefined,
+                p90: secureCallData.latency.tts.p90 || undefined,
+                p95: secureCallData.latency.tts.p95 || undefined,
+                p99: secureCallData.latency.tts.p99 || undefined,
+                max: secureCallData.latency.tts.max || undefined,
+                min: secureCallData.latency.tts.min || undefined,
+                num: secureCallData.latency.tts.num || undefined,
+                values: secureCallData.latency.tts.values || [],
+                ...secureCallData.latency.tts // Preserve any additional fields
+              } : undefined,
+              
+              knowledge_base: secureCallData.latency.knowledge_base ? {
+                p50: secureCallData.latency.knowledge_base.p50 || undefined,
+                p90: secureCallData.latency.knowledge_base.p90 || undefined,
+                p95: secureCallData.latency.knowledge_base.p95 || undefined,
+                p99: secureCallData.latency.knowledge_base.p99 || undefined,
+                max: secureCallData.latency.knowledge_base.max || undefined,
+                min: secureCallData.latency.knowledge_base.min || undefined,
+                num: secureCallData.latency.knowledge_base.num || undefined,
+                values: secureCallData.latency.knowledge_base.values || [],
+                ...secureCallData.latency.knowledge_base // Preserve any additional fields
+              } : undefined,
+              
+              s2s: secureCallData.latency.s2s ? {
+                p50: secureCallData.latency.s2s.p50 || undefined,
+                p90: secureCallData.latency.s2s.p90 || undefined,
+                p95: secureCallData.latency.s2s.p95 || undefined,
+                p99: secureCallData.latency.s2s.p99 || undefined,
+                max: secureCallData.latency.s2s.max || undefined,
+                min: secureCallData.latency.s2s.min || undefined,
+                num: secureCallData.latency.s2s.num || undefined,
+                values: secureCallData.latency.s2s.values || [],
+                ...secureCallData.latency.s2s // Preserve any additional fields
+              } : undefined,
+              
+              ...secureCallData.latency // Preserve any additional latency fields
+            } : undefined
+          };
+
+          // Use backward-compatible pattern: preserve ALL original fields + add computed fields
+          const enhancedResponse = {
+            ...safeCallData,
+            computed: {
+              // Enhanced computed fields for frontend convenience
+              duration_formatted: safeCallData.duration_ms 
+                ? `${Math.floor(safeCallData.duration_ms / 60000)}:${String(Math.floor((safeCallData.duration_ms % 60000) / 1000)).padStart(2, '0')}`
+                : '0:00',
+              start_date_formatted: safeCallData.start_timestamp 
+                ? new Date(safeCallData.start_timestamp).toLocaleString()
+                : null,
+              end_date_formatted: safeCallData.end_timestamp 
+                ? new Date(safeCallData.end_timestamp).toLocaleString()
+                : null,
+              has_recording: !!(safeCallData.recording_url),
+              has_transcript: !!(safeCallData.transcript),
+              has_analysis: !!(safeCallData.call_analysis),
+              transcript_word_count: safeCallData.transcript 
+                ? safeCallData.transcript.split(' ').length 
+                : 0,
+              avg_latency_e2e: safeCallData.latency?.e2e?.p50 || null,
+              
+              // Additional computed metrics for easier frontend consumption
+              sentiment_label: safeCallData.call_analysis?.user_sentiment || 'Unknown',
+              success_status: safeCallData.call_analysis?.call_successful ? 'Success' : 'Failed',
+              total_cost_formatted: safeCallData.call_cost?.combined_cost 
+                ? `$${(safeCallData.call_cost.combined_cost / 100).toFixed(3)}` 
+                : '$0.000',
+              cost_breakdown: safeCallData.call_cost?.product_costs?.map(p => ({
+                ...p,
+                cost_formatted: `$${(p.cost / 100).toFixed(3)}`
+              })) || [],
+            }
+          };
+
+          console.log(`📈 Enhanced call data prepared with ${Object.keys(enhancedResponse.computed).length} computed fields`);
+          console.log(`🎯 Call analysis: ${enhancedResponse.computed.sentiment_label} sentiment, ${enhancedResponse.computed.success_status} status`);
+          
+          res.json(enhancedResponse);
+
+        } catch (retellError: any) {
+          console.error(`❌ Failed to fetch call from Retell API for call ${callId}:`, retellError);
+          
+          // Fixed error handling with proper HTTP status codes
+          if (retellError.status === 401 || retellError.message?.includes('401') || retellError.message?.includes('unauthorized')) {
+            console.log(`🔒 Unauthorized API access for call ${callId}, returning 401`);
+            return res.status(401).json({ 
+              error: "Unauthorized",
+              message: "API credentials are invalid or expired",
+              call_id: callId
+            });
+          }
+
+          if (retellError.status === 403 || retellError.message?.includes('403') || retellError.message?.includes('forbidden')) {
+            console.log(`🚫 Forbidden API access for call ${callId}, returning 403`);
+            return res.status(403).json({ 
+              error: "Forbidden",
+              message: "Insufficient permissions to access this resource",
+              call_id: callId
+            });
+          }
+          
+          if (retellError.status === 404 || retellError.message?.includes('404') || retellError.message?.includes('not found')) {
+            console.log(`🔍 Call ${callId} not found in Retell API, attempting fallback to local storage...`);
+            
+            // Try fallback to local storage
+            try {
+              // Try both string and numeric call ID formats for comprehensive fallback
+              let localCall = null;
+              
+              // Try numeric call ID format first (most common for local storage)
+              if (/^\d+$/.test(callId)) {
+                try {
+                  localCall = await storage.getCall(parseInt(callId));
+                } catch (e) {
+                  // Continue with search logic below
+                }
+              }
+              
+              // If not found and not numeric, search through all calls for matching retell call_id
+              if (!localCall) {
+                const allCalls = await storage.getCalls();
+                localCall = allCalls.find(call => call.sessionId === callId || call.sessionId?.toString() === callId);
+              }
+              
+              if (localCall) {
+                console.log(`✅ Found call ${callId} in local storage, returning local data with computed fields`);
+                
+                // Add computed fields to local data for consistency
+                const localWithComputed = {
+                  ...localCall,
+                  computed: {
+                    duration_formatted: localCall.duration 
+                      ? `${Math.floor(localCall.duration / 60)}:${String(localCall.duration % 60).padStart(2, '0')}`
+                      : '0:00',
+                    has_recording: false,
+                    has_transcript: false,
+                    has_analysis: false,
+                    sentiment_label: localCall.sentiment || 'Unknown',
+                    success_status: localCall.outcome === 'successful' ? 'Success' : 'Failed',
+                    total_cost_formatted: localCall.cost ? `$${Number(localCall.cost).toFixed(3)}` : '$0.000',
+                  }
+                };
+                
+                return res.json(localWithComputed);
+              }
+            } catch (storageError) {
+              console.warn(`⚠️ Local storage fallback failed for call ${callId}:`, storageError);
+            }
+
+            return res.status(404).json({ 
+              error: "Call not found",
+              message: `Call with ID ${callId} not found in upstream service or local storage`,
+              call_id: callId
+            });
+          }
+
+          // Handle 5xx errors as service unavailable  
+          if (retellError.status >= 500 || retellError.message?.includes('500') || retellError.message?.includes('502') || 
+              retellError.message?.includes('503') || retellError.message?.includes('504')) {
+            console.log(`🛑 Upstream service error for call ${callId}, returning 503 Service Unavailable`);
+            return res.status(503).json({ 
+              error: "Service unavailable",
+              message: "The call data service is temporarily unavailable. Please try again later.",
+              call_id: callId
+            });
+          }
+
+          // Generic upstream error - use 502 for upstream communication issues
+          console.log(`⚠️ Unknown upstream error for call ${callId}, returning 502 Bad Gateway`);
+          return res.status(502).json({ 
+            error: "Bad gateway",
+            message: retellError.message || "Unable to communicate with upstream service",
+            call_id: callId
+          });
         }
       } else {
-        // Fallback to local data
-        const localCall = await storage.getCall(parseInt(callId));
-        if (!localCall) {
-          return res.status(404).json({ error: "Call not found" });
+        console.log(`⚠️ No Retell client available, falling back to local data for call: ${callId}`);
+        
+        // Fallback to local data when no Retell client is available
+        try {
+          let localCall = null;
+          
+          // Try numeric call ID format first (most common for local storage)
+          if (/^\d+$/.test(callId)) {
+            try {
+              localCall = await storage.getCall(parseInt(callId));
+            } catch (e) {
+              // Continue with search logic below
+            }
+          }
+          
+          // If not found and not numeric, search through all calls for matching retell call_id
+          if (!localCall) {
+            const allCalls = await storage.getCalls();
+            localCall = allCalls.find(call => call.sessionId === callId || call.sessionId?.toString() === callId);
+          }
+          
+          if (!localCall) {
+            console.log(`❌ Call ${callId} not found in local storage either`);
+            return res.status(404).json({ 
+              error: "Call not found",
+              message: `Call with ID ${callId} not found. Ensure you have a valid API key configured for full call details.`,
+              call_id: callId
+            });
+          }
+          
+          console.log(`✅ Returning local call data with computed fields for: ${callId}`);
+          
+          // Add computed fields to local data for consistency
+          const localWithComputed = {
+            ...localCall,
+            computed: {
+              duration_formatted: localCall.duration 
+                ? `${Math.floor(localCall.duration / 60)}:${String(localCall.duration % 60).padStart(2, '0')}`
+                : '0:00',
+              has_recording: false,
+              has_transcript: false,
+              has_analysis: false,
+              sentiment_label: localCall.sentiment || 'Unknown',
+              success_status: localCall.outcome === 'successful' ? 'Success' : 'Failed',
+              total_cost_formatted: localCall.cost ? `$${Number(localCall.cost).toFixed(3)}` : '$0.000',
+            }
+          };
+          
+          res.json(localWithComputed);
+        } catch (storageError) {
+          console.error(`❌ Failed to fetch from local storage for call ${callId}:`, storageError);
+          return res.status(503).json({ 
+            error: "Service unavailable",
+            message: "Unable to retrieve call data from any available source",
+            call_id: callId
+          });
         }
-        res.json(localCall);
       }
-    } catch (error) {
-      console.error("Failed to fetch call details:", error);
-      res.status(500).json({ error: "Failed to fetch call details" });
+    } catch (error: any) {
+      console.error(`💥 Unexpected error fetching call details for ${req.params.callId}:`, error);
+      res.status(503).json({ 
+        error: "Service unavailable",
+        message: error.message || "An unexpected error occurred while processing your request",
+        call_id: req.params.callId
+      });
     }
   });
 
@@ -1898,26 +2414,26 @@ Remember to be knowledgeable about the market, professional, and focused on help
             enhancedStats.totalCalls = validCalls.length;
 
             // Calculate duration metrics
-            const callsWithDuration = validCalls.filter((call: RetellCall) => call.duration_ms && call.duration_ms > 0);
+            const callsWithDuration = validCalls.filter((call: RetellCallData) => call.duration_ms && call.duration_ms > 0);
             enhancedStats.averageCallDuration = callsWithDuration.length > 0
-              ? Math.round(callsWithDuration.reduce((sum: number, call: RetellCall) => sum + (call.duration_ms || 0), 0) / callsWithDuration.length / 1000)
+              ? Math.round(callsWithDuration.reduce((sum: number, call: RetellCallData) => sum + (call.duration_ms || 0), 0) / callsWithDuration.length / 1000)
               : 0;
 
             // Calculate cost metrics
-            const callsWithCost = validCalls.filter((call: RetellCall) => call.call_cost_breakdown?.total_cost);
+            const callsWithCost = validCalls.filter((call: RetellCallData) => call.call_cost_breakdown?.total_cost);
             enhancedStats.totalCost = callsWithCost.length > 0
-              ? callsWithCost.reduce((sum: number, call: RetellCall) => sum + parseFloat(call.call_cost_breakdown?.total_cost || '0'), 0)
+              ? callsWithCost.reduce((sum: number, call: RetellCallData) => sum + parseFloat(call.call_cost_breakdown?.total_cost || '0'), 0)
               : 0;
 
             // Calculate latency metrics
-            const callsWithLatency = validCalls.filter((call: RetellCall) => call.latency?.avg_latency_ms);
+            const callsWithLatency = validCalls.filter((call: RetellCallData) => call.latency?.avg_latency_ms);
             enhancedStats.averageLatency = callsWithLatency.length > 0
-              ? Math.round(callsWithLatency.reduce((sum: number, call: RetellCall) => sum + (call.latency?.avg_latency_ms || 0), 0) / callsWithLatency.length)
+              ? Math.round(callsWithLatency.reduce((sum: number, call: RetellCallData) => sum + (call.latency?.avg_latency_ms || 0), 0) / callsWithLatency.length)
               : 0;
 
             // Calculate success rate based on call analysis
-            const callsWithAnalysis = validCalls.filter((call: RetellCall) => call.call_analysis?.call_successful !== undefined);
-            const successfulCallsCount = validCalls.filter((call: RetellCall) => call.call_analysis?.call_successful === true).length;
+            const callsWithAnalysis = validCalls.filter((call: RetellCallData) => call.call_analysis?.call_successful !== undefined);
+            const successfulCallsCount = validCalls.filter((call: RetellCallData) => call.call_analysis?.call_successful === true).length;
             enhancedStats.callSuccessRate = callsWithAnalysis.length > 0
               ? Math.round((successfulCallsCount / callsWithAnalysis.length) * 100)
               : 0;
@@ -1932,7 +2448,7 @@ Remember to be knowledgeable about the market, professional, and focused on help
               satisfied: 0
             };
 
-            validCalls.forEach((call: RetellCall) => {
+            validCalls.forEach((call: RetellCallData) => {
               const sentiment = call.call_analysis?.user_sentiment?.toLowerCase();
               if (sentiment && sentimentCounts.hasOwnProperty(sentiment)) {
                 sentimentCounts[sentiment]++;
@@ -1943,8 +2459,8 @@ Remember to be knowledgeable about the market, professional, and focused on help
             enhancedStats.positivesentimentCalls = sentimentCounts.positive + sentimentCounts.satisfied;
 
             // Direction analysis
-            enhancedStats.inboundCalls = validCalls.filter((call: RetellCall) => call.direction === 'inbound').length;
-            enhancedStats.outboundCalls = validCalls.filter((call: RetellCall) => call.direction === 'outbound').length;
+            enhancedStats.inboundCalls = validCalls.filter((call: RetellCallData) => call.direction === 'inbound').length;
+            enhancedStats.outboundCalls = validCalls.filter((call: RetellCallData) => call.direction === 'outbound').length;
 
             // Weekly trends (last 7 days)
             const sevenDaysAgo = new Date();
@@ -1957,7 +2473,7 @@ Remember to be knowledgeable about the market, professional, and focused on help
               const dayStart = new Date(date.setHours(0, 0, 0, 0));
               const dayEnd = new Date(date.setHours(23, 59, 59, 999));
 
-              const dayCalls = validCalls.filter((call: RetellCall) => {
+              const dayCalls = validCalls.filter((call: RetellCallData) => {
                 const callDate = new Date(call.start_timestamp || '');
                 return callDate >= dayStart && callDate <= dayEnd;
               });
@@ -1965,9 +2481,9 @@ Remember to be knowledgeable about the market, professional, and focused on help
               weeklyData.push({
                 date: dayStart.toISOString().split('T')[0],
                 calls: dayCalls.length,
-                successful: dayCalls.filter((call: RetellCall) => call.call_analysis?.call_successful === true).length,
-                duration: dayCalls.reduce((sum: number, call: RetellCall) => sum + (call.duration_ms || 0), 0) / 1000 / 60, // in minutes
-                cost: dayCalls.reduce((sum: number, call: RetellCall) => sum + parseFloat(call.call_cost_breakdown?.total_cost || '0'), 0)
+                successful: dayCalls.filter((call: RetellCallData) => call.call_analysis?.call_successful === true).length,
+                duration: dayCalls.reduce((sum: number, call: RetellCallData) => sum + (call.duration_ms || 0), 0) / 1000 / 60, // in minutes
+                cost: dayCalls.reduce((sum: number, call: RetellCallData) => sum + parseFloat(call.call_cost_breakdown?.total_cost || '0'), 0)
               });
             }
             enhancedStats.weeklyTrends = weeklyData;
@@ -1980,7 +2496,7 @@ Remember to be knowledgeable about the market, professional, and focused on help
               total_duration: number;
               positive_sentiment: number;
             }> = {};
-            validCalls.forEach((call: RetellCall) => {
+            validCalls.forEach((call: RetellCallData) => {
               const agentId = call.agent_id || 'unknown';
               if (!agentPerformance[agentId]) {
                 agentPerformance[agentId] = {
@@ -2066,7 +2582,7 @@ Remember to be knowledgeable about the market, professional, and focused on help
     try {
       const { timeframe = '30d', metrics = 'all' } = req.query;
       const retellClient = createRetellClient();
-      let calls: RetellCall[] = [];
+      let calls: RetellCallData[] = [];
 
       // Calculate date range
       const endDate = new Date();
@@ -2108,17 +2624,23 @@ Remember to be knowledgeable about the market, professional, and focused on help
           // Fall back to local storage data
           const localCalls = await storage.getCalls();
           calls = localCalls.map(call => ({
+            call_id: call.sessionId || `call_${call.id}`,
+            call_type: 'phone_call' as const,
+            agent_id: call.agentId?.toString() || 'unknown',
+            agent_version: 1,
+            call_status: (call.status === 'completed' ? 'ended' : call.status || 'ended') as any,
             duration_ms: call.duration ? call.duration * 1000 : undefined,
             call_cost_breakdown: { total_cost: call.cost?.toString() || '0' },
             latency: { avg_latency_ms: call.latency || 0 },
             call_analysis: {
               call_successful: call.status === 'completed',
-              user_sentiment: call.sentiment || 'neutral'
+              user_sentiment: (call.sentiment === 'positive' ? 'Positive' : 
+                             call.sentiment === 'negative' ? 'Negative' : 
+                             call.sentiment === 'frustrated' ? 'Frustrated' : 
+                             call.sentiment === 'satisfied' ? 'Satisfied' : 'Neutral') as 'Positive' | 'Negative' | 'Neutral' | 'Frustrated' | 'Satisfied'
             },
             direction: call.sessionId?.includes('inbound') ? 'inbound' : 'outbound',
-            start_timestamp: new Date().toISOString(),
-            agent_id: call.agentId?.toString(),
-            call_status: call.status || 'completed'
+            start_timestamp: Math.floor(Date.now() / 1000)
           }));
         }
       } else {
@@ -2126,34 +2648,40 @@ Remember to be knowledgeable about the market, professional, and focused on help
         console.log("No Retell client available, using local storage for detailed analytics");
         const localCalls = await storage.getCalls();
         calls = localCalls.map(call => ({
+          call_id: call.sessionId || `call_${call.id}`,
+          call_type: 'phone_call' as const,
+          agent_id: call.agentId?.toString() || 'unknown',
+          agent_version: 1,
+          call_status: (call.status === 'completed' ? 'ended' : call.status || 'ended') as any,
           duration_ms: call.duration ? call.duration * 1000 : undefined,
           call_cost_breakdown: { total_cost: call.cost?.toString() || '0' },
           latency: { avg_latency_ms: call.latency || 0 },
           call_analysis: {
             call_successful: call.status === 'completed',
-            user_sentiment: call.sentiment || 'neutral'
+            user_sentiment: (call.sentiment === 'positive' ? 'Positive' : 
+                           call.sentiment === 'negative' ? 'Negative' : 
+                           call.sentiment === 'frustrated' ? 'Frustrated' : 
+                           call.sentiment === 'satisfied' ? 'Satisfied' : 'Neutral') as 'Positive' | 'Negative' | 'Neutral' | 'Frustrated' | 'Satisfied'
           },
           direction: call.sessionId?.includes('inbound') ? 'inbound' : 'outbound',
-          start_timestamp: new Date().toISOString(),
-          agent_id: call.agentId?.toString(),
-          call_status: call.status || 'completed'
+          start_timestamp: Math.floor(Date.now() / 1000)
         }));
       }
 
       const analytics = {
         summary: {
           total_calls: calls.length,
-          total_duration_hours: (calls as RetellCall[]).reduce((sum: number, call: RetellCall) => sum + (call.duration_ms || 0), 0) / 1000 / 3600,
-          total_cost: (calls as RetellCall[]).reduce((sum: number, call: RetellCall) => sum + parseFloat(call.call_cost_breakdown?.total_cost || '0'), 0),
-          success_rate: calls.length > 0 ? (calls.filter((call: RetellCall) => call.call_analysis?.call_successful).length / calls.length * 100) : 0,
-          avg_call_duration: calls.length > 0 ? (calls as RetellCall[]).reduce((sum: number, call: RetellCall) => sum + (call.duration_ms || 0), 0) / calls.length / 1000 : 0
+          total_duration_hours: (calls as RetellCallData[]).reduce((sum: number, call: RetellCallData) => sum + (call.duration_ms || 0), 0) / 1000 / 3600,
+          total_cost: (calls as RetellCallData[]).reduce((sum: number, call: RetellCallData) => sum + parseFloat(call.call_cost_breakdown?.total_cost || '0'), 0),
+          success_rate: calls.length > 0 ? (calls.filter((call: RetellCallData) => call.call_analysis?.call_successful).length / calls.length * 100) : 0,
+          avg_call_duration: calls.length > 0 ? (calls as RetellCallData[]).reduce((sum: number, call: RetellCallData) => sum + (call.duration_ms || 0), 0) / calls.length / 1000 : 0
         },
         call_volume: {
           by_hour: {},
           by_day: {},
           by_direction: {
-            inbound: calls.filter((call: RetellCall) => call.direction === 'inbound').length,
-            outbound: calls.filter((call: RetellCall) => call.direction === 'outbound').length
+            inbound: calls.filter((call: RetellCallData) => call.direction === 'inbound').length,
+            outbound: calls.filter((call: RetellCallData) => call.direction === 'outbound').length
           }
         },
         performance: {
@@ -2180,7 +2708,7 @@ Remember to be knowledgeable about the market, professional, and focused on help
 
       // Process sentiment distribution
       const sentimentCounts: Record<string, number> = {};
-      calls.forEach((call: RetellCall) => {
+      calls.forEach((call: RetellCallData) => {
         const sentiment = call.call_analysis?.user_sentiment || 'unknown';
         sentimentCounts[sentiment] = (sentimentCounts[sentiment] || 0) + 1;
       });
@@ -2193,7 +2721,7 @@ Remember to be knowledgeable about the market, professional, and focused on help
         duration: number;
         cost: number;
       }> = {};
-      calls.forEach((call: RetellCall) => {
+      calls.forEach((call: RetellCallData) => {
         const agentId = call.agent_id || 'unknown';
         if (!agentStats[agentId]) {
           agentStats[agentId] = { total: 0, successful: 0, duration: 0, cost: 0 };
@@ -2216,8 +2744,8 @@ Remember to be knowledgeable about the market, professional, and focused on help
 
       // Calculate latency statistics
       const latencies = calls
-        .filter((call: RetellCall) => call.latency?.avg_latency_ms)
-        .map((call: RetellCall) => call.latency?.avg_latency_ms || 0)
+        .filter((call: RetellCallData) => call.latency?.avg_latency_ms)
+        .map((call: RetellCallData) => call.latency?.avg_latency_ms || 0)
         .sort((a: number, b: number) => a - b);
 
       if (latencies.length > 0) {
@@ -2227,7 +2755,7 @@ Remember to be knowledgeable about the market, professional, and focused on help
       }
 
       // Cost analysis
-      const totalMinutes = calls.reduce((sum: number, call: RetellCall) => sum + (call.duration_ms || 0), 0) / 1000 / 60;
+      const totalMinutes = calls.reduce((sum: number, call: RetellCallData) => sum + (call.duration_ms || 0), 0) / 1000 / 60;
       const totalCost = analytics.summary.total_cost;
 
       analytics.performance.cost_analysis.cost_per_call = calls.length > 0 ? totalCost / calls.length : 0;
@@ -2235,11 +2763,11 @@ Remember to be knowledgeable about the market, professional, and focused on help
 
       // Cost by direction
       const inboundCost = calls
-        .filter((call: RetellCall) => call.direction === 'inbound')
-        .reduce((sum: number, call: RetellCall) => sum + parseFloat(call.call_cost_breakdown?.total_cost || '0'), 0);
+        .filter((call: RetellCallData) => call.direction === 'inbound')
+        .reduce((sum: number, call: RetellCallData) => sum + parseFloat(call.call_cost_breakdown?.total_cost || '0'), 0);
       const outboundCost = calls
-        .filter((call: RetellCall) => call.direction === 'outbound')
-        .reduce((sum: number, call: RetellCall) => sum + parseFloat(call.call_cost_breakdown?.total_cost || '0'), 0);
+        .filter((call: RetellCallData) => call.direction === 'outbound')
+        .reduce((sum: number, call: RetellCallData) => sum + parseFloat(call.call_cost_breakdown?.total_cost || '0'), 0);
 
       analytics.performance.cost_analysis.cost_by_direction = {
         inbound: inboundCost,
@@ -2247,7 +2775,7 @@ Remember to be knowledgeable about the market, professional, and focused on help
       };
 
       // Call volume by time
-      calls.forEach((call: RetellCall) => {
+      calls.forEach((call: RetellCallData) => {
         const date = new Date(call.start_timestamp || '');
         const hour = date.getHours();
         const day = date.toISOString().split('T')[0];
@@ -2257,10 +2785,10 @@ Remember to be knowledgeable about the market, professional, and focused on help
       });
 
       // Quality metrics
-      const completedCalls = calls.filter((call: RetellCall) => call.call_status === 'completed');
+      const completedCalls = calls.filter((call: RetellCallData) => call.call_status === 'ended');
       analytics.quality_metrics.call_completion_rate = calls.length > 0 ? (completedCalls.length / calls.length * 100) : 0;
 
-      const successfulCalls = calls.filter((call: RetellCall) => call.call_analysis?.call_successful);
+      const successfulCalls = calls.filter((call: RetellCallData) => call.call_analysis?.call_successful);
       analytics.quality_metrics.resolution_rate = calls.length > 0 ? (successfulCalls.length / calls.length * 100) : 0;
 
       res.json({
