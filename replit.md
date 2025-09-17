@@ -94,6 +94,15 @@ This is a full-stack AI dashboard application built for RE/MAX Eclipse, featurin
 
 ```
 Changelog:
+- September 17, 2025. Enhanced Call History Data Schema - Major database schema enhancement:
+  * Added comprehensive Retell API fields to calls table for rich data capture
+  * Enhanced schema includes transcript, recording URLs, call metadata, and timing precision
+  * Added fields: retell_call_id, call_type, call_status, direction, user_sentiment
+  * Added content fields: transcript, recording_url, public_log_url, metadata
+  * Added timing fields: start_timestamp, end_timestamp, duration_ms for precision
+  * Added analysis fields: call_successful, disconnection_reason, in_voicemail
+  * Maintained backward compatibility with existing data and applications
+  * Ready for advanced call history features: transcript viewer, audio playback, filtering
 - August 23, 2025. Enhanced Aesthetics Across All Pages - Applied consistent visual improvements:
   * Enhanced all page headers with gradient backgrounds and floating cosmic elements
   * Implemented stunning gradient text effects for page titles
