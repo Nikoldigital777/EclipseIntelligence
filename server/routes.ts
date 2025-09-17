@@ -951,6 +951,127 @@ Remember to be knowledgeable about the market, professional, and focused on help
     }
   });
 
+  // Bidirectional sync route for Retell API
+  router.patch("/agents/:id/sync", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const agentId = req.params.id;
+      const updates = req.body;
+      
+      console.log(`🔄 Syncing agent ${agentId} to Retell with updates:`, JSON.stringify(updates, null, 2));
+      
+      const retellClient = createRetellClient();
+      if (!retellClient) {
+        return res.status(500).json({ error: "Retell API client not available" });
+      }
+
+      // Validate agent exists
+      if (!agentId.startsWith('agent_')) {
+        return res.status(400).json({ error: "Invalid Retell agent ID format" });
+      }
+
+      let result = {};
+      let llmUpdateResult = {};
+
+      // If updating LLM-related fields, update the LLM first
+      if (updates.general_prompt && updates.llm_id) {
+        try {
+          const llmUpdates = {
+            general_prompt: updates.general_prompt
+          };
+          
+          // Add other LLM fields if present
+          if (updates.model_temperature !== undefined) llmUpdates.model_temperature = updates.model_temperature;
+          if (updates.model !== undefined) llmUpdates.model = updates.model;
+          if (updates.s2s_model !== undefined) llmUpdates.s2s_model = updates.s2s_model;
+          if (updates.model_high_priority !== undefined) llmUpdates.model_high_priority = updates.model_high_priority;
+          if (updates.tool_call_strict_mode !== undefined) llmUpdates.tool_call_strict_mode = updates.tool_call_strict_mode;
+          if (updates.begin_message !== undefined) llmUpdates.begin_message = updates.begin_message;
+          if (updates.starting_state !== undefined) llmUpdates.starting_state = updates.starting_state;
+          if (updates.general_tools !== undefined) llmUpdates.general_tools = updates.general_tools;
+          if (updates.states !== undefined) llmUpdates.states = updates.states;
+          if (updates.default_dynamic_variables !== undefined) llmUpdates.default_dynamic_variables = updates.default_dynamic_variables;
+          if (updates.knowledge_base_ids !== undefined) llmUpdates.knowledge_base_ids = updates.knowledge_base_ids;
+
+          llmUpdateResult = await retellClient.updateLlm(updates.llm_id, llmUpdates);
+        } catch (llmError) {
+          console.error("Failed to update LLM:", llmError);
+          return res.status(500).json({ error: "Failed to update LLM prompt", details: llmError.message });
+        }
+      }
+
+      // Update agent-level settings (voice, conversation, etc.)
+      const agentUpdates = {};
+      
+      // Voice configuration updates
+      if (updates.voice_id !== undefined) agentUpdates.voice_id = updates.voice_id;
+      if (updates.voice_model !== undefined) agentUpdates.voice_model = updates.voice_model;
+      if (updates.voice_temperature !== undefined) agentUpdates.voice_temperature = updates.voice_temperature;
+      if (updates.voice_speed !== undefined) agentUpdates.voice_speed = updates.voice_speed;
+      if (updates.volume !== undefined) agentUpdates.volume = updates.volume;
+      if (updates.fallback_voice_ids !== undefined) agentUpdates.fallback_voice_ids = updates.fallback_voice_ids;
+      
+      // Conversation settings
+      if (updates.language !== undefined) agentUpdates.language = updates.language;
+      if (updates.responsiveness !== undefined) agentUpdates.responsiveness = updates.responsiveness;
+      if (updates.interruption_sensitivity !== undefined) agentUpdates.interruption_sensitivity = updates.interruption_sensitivity;
+      if (updates.enable_backchannel !== undefined) agentUpdates.enable_backchannel = updates.enable_backchannel;
+      if (updates.backchannel_frequency !== undefined) agentUpdates.backchannel_frequency = updates.backchannel_frequency;
+      if (updates.backchannel_words !== undefined) agentUpdates.backchannel_words = updates.backchannel_words;
+      if (updates.reminder_trigger_ms !== undefined) agentUpdates.reminder_trigger_ms = updates.reminder_trigger_ms;
+      if (updates.reminder_max_count !== undefined) agentUpdates.reminder_max_count = updates.reminder_max_count;
+      if (updates.end_call_after_silence_ms !== undefined) agentUpdates.end_call_after_silence_ms = updates.end_call_after_silence_ms;
+      if (updates.max_call_duration_ms !== undefined) agentUpdates.max_call_duration_ms = updates.max_call_duration_ms;
+
+      // Call handling settings
+      if (updates.webhook_url !== undefined) agentUpdates.webhook_url = updates.webhook_url;
+      if (updates.webhook_timeout_ms !== undefined) agentUpdates.webhook_timeout_ms = updates.webhook_timeout_ms;
+      if (updates.begin_message_delay_ms !== undefined) agentUpdates.begin_message_delay_ms = updates.begin_message_delay_ms;
+      if (updates.ring_duration_ms !== undefined) agentUpdates.ring_duration_ms = updates.ring_duration_ms;
+      if (updates.voicemail_option !== undefined) agentUpdates.voicemail_option = updates.voicemail_option;
+      if (updates.ambient_sound !== undefined) agentUpdates.ambient_sound = updates.ambient_sound;
+      if (updates.ambient_sound_volume !== undefined) agentUpdates.ambient_sound_volume = updates.ambient_sound_volume;
+
+      // Speech settings
+      if (updates.stt_mode !== undefined) agentUpdates.stt_mode = updates.stt_mode;
+      if (updates.vocab_specialization !== undefined) agentUpdates.vocab_specialization = updates.vocab_specialization;
+      if (updates.boosted_keywords !== undefined) agentUpdates.boosted_keywords = updates.boosted_keywords;
+      if (updates.allow_user_dtmf !== undefined) agentUpdates.allow_user_dtmf = updates.allow_user_dtmf;
+      if (updates.user_dtmf_options !== undefined) agentUpdates.user_dtmf_options = updates.user_dtmf_options;
+      if (updates.denoising_mode !== undefined) agentUpdates.denoising_mode = updates.denoising_mode;
+
+      // Analytics settings
+      if (updates.data_storage_setting !== undefined) agentUpdates.data_storage_setting = updates.data_storage_setting;
+      if (updates.opt_in_signed_url !== undefined) agentUpdates.opt_in_signed_url = updates.opt_in_signed_url;
+      if (updates.post_call_analysis_data !== undefined) agentUpdates.post_call_analysis_data = updates.post_call_analysis_data;
+      if (updates.post_call_analysis_model !== undefined) agentUpdates.post_call_analysis_model = updates.post_call_analysis_model;
+      if (updates.pii_config !== undefined) agentUpdates.pii_config = updates.pii_config;
+
+      // Basic agent info
+      if (updates.agent_name !== undefined) agentUpdates.agent_name = updates.agent_name;
+
+      // Update agent if there are agent-level changes
+      if (Object.keys(agentUpdates).length > 0) {
+        try {
+          result = await retellClient.updateAgent(agentId, agentUpdates);
+        } catch (agentError) {
+          console.error("Failed to update agent:", agentError);
+          return res.status(500).json({ error: "Failed to update agent", details: agentError.message });
+        }
+      }
+
+      console.log("✅ Successfully synced agent to Retell");
+      res.json({ 
+        success: true, 
+        agent: result, 
+        llm: llmUpdateResult,
+        message: "Agent successfully synced to Retell dashboard" 
+      });
+    } catch (error) {
+      console.error("Failed to sync agent to Retell:", error);
+      res.status(500).json({ error: "Failed to sync agent to Retell", details: error.message });
+    }
+  });
+
   // Batch calls routes
   router.get("/batch-calls", authenticateToken, async (req: AuthRequest, res) => {
     try {
