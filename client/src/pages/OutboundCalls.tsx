@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
+
 
 const sampleRecipients = [
   { id: 1, phone: "+1(248)555-0123", firstName: "John", lastName: "Smith" },
@@ -29,7 +29,7 @@ export default function OutboundCalls() {
   const [concurrency, setConcurrency] = useState(5);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [recipients, setRecipients] = useState(sampleRecipients);
-  const [termsAccepted, setTermsAccepted] = useState(false);
+  
   const [fromNumber, setFromNumber] = useState(""); // Added state for fromNumber
 
   // Agent type definition
@@ -66,7 +66,7 @@ export default function OutboundCalls() {
       setBatchName("");
       setRecipients(sampleRecipients); // Reset to sample data instead of empty array
       setCsvFile(null);
-      setTermsAccepted(false);
+      
       setSelectedAgent("");
       setSchedulingMode("now");
       setScheduledDateTime("");
@@ -349,15 +349,7 @@ export default function OutboundCalls() {
       }
     }
 
-    // Terms acceptance validation
-    if (!termsAccepted) {
-      toast({
-        title: "Terms Required",
-        description: "Please accept the terms of service and privacy policy.",
-        variant: "destructive",
-      });
-      return false;
-    }
+    
 
     return true;
   };
@@ -799,17 +791,6 @@ export default function OutboundCalls() {
 
           {/* Actions */}
           <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="terms"
-                checked={termsAccepted}
-                onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
-                data-testid="checkbox-terms"
-              />
-              <Label htmlFor="terms" className="text-[hsl(var(--soft-gray))] text-sm">
-                I agree to the terms of service and privacy policy
-              </Label>
-            </div>
 
             <div className="space-y-3">
               <CosmicButton
@@ -824,7 +805,7 @@ export default function OutboundCalls() {
               <CosmicButton
                 variant="remax"
                 className="w-full"
-                disabled={!batchName || !selectedAgent || recipients.length === 0 || !termsAccepted || createBatchCampaignMutation.isPending}
+                disabled={!batchName || !selectedAgent || recipients.length === 0 || createBatchCampaignMutation.isPending}
                 onClick={handleLaunchBatchCampaign}
                 data-testid="button-launch-campaign"
               >
