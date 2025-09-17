@@ -122,4 +122,4 @@ export type InsertLead = z.infer<typeof insertLeadSchema>;
 export type BatchCall = typeof batchCalls.$inferSelect;
 export type InsertBatchCall = z.infer<typeof insertBatchCallSchema>;
 export type Call = typeof calls.$inferSelect;
-export type InsertCall = z.infer<typeof insertCallSchema>;
+export type InsertCall = typeof calls.$inferInsert;

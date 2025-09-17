@@ -118,8 +118,9 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    // Set initial greeting
+    // Set initial greeting and make visible immediately
     setGreeting(getGreeting());
+    setIsVisible(true);
 
     // Update greeting every minute
     const greetingInterval = setInterval(() => {
