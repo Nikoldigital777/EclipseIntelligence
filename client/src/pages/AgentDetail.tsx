@@ -822,10 +822,10 @@ Remember to always be helpful, patient, and represent the company professionally
                         
                         {callStatus === 'connected' && (
                           <CosmicButton 
-                            variant="destructive" 
+                            variant="remax" 
                             size="sm"
                             onClick={handleEndCall}
-                            className="flex items-center space-x-2"
+                            className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 border-red-500"
                             data-testid="button-end-call"
                           >
                             <span>🔴</span>
