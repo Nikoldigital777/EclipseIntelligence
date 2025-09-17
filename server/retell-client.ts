@@ -150,6 +150,53 @@ export class RetellClient {
 
     return await response.json();
   }
+
+  // Update methods for bidirectional sync
+  async updateAgent(agentId: string, updates: any) {
+    console.log(`🔄 Updating agent ${agentId} with data:`, JSON.stringify(updates, null, 2));
+    
+    const response = await fetch(`${this.baseUrl}/update-agent/${agentId}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updates),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ Failed to update agent ${agentId}:`, errorText);
+      throw new Error(`Retell API error: ${response.status} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    console.log(`✅ Successfully updated agent ${agentId}`);
+    return result;
+  }
+
+  async updateLlm(llmId: string, updates: any) {
+    console.log(`🔄 Updating LLM ${llmId} with data:`, JSON.stringify(updates, null, 2));
+    
+    const response = await fetch(`${this.baseUrl}/update-retell-llm/${llmId}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updates),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ Failed to update LLM ${llmId}:`, errorText);
+      throw new Error(`Retell API error: ${response.status} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    console.log(`✅ Successfully updated LLM ${llmId}`);
+    return result;
+  }
 }
 
 // Factory function to create client instance
