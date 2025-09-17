@@ -1,4 +1,4 @@
-import { Download, Filter, MessageCircle, Volume2, X, FileText, Eye } from "lucide-react";
+import { Download, Filter, MessageCircle, Volume2, X, FileText, Eye, DollarSign, Clock, CheckCircle, AlertCircle, PlayCircle, Mic, FileAudio, Activity, TrendingUp, Headphones, BarChart3, Zap, Phone, User, Play } from "lucide-react";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
 import CosmicButton from "@/components/CosmicButton";
 import TranscriptViewer from "@/components/TranscriptViewer";
@@ -12,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { type Call } from "@shared/schema";
 import { useState, useEffect } from "react";
-import { Phone, Clock, User, TrendingUp, Play } from "lucide-react";
 
 export default function CallHistory() {
   const [isVisible, setIsVisible] = useState(false);
@@ -94,7 +93,60 @@ export default function CallHistory() {
     if (!durationMs) return 'N/A';
     const seconds = Math.floor(durationMs / 1000);
     const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes % 60}m`;
+    }
     return `${minutes}:${(seconds % 60).toString().padStart(2, '0')}`;
+  };
+
+  const formatCost = (cost: number | string | null | undefined): string => {
+    if (!cost) return 'N/A';
+    const numCost = typeof cost === 'string' ? parseFloat(cost) : cost;
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 3,
+      maximumFractionDigits: 4
+    }).format(numCost);
+  };
+
+  const hasRecordings = (call: Call): boolean => {
+    return !!(call.recordingUrl || call.recordingMultiChannelUrl || call.scrubbedRecordingUrl);
+  };
+
+  const hasTranscript = (call: Call): boolean => {
+    return !!(call.transcript && call.transcript.trim().length > 0);
+  };
+
+  const getCallQualityIndicator = (call: Call): string => {
+    if (call.callSuccessful) return 'High';
+    if (call.userSentiment === 'Positive' || call.sentiment === 'positive') return 'Good';
+    if (call.userSentiment === 'Neutral' || call.sentiment === 'neutral') return 'Fair';
+    return 'Poor';
+  };
+
+  const getQualityColor = (quality: string): string => {
+    switch (quality) {
+      case 'High': return 'text-green-400';
+      case 'Good': return 'text-blue-400';
+      case 'Fair': return 'text-yellow-400';
+      case 'Poor': return 'text-red-400';
+      default: return 'text-gray-400';
+    }
+  };
+
+  const getCallTypeDisplay = (call: Call): string => {
+    if (call.callType === 'web_call') return '🌐 Web Call';
+    if (call.callType === 'phone_call') return '📞 Phone Call';
+    return '📞 Phone Call'; // default
+  };
+
+  const getDirectionIcon = (direction: string | null | undefined): string => {
+    if (direction === 'inbound') return '📥';
+    if (direction === 'outbound') return '📤';
+    return '↔️';
   };
 
   const formatDateTime = (dateString: string | null | undefined): string => {
@@ -125,11 +177,37 @@ export default function CallHistory() {
   };
 
   const getSentimentColor = (sentiment: string | null | undefined): string => {
-    switch (sentiment) {
-      case 'Positive': return 'text-green-400';
-      case 'Negative': return 'text-red-400';
-      case 'Neutral': return 'text-yellow-400';
+    const normalizedSentiment = sentiment?.toLowerCase();
+    switch (normalizedSentiment) {
+      case 'positive': 
+      case 'satisfied': 
+        return 'text-green-400';
+      case 'negative': 
+      case 'frustrated': 
+        return 'text-red-400';
+      case 'neutral': 
+        return 'text-yellow-400';
       default: return 'text-gray-400';
+    }
+  };
+
+  const getSentimentDisplay = (call: Call): { emoji: string; text: string; color: string } => {
+    const sentiment = call.userSentiment || call.sentiment;
+    const normalizedSentiment = sentiment?.toLowerCase();
+    
+    switch (normalizedSentiment) {
+      case 'positive':
+        return { emoji: '😊', text: 'Positive', color: 'text-green-400' };
+      case 'negative':
+        return { emoji: '😞', text: 'Negative', color: 'text-red-400' };
+      case 'neutral':
+        return { emoji: '😐', text: 'Neutral', color: 'text-yellow-400' };
+      case 'frustrated':
+        return { emoji: '😤', text: 'Frustrated', color: 'text-red-400' };
+      case 'satisfied':
+        return { emoji: '😌', text: 'Satisfied', color: 'text-green-400' };
+      default:
+        return { emoji: '❓', text: 'Unknown', color: 'text-gray-400' };
     }
   };
 
@@ -438,14 +516,14 @@ export default function CallHistory() {
             <table className="w-full">
               <thead className="bg-[hsl(var(--lunar-mist))]/20">
                 <tr>
-                  <th className="text-left py-4 px-6 font-semibold text-white">Time</th>
+                  <th className="text-left py-4 px-6 font-semibold text-white">Time & Direction</th>
                   <th className="text-left py-4 px-6 font-semibold text-white">Duration</th>
-                  <th className="text-left py-4 px-6 font-semibold text-white">Channel Type</th>
+                  <th className="text-left py-4 px-6 font-semibold text-white">Type & Quality</th>
                   <th className="text-left py-4 px-6 font-semibold text-white">Cost</th>
-                  <th className="text-left py-4 px-6 font-semibold text-white">Session Status</th>
-                  <th className="text-left py-4 px-6 font-semibold text-white">User Sentiment</th>
-                  <th className="text-left py-4 px-6 font-semibold text-white">From</th>
-                  <th className="text-left py-4 px-6 font-semibold text-white">To</th>
+                  <th className="text-left py-4 px-6 font-semibold text-white">Status</th>
+                  <th className="text-left py-4 px-6 font-semibold text-white">Sentiment</th>
+                  <th className="text-left py-4 px-6 font-semibold text-white">Contact Info</th>
+                  <th className="text-left py-4 px-6 font-semibold text-white">Media</th>
                   <th className="text-left py-4 px-6 font-semibold text-white">Actions</th>
                 </tr>
               </thead>
@@ -453,7 +531,10 @@ export default function CallHistory() {
                 {isLoading ? (
                   <tr>
                     <td colSpan={9} className="text-center py-8 text-[hsl(var(--soft-gray))]" data-testid="loading-message">
-                      Loading call history...
+                      <div className="flex flex-col items-center">
+                        <Activity className="w-8 h-8 animate-pulse mb-2" />
+                        <span>Loading enhanced call history...</span>
+                      </div>
                     </td>
                   </tr>
                 ) : error ? (
@@ -465,52 +546,162 @@ export default function CallHistory() {
                 ) : !calls || calls.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="text-center py-8 text-[hsl(var(--soft-gray))]" data-testid="no-calls-message">
-                      No calls found. Start making some cosmic connections! 🌙
+                      <div className="flex flex-col items-center">
+                        <Phone className="w-12 h-12 mb-4 opacity-50" />
+                        <span>No calls found. Start making some cosmic connections! 🌙</span>
+                      </div>
                     </td>
                   </tr>
                 ) : (
-                  calls.map((call) => (
-                    <tr key={call.id} className="border-b border-white/5 hover:bg-white/5 transition-colors" data-testid={`call-row-${call.id}`}>
-                      <td className="py-4 px-6 text-white" data-testid={`call-time-${call.id}`}>
-                        {formatDateTime(call.createdAt)}
-                      </td>
-                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`call-duration-${call.id}`}>
-                        {formatDuration(call.duration)}
-                      </td>
-                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))]">
-                        Phone Call
-                      </td>
-                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`call-cost-${call.id}`}>
-                        {call.cost ? `$${call.cost}` : 'N/A'}
-                      </td>
-                      <td className="py-4 px-6" data-testid={`call-status-${call.id}`}>
-                        <Badge className={`${getStatusBadge(call.status)} text-white border-0`}>
-                          {call.status}
-                        </Badge>
-                      </td>
-                      <td className="py-4 px-6 text-2xl" data-testid={`call-sentiment-${call.id}`}>
-                        {getSentimentEmoji(call.sentiment)}
-                      </td>
-                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`call-from-${call.id}`}>
-                        {call.fromNumber || 'N/A'}
-                      </td>
-                      <td className="py-4 px-6 text-[hsl(var(--soft-gray))]" data-testid={`call-to-${call.id}`}>
-                        {call.toNumber || 'N/A'}
-                      </td>
-                      <td className="py-4 px-6">
-                        <CosmicButton 
-                          variant="eclipse" 
-                          size="sm"
-                          onClick={() => openRichDetails(call)}
-                          className="flex items-center space-x-1 hover:scale-105 transition-transform duration-200"
-                          data-testid={`view-details-button-${call.id}`}
-                        >
-                          <Eye className="w-4 h-4" />
-                          <span>Details</span>
-                        </CosmicButton>
-                      </td>
-                    </tr>
-                  ))
+                  calls.map((call) => {
+                    const sentimentInfo = getSentimentDisplay(call);
+                    const quality = getCallQualityIndicator(call);
+                    const hasRec = hasRecordings(call);
+                    const hasTrans = hasTranscript(call);
+                    
+                    return (
+                      <tr key={call.id} className="border-b border-white/5 hover:bg-white/5 transition-colors" data-testid={`call-row-${call.id}`}>
+                        {/* Time & Direction */}
+                        <td className="py-4 px-6" data-testid={`call-time-${call.id}`}>
+                          <div className="text-white text-sm font-medium">
+                            {formatDateTime(call.createdAt)}
+                          </div>
+                          <div className="flex items-center mt-1 text-xs text-gray-400">
+                            <span className="mr-1">{getDirectionIcon(call.direction)}</span>
+                            <span>{call.direction || 'Unknown'}</span>
+                          </div>
+                        </td>
+                        
+                        {/* Duration */}
+                        <td className="py-4 px-6" data-testid={`call-duration-${call.id}`}>
+                          <div className="flex items-center text-[hsl(var(--soft-gray))]">
+                            <Clock className="w-4 h-4 mr-1" />
+                            <span>{formatDuration(call.durationMs || call.duration)}</span>
+                          </div>
+                        </td>
+                        
+                        {/* Type & Quality */}
+                        <td className="py-4 px-6">
+                          <div className="text-[hsl(var(--soft-gray))] text-sm">
+                            {getCallTypeDisplay(call)}
+                          </div>
+                          <div className={`text-xs mt-1 flex items-center ${getQualityColor(quality)}`}>
+                            <BarChart3 className="w-3 h-3 mr-1" />
+                            <span>{quality} Quality</span>
+                          </div>
+                        </td>
+                        
+                        {/* Cost */}
+                        <td className="py-4 px-6" data-testid={`call-cost-${call.id}`}>
+                          <div className="flex items-center text-[hsl(var(--soft-gray))]">
+                            <DollarSign className="w-4 h-4 mr-1" />
+                            <span>{formatCost(call.cost)}</span>
+                          </div>
+                        </td>
+                        
+                        {/* Status */}
+                        <td className="py-4 px-6" data-testid={`call-status-${call.id}`}>
+                          <Badge className={`${getStatusBadge(call.callStatus || call.status)} text-white border-0`}>
+                            {call.callSuccessful ? (
+                              <span className="flex items-center">
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Success
+                              </span>
+                            ) : (
+                              <span className="flex items-center">
+                                <AlertCircle className="w-3 h-3 mr-1" />
+                                {call.callStatus || call.status || 'Failed'}
+                              </span>
+                            )}
+                          </Badge>
+                        </td>
+                        
+                        {/* Sentiment */}
+                        <td className="py-4 px-6" data-testid={`call-sentiment-${call.id}`}>
+                          <div className="flex items-center">
+                            <span className="text-lg mr-2">{sentimentInfo.emoji}</span>
+                            <div>
+                              <div className={`text-sm font-medium ${sentimentInfo.color}`}>
+                                {sentimentInfo.text}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        
+                        {/* Contact Info */}
+                        <td className="py-4 px-6" data-testid={`call-contact-${call.id}`}>
+                          <div className="text-[hsl(var(--soft-gray))] text-sm">
+                            <div className="flex items-center mb-1">
+                              <span className="text-xs text-gray-500 mr-1">From:</span>
+                              <span>{call.fromNumber || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center">
+                              <span className="text-xs text-gray-500 mr-1">To:</span>
+                              <span>{call.toNumber || 'N/A'}</span>
+                            </div>
+                          </div>
+                        </td>
+                        
+                        {/* Media */}
+                        <td className="py-4 px-6">
+                          <div className="flex items-center space-x-2">
+                            {hasRec && (
+                              <div className="flex items-center text-green-400" title="Recording Available">
+                                <Headphones className="w-4 h-4" />
+                              </div>
+                            )}
+                            {hasTrans && (
+                              <div className="flex items-center text-blue-400" title="Transcript Available">
+                                <FileText className="w-4 h-4" />
+                              </div>
+                            )}
+                            {!hasRec && !hasTrans && (
+                              <span className="text-gray-500 text-xs">No Media</span>
+                            )}
+                          </div>
+                        </td>
+                        
+                        {/* Actions */}
+                        <td className="py-4 px-6">
+                          <div className="flex space-x-1">
+                            <CosmicButton 
+                              variant="eclipse" 
+                              size="sm"
+                              onClick={() => openRichDetails(call)}
+                              className="flex items-center space-x-1 hover:scale-105 transition-transform duration-200"
+                              data-testid={`view-details-button-${call.id}`}
+                            >
+                              <Eye className="w-3 h-3" />
+                            </CosmicButton>
+                            
+                            {hasTrans && (
+                              <CosmicButton 
+                                variant="secondary" 
+                                size="sm"
+                                onClick={() => openTranscript(call)}
+                                className="flex items-center space-x-1 hover:scale-105 transition-transform duration-200"
+                                data-testid={`transcript-button-${call.id}`}
+                              >
+                                <MessageCircle className="w-3 h-3" />
+                              </CosmicButton>
+                            )}
+                            
+                            {hasRec && (
+                              <CosmicButton 
+                                variant="remax" 
+                                size="sm"
+                                onClick={() => openAudioPlayer(call)}
+                                className="flex items-center space-x-1 hover:scale-105 transition-transform duration-200"
+                                data-testid={`audio-button-${call.id}`}
+                              >
+                                <Volume2 className="w-3 h-3" />
+                              </CosmicButton>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -520,92 +711,191 @@ export default function CallHistory() {
         {/* Enhanced Call Cards */}
         <div className="grid grid-cols-1 gap-6 mt-6">
           {calls.length > 0 ? (
-            calls.map((call, index) => (
-              <GlassmorphicCard key={call.sessionId || call.id || index} className="hover:scale-[1.01] transition-all duration-300 border border-white/10 hover:border-white/20">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-[hsl(var(--primary-blue))] to-[hsl(var(--eclipse-glow))] rounded-full flex items-center justify-center shadow-lg">
-                      <Phone className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-white">
-                        {call.fromNumber || call.toNumber || `+1 (555) ${100 + index}-${1000 + index}`}
-                      </h3>
-                      <p className="text-gray-300 text-sm">
-                        Phone Call • Agent: {call.agentId || call.retellAgentId || 'AI Agent'}
-                      </p>
-                      <p className="text-gray-400 text-xs">
-                        {call.createdAt ? new Date(call.createdAt.toString()).toLocaleTimeString() : 'Time N/A'} • 
-                        {formatDuration(call.duration)} duration
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-4">
-                    <div className="text-center">
-                      <div className="flex items-center space-x-1 mb-1">
-                        <TrendingUp className={`w-4 h-4 ${getSentimentColor(call.sentiment)}`} />
-                        <span className={`text-sm font-medium ${getSentimentColor(call.sentiment)}`}>
-                          {call.sentiment || 'Unknown'}
-                        </span>
+            calls.map((call, index) => {
+              const sentimentInfo = getSentimentDisplay(call);
+              const quality = getCallQualityIndicator(call);
+              const hasRec = hasRecordings(call);
+              const hasTrans = hasTranscript(call);
+              
+              return (
+                <GlassmorphicCard key={call.sessionId || call.id || index} className="hover:scale-[1.01] transition-all duration-300 border border-white/10 hover:border-white/20">
+                  <div className="p-6">
+                    {/* Header Row */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-4">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg ${
+                          call.callType === 'web_call' 
+                            ? 'bg-gradient-to-br from-[hsl(var(--manifest-blue))] to-[hsl(var(--eclipse-glow))]'
+                            : 'bg-gradient-to-br from-[hsl(var(--primary-blue))] to-[hsl(var(--eclipse-glow))]'
+                        }`}>
+                          {call.callType === 'web_call' ? (
+                            <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                          ) : (
+                            <Phone className="w-6 h-6 text-white" />
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-white flex items-center">
+                            <span className="mr-2">{getDirectionIcon(call.direction)}</span>
+                            {call.fromNumber || call.toNumber || `+1 (555) ${100 + index}-${1000 + index}`}
+                          </h3>
+                          <p className="text-gray-300 text-sm">
+                            {getCallTypeDisplay(call)} • Agent: {call.agentId || call.retellAgentId || 'AI Agent'}
+                          </p>
+                          <div className="flex items-center space-x-4 text-gray-400 text-xs mt-1">
+                            <span>{call.createdAt ? new Date(call.createdAt.toString()).toLocaleTimeString() : 'Time N/A'}</span>
+                            <span>{formatDuration(call.durationMs || call.duration)}</span>
+                            <span>{formatCost(call.cost)}</span>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-400">Sentiment</p>
+
+                      <div className="flex items-center space-x-6">
+                        {/* Quality Indicator */}
+                        <div className="text-center">
+                          <div className={`flex items-center space-x-1 mb-1 ${getQualityColor(quality)}`}>
+                            <BarChart3 className="w-4 h-4" />
+                            <span className="text-sm font-medium">{quality}</span>
+                          </div>
+                          <p className="text-xs text-gray-400">Quality</p>
+                        </div>
+
+                        {/* Sentiment */}
+                        <div className="text-center">
+                          <div className="flex items-center space-x-1 mb-1">
+                            <span className="text-lg">{sentimentInfo.emoji}</span>
+                            <span className={`text-sm font-medium ${sentimentInfo.color}`}>
+                              {sentimentInfo.text}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-400">Sentiment</p>
+                        </div>
+
+                        {/* Success Status */}
+                        <div className="text-center">
+                          <div className="flex items-center space-x-1 mb-1">
+                            {call.callSuccessful ? (
+                              <CheckCircle className="w-5 h-5 text-green-400" />
+                            ) : (
+                              <AlertCircle className="w-5 h-5 text-red-400" />
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-400">Status</p>
+                        </div>
+
+                        {/* Media Indicators */}
+                        <div className="text-center">
+                          <div className="flex items-center space-x-2 mb-1">
+                            {hasRec && (
+                              <Headphones className="w-4 h-4 text-green-400" />
+                            )}
+                            {hasTrans && (
+                              <FileText className="w-4 h-4 text-blue-400" />
+                            )}
+                            {!hasRec && !hasTrans && (
+                              <div className="w-4 h-4 opacity-20">
+                                <X className="w-4 h-4 text-gray-500" />
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-400">Media</p>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="text-center">
-                      <p className={`text-lg font-bold ${call.status === 'completed' ? 'text-green-400' : 'text-red-400'}`}>
-                        {call.status === 'completed' ? '✓' : '✗'}
-                      </p>
-                      <p className="text-xs text-gray-400">Success</p>
+                    {/* Action Buttons */}
+                    <div className="flex justify-between items-center">
+                      <div className="flex space-x-2">
+                        <CosmicButton 
+                          variant="secondary" 
+                          size="sm"
+                          onClick={() => openRichDetails(call)}
+                          className="flex items-center space-x-1"
+                          data-testid={`view-details-card-button-${call.id}`}
+                        >
+                          <Eye className="w-4 h-4" />
+                          <span>Full Details</span>
+                        </CosmicButton>
+
+                        {hasTrans && (
+                          <CosmicButton 
+                            variant="eclipse" 
+                            size="sm"
+                            onClick={() => openTranscript(call)}
+                            className="flex items-center space-x-1"
+                            data-testid={`transcript-button-${call.id}`}
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            <span>Transcript</span>
+                          </CosmicButton>
+                        )}
+
+                        {hasRec && (
+                          <CosmicButton 
+                            variant="remax" 
+                            size="sm"
+                            onClick={() => openAudioPlayer(call)}
+                            className="flex items-center space-x-1"
+                            data-testid={`audio-button-${call.id}`}
+                          >
+                            <Volume2 className="w-4 h-4" />
+                            <span>Audio</span>
+                          </CosmicButton>
+                        )}
+                      </div>
+
+                      {/* Quick Stats */}
+                      <div className="flex items-center space-x-4 text-xs text-gray-400">
+                        {call.latency && (
+                          <div className="flex items-center space-x-1">
+                            <Zap className="w-3 h-3" />
+                            <span>{call.latency}ms</span>
+                          </div>
+                        )}
+                        {call.disconnectionReason && (
+                          <div className="flex items-center space-x-1">
+                            <AlertCircle className="w-3 h-3" />
+                            <span className="truncate max-w-24">{call.disconnectionReason}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="flex space-x-2">
-                      <CosmicButton 
-                        variant="manifest" 
-                        size="sm"
-                        onClick={() => openRichDetails(call)}
-                        className="flex items-center space-x-1"
-                        data-testid={`view-details-card-button-${call.id}`}
-                      >
-                        <Eye className="w-4 h-4" />
-                        <span>Details</span>
-                      </CosmicButton>
+                    {/* Call Summary/Outcome */}
+                    {call.outcome && (
+                      <div className="mt-4 p-3 bg-white/5 rounded-lg border border-white/10">
+                        <div className="flex items-start space-x-2">
+                          <FileText className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="text-sm font-medium text-white mb-1">Call Summary:</p>
+                            <p className="text-sm text-gray-300">{call.outcome}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
-                      <CosmicButton 
-                        variant="eclipse" 
-                        size="sm"
-                        onClick={() => openTranscript(call)}
-                        className="flex items-center space-x-1"
-                        data-testid={`transcript-button-${call.id}`}
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                        <span>Transcript</span>
-                      </CosmicButton>
-
-                      <CosmicButton 
-                        variant="remax" 
-                        size="sm"
-                        onClick={() => openAudioPlayer(call)}
-                        className="flex items-center space-x-1"
-                        data-testid={`audio-button-${call.id}`}
-                      >
-                        <Volume2 className="w-4 h-4" />
-                        <span>Audio</span>
-                      </CosmicButton>
-                    </div>
+                    {/* Additional Analysis Data */}
+                    {(call.inVoicemail || call.endReason) && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {call.inVoicemail && (
+                          <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
+                            <Mic className="w-3 h-3 mr-1" />
+                            Voicemail
+                          </Badge>
+                        )}
+                        {call.endReason && (
+                          <Badge className="bg-gray-500/20 text-gray-400 border-gray-500/30">
+                            {call.endReason}
+                          </Badge>
+                        )}
+                      </div>
+                    )}
                   </div>
-                </div>
-
-                {call.outcome && (
-                  <div className="mt-4 p-3 bg-white/5 rounded-lg border border-white/10">
-                    <p className="text-sm text-gray-300">
-                      <span className="font-medium text-white">Outcome: </span>
-                      {call.outcome}
-                    </p>
-                  </div>
-                )}
-              </GlassmorphicCard>
-            ))
+                </GlassmorphicCard>
+              );
+            })
           ) : (
             <GlassmorphicCard className="text-center py-12">
               <Phone className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -642,11 +932,64 @@ export default function CallHistory() {
             </p>
           </DialogHeader>
           <div className="py-4">
-            <AudioPlayer 
-              audioUrl={audioCall?.recordingUrl || audioCall?.recordingMultiChannelUrl}
-              title={`Call Recording - ${audioCall?.fromNumber || audioCall?.toNumber || 'Unknown'}`}
-              onError={(error) => console.error('Audio player error:', error)}
-            />
+            <div className="space-y-4">
+              {/* Recording Selection */}
+              {audioCall && (
+                <div className="grid grid-cols-1 gap-3">
+                  {audioCall.recordingUrl && (
+                    <div className="p-3 bg-white/5 rounded-lg border border-white/10">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-white">Standard Recording</span>
+                        <FileAudio className="w-4 h-4 text-blue-400" />
+                      </div>
+                      <AudioPlayer 
+                        audioUrl={audioCall.recordingUrl}
+                        title="Standard Recording"
+                        onError={(error) => console.error('Audio player error:', error)}
+                      />
+                    </div>
+                  )}
+                  
+                  {audioCall.recordingMultiChannelUrl && (
+                    <div className="p-3 bg-white/5 rounded-lg border border-white/10">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-white">Multi-Channel Recording</span>
+                        <Headphones className="w-4 h-4 text-green-400" />
+                      </div>
+                      <AudioPlayer 
+                        audioUrl={audioCall.recordingMultiChannelUrl}
+                        title="Multi-Channel Recording"
+                        onError={(error) => console.error('Audio player error:', error)}
+                      />
+                    </div>
+                  )}
+                  
+                  {audioCall.scrubbedRecordingUrl && (
+                    <div className="p-3 bg-white/5 rounded-lg border border-white/10">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-white">Privacy-Protected Recording</span>
+                        <div className="flex items-center space-x-1">
+                          <Eye className="w-4 h-4 text-purple-400" />
+                          <span className="text-xs text-purple-400">PII Removed</span>
+                        </div>
+                      </div>
+                      <AudioPlayer 
+                        audioUrl={audioCall.scrubbedRecordingUrl}
+                        title="Privacy-Protected Recording"
+                        onError={(error) => console.error('Audio player error:', error)}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {!audioCall?.recordingUrl && !audioCall?.recordingMultiChannelUrl && !audioCall?.scrubbedRecordingUrl && (
+                <div className="text-center py-8 text-gray-400">
+                  <Volume2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>No recordings available for this call</p>
+                </div>
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>
