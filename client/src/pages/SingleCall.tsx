@@ -267,15 +267,47 @@ export default function SingleCall() {
                   <Label htmlFor="from-number" className="text-white font-medium">
                     From Number *
                   </Label>
-                  <Input
-                    id="from-number"
-                    data-testid="input-from-number"
-                    type="tel"
-                    placeholder="+1 (555) 000-0000"
-                    value={formData.fromNumber}
-                    onChange={(e) => handleInputChange('fromNumber', e.target.value)}
-                    className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white placeholder-gray-400 focus:border-[hsl(var(--remax-red))]/50"
-                  />
+                  <Select 
+                    value={formData.fromNumber} 
+                    onValueChange={(value) => handleInputChange('fromNumber', value)}
+                    data-testid="select-from-number"
+                  >
+                    <SelectTrigger className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white focus:border-[hsl(var(--remax-red))]/50">
+                      <SelectValue placeholder="Select a phone number" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[hsl(var(--deep-night))] border-white/20">
+                      <SelectItem value="+1 (248) 283-4183" className="text-white hover:bg-white/10">
+                        <div className="flex items-center justify-between w-full">
+                          <span>+1 (248) 283-4183</span>
+                          <span className="text-xs text-gray-400 ml-2">Recruiting</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="+1(248)653-1643" className="text-white hover:bg-white/10">
+                        <div className="flex items-center justify-between w-full">
+                          <span>+1(248)653-1643</span>
+                          <span className="text-xs text-gray-400 ml-2">Recruiting Outbound</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="+1 (248) 780-0017" className="text-white hover:bg-white/10">
+                        <div className="flex items-center justify-between w-full">
+                          <span>+1 (248) 780-0017</span>
+                          <span className="text-xs text-gray-400 ml-2">Madison Backup</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="+1 (248) 599-0019" className="text-white hover:bg-white/10">
+                        <div className="flex items-center justify-between w-full">
+                          <span>+1 (248) 599-0019</span>
+                          <span className="text-xs text-gray-400 ml-2">Test Recruit</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="+1 (586) 500-6801" className="text-white hover:bg-white/10">
+                        <div className="flex items-center justify-between w-full">
+                          <span>+1 (586) 500-6801</span>
+                          <span className="text-xs text-gray-400 ml-2">Office</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div className="space-y-2">

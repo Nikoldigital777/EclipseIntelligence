@@ -1,7 +1,67 @@
-import { Plus, Phone } from "lucide-react";
+
+import { Plus, Phone, Settings, Trash2 } from "lucide-react";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
 import CosmicButton from "@/components/CosmicButton";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+interface PhoneNumber {
+  id: string;
+  number: string;
+  name: string;
+  type: 'inbound' | 'outbound';
+  assignedAgent: string;
+  status: 'active' | 'inactive';
+}
+
+const phoneNumbers: PhoneNumber[] = [
+  {
+    id: "1",
+    number: "+1 (248) 283-4183",
+    name: "Recruiting",
+    type: "outbound",
+    assignedAgent: "Levan Outbound Recruiting Agent",
+    status: "active"
+  },
+  {
+    id: "2", 
+    number: "+1(248)653-1643",
+    name: "Recruiting Outbound",
+    type: "outbound",
+    assignedAgent: "Levan Outbound Recruiting Agent",
+    status: "active"
+  },
+  {
+    id: "3",
+    number: "+1 (248) 780-0017",
+    name: "Madison Backup",
+    type: "inbound",
+    assignedAgent: "Madison Receptionist Agent",
+    status: "active"
+  },
+  {
+    id: "4",
+    number: "+1 (248) 599-0019",
+    name: "Test Recruit",
+    type: "outbound",
+    assignedAgent: "Levan Outbound Recruiting Agent",
+    status: "active"
+  },
+  {
+    id: "5",
+    number: "+1 (586) 500-6801",
+    name: "Office",
+    type: "inbound",
+    assignedAgent: "Madison Receptionist Agent", 
+    status: "active"
+  }
+];
 
 export default function Numbers() {
   return (
@@ -53,43 +113,130 @@ export default function Numbers() {
         </div>
       </div>
 
-      {/* Empty State */}
-      <GlassmorphicCard className="text-center py-16 border border-white/10 hover:border-white/20 transition-colors duration-300">
-        <div className="w-16 h-16 bg-gradient-to-br from-[hsl(var(--manifest-blue))] to-[hsl(var(--eclipse-glow))] rounded-full flex items-center justify-center mx-auto mb-4 lunar-shadow">
-          <Phone className="w-8 h-8 text-white" />
-        </div>
-        <h3 className="text-xl font-semibold text-white mb-2">No numbers purchased yet</h3>
-        <p className="text-[hsl(var(--soft-gray))] mb-6">
-          Manifest your cosmic connection channels. Purchase your first lunar line to begin the journey.
-        </p>
-        <CosmicButton variant="remax" className="flex items-center space-x-2">
-          <Plus className="w-4 h-4" />
-          <span>Buy Your First Number</span>
-        </CosmicButton>
-      </GlassmorphicCard>
-
-      {/* Table Headers (for reference) */}
-      <div className="mt-8 opacity-50">
-        <GlassmorphicCard>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-[hsl(var(--lunar-mist))]/20">
-                <tr>
-                  <th className="text-left py-4 px-6 font-semibold text-white">Number</th>
-                  <th className="text-left py-4 px-6 font-semibold text-white">Status</th>
-                  <th className="text-left py-4 px-6 font-semibold text-white">Assigned To</th>
-                  <th className="text-left py-4 px-6 font-semibold text-white">Type</th>
-                  <th className="text-left py-4 px-6 font-semibold text-white">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="py-8 px-6 text-center text-[hsl(var(--soft-gray))]" colSpan={5}>
-                    No lunar lines established yet
+      {/* Phone Numbers Table */}
+      <GlassmorphicCard className="mt-8 border border-white/10 hover:border-white/20 transition-colors duration-300">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-[hsl(var(--lunar-mist))]/20">
+              <tr>
+                <th className="text-left py-4 px-6 font-semibold text-white">Number</th>
+                <th className="text-left py-4 px-6 font-semibold text-white">Name</th>
+                <th className="text-left py-4 px-6 font-semibold text-white">Status</th>
+                <th className="text-left py-4 px-6 font-semibold text-white">Type</th>
+                <th className="text-left py-4 px-6 font-semibold text-white">Assigned Agent</th>
+                <th className="text-left py-4 px-6 font-semibold text-white">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {phoneNumbers.map((phoneNumber, index) => (
+                <tr key={phoneNumber.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                  <td className="py-4 px-6">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-[hsl(var(--manifest-blue))] to-[hsl(var(--eclipse-glow))] rounded-full flex items-center justify-center">
+                        <Phone className="w-5 h-5 text-white" />
+                      </div>
+                      <span className="text-white font-mono">{phoneNumber.number}</span>
+                    </div>
+                  </td>
+                  <td className="py-4 px-6">
+                    <span className="text-white font-medium">{phoneNumber.name}</span>
+                  </td>
+                  <td className="py-4 px-6">
+                    <Badge 
+                      className={`${
+                        phoneNumber.status === 'active' 
+                          ? 'bg-green-500/20 text-green-300 border-green-500/30' 
+                          : 'bg-gray-500/20 text-gray-300 border-gray-500/30'
+                      }`}
+                    >
+                      {phoneNumber.status}
+                    </Badge>
+                  </td>
+                  <td className="py-4 px-6">
+                    <Badge 
+                      className={`${
+                        phoneNumber.type === 'inbound'
+                          ? 'bg-[hsl(var(--manifest-blue))]/20 text-[hsl(var(--manifest-blue))] border-[hsl(var(--manifest-blue))]/30'
+                          : 'bg-[hsl(var(--eclipse-glow))]/20 text-[hsl(var(--eclipse-glow))] border-[hsl(var(--eclipse-glow))]/30'
+                      }`}
+                    >
+                      {phoneNumber.type}
+                    </Badge>
+                  </td>
+                  <td className="py-4 px-6">
+                    <span className="text-[hsl(var(--soft-gray))]">{phoneNumber.assignedAgent}</span>
+                  </td>
+                  <td className="py-4 px-6">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="text-white hover:bg-white/10" size="sm">
+                          <Settings className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="bg-[hsl(var(--lunar-glass))] border-white/20">
+                        <DropdownMenuItem className="text-white hover:bg-white/10">
+                          <Settings className="w-4 h-4 mr-2" />
+                          Configure
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-red-300 hover:bg-red-500/10">
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Release Number
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </td>
                 </tr>
-              </tbody>
-            </table>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </GlassmorphicCard>
+
+      {/* Summary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
+        <GlassmorphicCard className="p-6 border border-white/10">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-2xl font-bold text-white">{phoneNumbers.length}</h3>
+              <p className="text-[hsl(var(--soft-gray))] text-sm">Total Numbers</p>
+            </div>
+            <Phone className="w-8 h-8 text-[hsl(var(--manifest-blue))]" />
+          </div>
+        </GlassmorphicCard>
+
+        <GlassmorphicCard className="p-6 border border-white/10">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-2xl font-bold text-white">{phoneNumbers.filter(n => n.status === 'active').length}</h3>
+              <p className="text-[hsl(var(--soft-gray))] text-sm">Active Lines</p>
+            </div>
+            <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+              <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+            </div>
+          </div>
+        </GlassmorphicCard>
+
+        <GlassmorphicCard className="p-6 border border-white/10">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-2xl font-bold text-white">{phoneNumbers.filter(n => n.type === 'inbound').length}</h3>
+              <p className="text-[hsl(var(--soft-gray))] text-sm">Inbound Lines</p>
+            </div>
+            <div className="w-8 h-8 bg-[hsl(var(--manifest-blue))]/20 rounded-full flex items-center justify-center">
+              <div className="w-4 h-4 bg-[hsl(var(--manifest-blue))] rounded-full"></div>
+            </div>
+          </div>
+        </GlassmorphicCard>
+
+        <GlassmorphicCard className="p-6 border border-white/10">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-2xl font-bold text-white">{phoneNumbers.filter(n => n.type === 'outbound').length}</h3>
+              <p className="text-[hsl(var(--soft-gray))] text-sm">Outbound Lines</p>
+            </div>
+            <div className="w-8 h-8 bg-[hsl(var(--eclipse-glow))]/20 rounded-full flex items-center justify-center">
+              <div className="w-4 h-4 bg-[hsl(var(--eclipse-glow))] rounded-full"></div>
+            </div>
           </div>
         </GlassmorphicCard>
       </div>

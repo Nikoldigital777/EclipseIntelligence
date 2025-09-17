@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Upload, Download, Plus, Minus, Phone, Calendar, Clock, Users, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -31,6 +30,7 @@ export default function OutboundCalls() {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [recipients, setRecipients] = useState(sampleRecipients);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [fromNumber, setFromNumber] = useState(""); // Added state for fromNumber
 
   // Agent type definition
   interface Agent {
@@ -58,10 +58,10 @@ export default function OutboundCalls() {
         title: "Campaign Launched Successfully! 🚀",
         description: `Batch campaign "${batchName.trim()}" has been launched with ${recipients.length} recipients. Batch ID: ${batchId}`,
       });
-      
+
       // Invalidate batch calls cache to refresh the BatchCalls page
       queryClient.invalidateQueries({ queryKey: ['/api/batch-calls'] });
-      
+
       // Reset form
       setBatchName("");
       setRecipients(sampleRecipients); // Reset to sample data instead of empty array
@@ -70,11 +70,12 @@ export default function OutboundCalls() {
       setSelectedAgent("");
       setSchedulingMode("now");
       setScheduledDateTime("");
+      setFromNumber(""); // Reset fromNumber
     },
     onError: (error: any) => {
       console.error('Batch campaign creation error:', error);
       let errorMessage = "Failed to launch batch campaign. Please try again.";
-      
+
       if (error.message.includes('400')) {
         errorMessage = "Invalid request data. Please check your form inputs.";
       } else if (error.message.includes('401') || error.message.includes('403')) {
@@ -95,13 +96,13 @@ export default function OutboundCalls() {
 
   const selectedAgentData = agents.find((agent: Agent) => agent.id.toString() === selectedAgent);
   const totalRecipients = recipients.length;
-  
+
   // Retell AI Pricing Components (per minute)
   const voiceEngineRate = 0.07; // Elevenlabs/Cartesia voices
   const llmRate = 0.04; // GPT-4 rate
   const telephonyRate = 0.015; // US calls via Retell Twilio
   const baseRatePerMinute = voiceEngineRate + llmRate + telephonyRate; // ~$0.125/min
-  
+
   const avgCallDuration = 2.5; // Average call duration in minutes
   const costPerDial = baseRatePerMinute * avgCallDuration; // ~$0.31 per call
   const estimatedCost = totalRecipients * costPerDial;
@@ -132,7 +133,7 @@ export default function OutboundCalls() {
       setCsvFile(file);
       const text = await file.text();
       const lines = text.split('\n').filter(line => line.trim() !== '');
-      
+
       if (lines.length === 0) {
         toast({
           title: "Empty File",
@@ -145,7 +146,7 @@ export default function OutboundCalls() {
       // Parse CSV - expect format: phone, firstName, lastName (with or without headers)
       const parsedRecipients = [];
       let startIndex = 0;
-      
+
       // Check if first row looks like headers
       const firstLine = lines[0].toLowerCase();
       if (firstLine.includes('phone') || firstLine.includes('first') || firstLine.includes('last')) {
@@ -155,12 +156,12 @@ export default function OutboundCalls() {
       for (let i = startIndex; i < lines.length; i++) {
         const line = lines[i];
         const columns = line.split(',').map(col => col.trim().replace(/["']/g, ''));
-        
+
         if (columns.length >= 1) {
           const phone = columns[0];
           const firstName = columns[1] || 'Unknown';
           const lastName = columns[2] || 'Contact';
-          
+
           // Basic phone number validation
           const cleanPhone = phone.replace(/[^\d+()-\s]/g, '');
           if (cleanPhone && cleanPhone.length >= 10) {
@@ -294,7 +295,7 @@ export default function OutboundCalls() {
 
       const scheduledTime = new Date(scheduledDateTime);
       const now = new Date();
-      
+
       if (scheduledTime <= now) {
         toast({
           title: "Invalid Scheduled Time",
@@ -342,12 +343,12 @@ export default function OutboundCalls() {
     }));
 
     const payload = {
-      from_number: selectedAgentData!.phone,
+      from_number: fromNumber, // Use the selected fromNumber
       tasks,
       name: batchName.trim(),
       override_agent_id: selectedAgent,
-      trigger_timestamp: schedulingMode === "schedule" && scheduledDateTime 
-        ? new Date(scheduledDateTime).getTime() 
+      trigger_timestamp: schedulingMode === "schedule" && scheduledDateTime
+        ? new Date(scheduledDateTime).getTime()
         : undefined
     };
 
@@ -423,7 +424,7 @@ export default function OutboundCalls() {
           <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_75%_25%,hsl(var(--eclipse-glow))_0%,transparent_50%)]"></div>
           <div className="absolute bottom-0 left-0 w-full h-full bg-[radial-gradient(circle_at_25%_75%,hsl(var(--manifest-blue))_0%,transparent_50%)]"></div>
         </div>
-        
+
         <div className="flex items-center justify-between relative z-10">
           <div>
             <h1 className="text-5xl font-bold text-white mb-3 drop-shadow-2xl [text-shadow:_2px_2px_8px_rgb(0_0_0_/_50%)] flex items-center">
@@ -450,7 +451,7 @@ export default function OutboundCalls() {
               <span className="mr-3">⚙️</span>
               Batch Configuration
             </h3>
-            
+
             <div className="space-y-6">
               {/* Batch Name */}
               <div>
@@ -488,7 +489,7 @@ export default function OutboundCalls() {
                     ))}
                   </SelectContent>
                 </Select>
-                
+
                 {selectedAgentData && (
                   <div className="mt-3 p-3 bg-[hsl(var(--eclipse-glow))]/20 rounded-lg border border-[hsl(var(--eclipse-glow))]/30">
                     <div className="flex items-center justify-between">
@@ -537,7 +538,7 @@ export default function OutboundCalls() {
                     <Label htmlFor="send-schedule" className="text-white">Schedule for Later</Label>
                   </div>
                 </RadioGroup>
-                
+
                 {schedulingMode === "schedule" && (
                   <div className="mt-4 grid grid-cols-2 gap-4">
                     <div>
@@ -605,7 +606,7 @@ export default function OutboundCalls() {
               <span className="mr-3">👥</span>
               Recipients ({totalRecipients})
             </h3>
-            
+
             {recipients.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -670,7 +671,7 @@ export default function OutboundCalls() {
                   <span>${baseRatePerMinute.toFixed(3)}</span>
                 </div>
               </div>
-              
+
               <div className="border-t border-white/10 pt-3 space-y-2">
                 <div className="flex justify-between">
                   <span className="text-[hsl(var(--soft-gray))]">Avg. Call Duration:</span>
@@ -685,14 +686,14 @@ export default function OutboundCalls() {
                   <span className="text-white font-semibold">{totalRecipients}</span>
                 </div>
               </div>
-              
+
               <div className="border-t border-white/10 pt-3">
                 <div className="flex justify-between">
                   <span className="text-white font-medium">Total Estimated Cost:</span>
                   <span className="text-[hsl(var(--success-green))] font-bold text-lg">${estimatedCost.toFixed(2)}</span>
                 </div>
               </div>
-              
+
               <div className="mt-4 p-3 bg-[hsl(var(--eclipse-glow))]/10 rounded-lg border border-[hsl(var(--eclipse-glow))]/20">
                 <p className="text-[hsl(var(--eclipse-glow))] text-xs leading-relaxed">
                   💡 Enterprise plans offer volume discounts as low as $0.05/min for high-volume usage
@@ -715,7 +716,7 @@ export default function OutboundCalls() {
               </div>
               <div className="p-3 bg-[hsl(var(--eclipse-glow))]/20 rounded-lg">
                 <p className="text-[hsl(var(--eclipse-glow))] text-xs leading-relaxed">
-                  Batch calls will be made using your selected agent's voice and personality. 
+                  Batch calls will be made using your selected agent's voice and personality.
                   All conversations are recorded and analyzed for performance insights.
                 </p>
               </div>
@@ -725,8 +726,8 @@ export default function OutboundCalls() {
           {/* Actions */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="terms" 
+              <Checkbox
+                id="terms"
                 checked={termsAccepted}
                 onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
                 data-testid="checkbox-terms"
@@ -735,10 +736,10 @@ export default function OutboundCalls() {
                 I agree to the terms of service and privacy policy
               </Label>
             </div>
-            
+
             <div className="space-y-3">
-              <CosmicButton 
-                variant="eclipse" 
+              <CosmicButton
+                variant="eclipse"
                 className="w-full"
                 disabled={!batchName || !selectedAgent || recipients.length === 0 || createBatchCampaignMutation.isPending}
                 onClick={handleSaveAsDraft}
@@ -746,10 +747,10 @@ export default function OutboundCalls() {
               >
                 Save as Draft
               </CosmicButton>
-              <CosmicButton 
-                variant="remax" 
+              <CosmicButton
+                variant="remax"
                 className="w-full"
-                disabled={!batchName || !selectedAgent || recipients.length === 0 || !termsAccepted || createBatchCampaignMutation.isPending}
+                disabled={!batchName || !selectedAgent || recipients.length === 0 || !termsAccepted || createBatchCampaignMutation.isPending || !fromNumber} // Added fromNumber validation
                 onClick={handleLaunchBatchCampaign}
                 data-testid="button-launch-campaign"
               >
