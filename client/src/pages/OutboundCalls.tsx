@@ -29,7 +29,7 @@ export default function OutboundCalls() {
   const [concurrency, setConcurrency] = useState(5);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [recipients, setRecipients] = useState(sampleRecipients);
-  
+
   const [fromNumber, setFromNumber] = useState(""); // Added state for fromNumber
 
   // Agent type definition
@@ -66,7 +66,7 @@ export default function OutboundCalls() {
       setBatchName("");
       setRecipients(sampleRecipients); // Reset to sample data instead of empty array
       setCsvFile(null);
-      
+
       setSelectedAgent("");
       setSchedulingMode("now");
       setScheduledDateTime("");
@@ -157,7 +157,7 @@ export default function OutboundCalls() {
           if (cleanPhone && cleanPhone.replace(/\D/g, '').length >= 10) {
             // Remove all non-digits to check length and format
             const digitsOnly = cleanPhone.replace(/\D/g, '');
-            
+
             // Handle different phone number formats
             let formattedPhone;
             if (cleanPhone.startsWith('+1') && digitsOnly.length === 11) {
@@ -176,7 +176,7 @@ export default function OutboundCalls() {
               // Use as-is for other formats
               formattedPhone = cleanPhone.startsWith('+') ? cleanPhone : `+1${digitsOnly}`;
             }
-            
+
             parsedRecipients.push({
               id: parsedRecipients.length + 1,
               phone: formattedPhone,
@@ -339,7 +339,7 @@ export default function OutboundCalls() {
       }
     }
 
-    
+
 
     return true;
   };
@@ -531,7 +531,7 @@ export default function OutboundCalls() {
                   </SelectTrigger>
                   <SelectContent className="bg-[hsl(var(--lunar-glass))] border-white/20">
                     {agents.map((agent) => (
-                      <SelectItem key={agent.id} value={agent.id.toString()} className="text-white">
+                      <SelectItem key={agent.id} value={String(agent.id)} className="text-white">
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 bg-gradient-to-br from-[hsl(var(--manifest-blue))] to-[hsl(var(--eclipse-glow))] rounded-full flex items-center justify-center">
                             <span className="text-white font-semibold text-xs">{agent.avatar}</span>

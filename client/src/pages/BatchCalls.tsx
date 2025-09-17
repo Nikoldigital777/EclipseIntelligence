@@ -140,22 +140,22 @@ export default function BatchCalls() {
                     <tr key={batchCall.id} className="border-b border-white/5 hover:bg-white/5 transition-colors" data-testid={`batch-call-row-${batchCall.id}`}>
                       <td className="py-4 px-6 text-white font-medium min-w-[200px]" data-testid={`batch-name-${batchCall.id}`}>
                         <div className="break-words max-w-[200px]" title={batchCall.name}>
-                          {batchCall.name}
+                          {typeof batchCall.name === 'string' ? batchCall.name : 'N/A'}
                         </div>
                       </td>
                       <td className="py-4 px-6 min-w-[120px]" data-testid={`batch-status-${batchCall.id}`}>
                         <Badge className={`${getStatusBadge(batchCall.status)} text-white border-0 whitespace-nowrap`}>
-                          {batchCall.status}
+                          {typeof batchCall.status === 'string' ? batchCall.status : 'unknown'}
                         </Badge>
                       </td>
                       <td className="py-4 px-6 text-[hsl(var(--soft-gray))] text-center min-w-[100px]" data-testid={`batch-recipients-${batchCall.id}`}>
-                        {batchCall.totalTaskCount.toLocaleString()}
+                        {typeof batchCall.totalTaskCount === 'number' ? batchCall.totalTaskCount.toLocaleString() : '0'}
                       </td>
                       <td className="py-4 px-6 text-[hsl(var(--soft-gray))] text-center min-w-[100px]" data-testid={`batch-completed-${batchCall.id}`}>
-                        {batchCall.completedCount.toLocaleString()}
+                        {typeof batchCall.completedCount === 'number' ? batchCall.completedCount.toLocaleString() : '0'}
                       </td>
                       <td className="py-4 px-6 text-[hsl(var(--soft-gray))] text-center min-w-[100px]" data-testid={`batch-successful-${batchCall.id}`}>
-                        {batchCall.successfulCount.toLocaleString()}
+                        {typeof batchCall.successfulCount === 'number' ? batchCall.successfulCount.toLocaleString() : '0'}
                       </td>
                       <td className="py-4 px-6 text-[hsl(var(--soft-gray))] text-center min-w-[120px]" data-testid={`batch-success-rate-${batchCall.id}`}>
                         <span className="font-medium">
