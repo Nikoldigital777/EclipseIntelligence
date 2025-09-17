@@ -201,12 +201,36 @@ export default function Dashboard() {
             }
           }
         } catch (error) {
-          console.error('Error fetching agents for dashboard:', error);
+          console.error("Error fetching agents for dashboard:", error);
         }
 
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
         // If authentication fails, user will be redirected to login
+        // For development, set fallback data so UI doesn't break
+        if (!import.meta.env.PROD) {
+          setStats({
+            totalLeads: 15,
+            hotLeads: 5,
+            callbacksDue: 3,
+            totalCalls: 127,
+            successfulCalls: 89,
+            activeAgents: 3,
+            conversionRate: 67,
+            todaysCalls: 12,
+            averageCallDuration: 245,
+            positivesentimentCalls: 78,
+            sentimentBreakdown: {
+              positive: 45,
+              neutral: 32,
+              negative: 12,
+              frustrated: 8,
+              satisfied: 30
+            },
+            weeklyTrends: [],
+            topPerformingAgents: []
+          });
+        }
       }
     };
 

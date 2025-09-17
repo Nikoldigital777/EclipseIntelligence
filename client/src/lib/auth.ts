@@ -195,54 +195,52 @@ export class AuthService {
     return data;
   }
 
-  static async makeAuthenticatedRequest<T>(
-    endpoint: string,
-    options: RequestOptions = {}
-  ): Promise<T> {
+  // Enhanced API client with better error handling
+  static async makeAuthenticatedRequest(url: string, options: RequestInit = {}): Promise<Response> {
     const token = this.getToken();
+
     if (!token) {
-      console.error('No authentication token available for request:', endpoint);
-      throw new Error('No authentication token available');
+      throw new Error('Authentication required');
     }
 
-    const { method = 'GET', body, headers = {} } = options;
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      ...options.headers,
+    };
 
-    console.log(`Making authenticated request: ${method} ${endpoint}`);
+    console.log(`Making authenticated request: ${options.method || 'GET'} ${url}`);
 
     try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          ...headers,
-        },
-        body: body ? JSON.stringify(body) : undefined,
+      // Ensure we're making requests to the correct base URL
+      const baseUrl = import.meta.env.PROD ? '' : 'http://localhost:5000';
+      const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+
+      const response = await fetch(fullUrl, {
+        ...options,
+        headers,
       });
 
-      console.log(`Response status for ${endpoint}:`, response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Request failed for ${endpoint}:`, {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorText
-        });
-
-        if (response.status === 401) {
-          console.warn('Authentication token expired, logging out');
-          this.logout();
-          throw new Error('Authentication failed');
-        }
-        throw new Error(`Request failed: ${response.statusText} - ${errorText}`);
+      // Handle token expiration
+      if (response.status === 401) {
+        console.log('Token expired, redirecting to login');
+        this.logout();
+        throw new Error('Authentication required');
       }
 
-      const data = await response.json();
-      console.log(`Successful response for ${endpoint}:`, data);
-      return data;
+      // Check if response is ok
+      if (!response.ok) {
+        console.error(`HTTP error for ${url}: ${response.status} ${response.statusText}`);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return response;
     } catch (error) {
-      console.error(`Network error for ${endpoint}:`, error);
+      console.error(`Network error for ${url}:`, error);
+      // Re-throw with more context
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error(`Network connection failed for ${url}`);
+      }
       throw error;
     }
   }

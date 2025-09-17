@@ -1456,9 +1456,16 @@ Remember to be knowledgeable about the market, professional, and focused on help
     }
   });
 
+  // Test route to verify API is working
+  router.get("/test", (req, res) => {
+    res.json({ message: "API is working", timestamp: new Date().toISOString() });
+  });
+
   // Analytics routes (protected)
   router.get("/analytics/stats", authenticateToken, async (req: AuthRequest, res) => {
     try {
+      console.log("Analytics stats endpoint hit");
+      console.log("User:", req.user?.email || 'No user found');
       const leads = await storage.getLeads();
       const calls = await storage.getCalls();
       const agents = await storage.getAgents();
@@ -1618,10 +1625,48 @@ Remember to be knowledgeable about the market, professional, and focused on help
         }
       }
 
+      console.log("Sending analytics stats:", enhancedStats);
       res.json(enhancedStats);
     } catch (error) {
       console.error("Failed to fetch analytics:", error);
-      res.status(500).json({ error: "Failed to fetch analytics" });
+      console.error("Full error details:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      
+      // Send fallback data to prevent frontend crashes
+      const fallbackStats = {
+        totalLeads: 0,
+        hotLeads: 0,
+        callbacksDue: 0,
+        totalCalls: 0,
+        successfulCalls: 0,
+        activeAgents: 0,
+        conversionRate: 0,
+        averageCallDuration: 0,
+        positivesentimentCalls: 0,
+        inboundCalls: 0,
+        outboundCalls: 0,
+        totalCost: 0,
+        averageLatency: 0,
+        callSuccessRate: 0,
+        sentimentBreakdown: {
+          positive: 0,
+          neutral: 0,
+          negative: 0,
+          frustrated: 0,
+          satisfied: 0
+        },
+        weeklyTrends: [],
+        topPerformingAgents: []
+      };
+      
+      res.status(500).json({ 
+        error: "Failed to fetch analytics",
+        fallback: fallbackStats,
+        details: error.message
+      });
     }
   });
 
