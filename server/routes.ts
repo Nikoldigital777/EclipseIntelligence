@@ -19,12 +19,14 @@ interface RetellAgent {
   agent_id?: string;
   agent_name?: string;
   phone?: string;
+  phone_number?: string;
   voice_id?: string;
   voice?: string;
   id?: string;
   name?: string;
   response_engine?: {
     llm_id?: string;
+    type?: string;
   };
   voice_model?: string;
   voice_temperature?: number;
@@ -61,6 +63,9 @@ interface RetellAgent {
   post_call_analysis_data?: any;
   post_call_analysis_model?: string;
   pii_config?: any;
+  last_modification_timestamp?: number;
+  version?: number;
+  is_published?: boolean;
 }
 
 interface RetellCall {
@@ -441,8 +446,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             type: agent.response_engine?.type || "Single Prompt",
             voice_id: agent.voice_id,
             voice: agent.voice_id || "Default Voice",
-            phone_number: agent.phone_number,
-            phone: agent.phone_number || "+1(555)000-0000",
+            phone_number: agent.phone_number || agent.phone,
+            phone: agent.phone_number || agent.phone || "+1(555)000-0000",
             editedBy: "Retell AI",
             editedAt: agent.last_modification_timestamp ? 
               new Date(agent.last_modification_timestamp * 1000).toLocaleDateString() : "Unknown",

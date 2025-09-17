@@ -185,19 +185,25 @@ export default function CallHistory() {
     const criteria: any = {};
     
     if (filters.sentiment !== 'all') {
-      criteria.user_sentiment = filters.sentiment;
+      // Retell API requires user_sentiment to be an array with capitalized values
+      const capitalizedSentiment = filters.sentiment.charAt(0).toUpperCase() + filters.sentiment.slice(1).toLowerCase();
+      criteria.user_sentiment = [capitalizedSentiment];
     }
     if (filters.callType !== 'all') {
-      criteria.call_type = filters.callType;
+      // Retell API requires call_type to be an array
+      criteria.call_type = [filters.callType];
     }
     if (filters.successStatus !== 'all') {
-      criteria.call_successful = filters.successStatus === 'successful';
+      // Retell API requires call_successful to be an array
+      criteria.call_successful = [filters.successStatus === 'successful'];
     }
     if (filters.direction !== 'all') {
-      criteria.direction = filters.direction;
+      // Retell API requires direction to be an array
+      criteria.direction = [filters.direction];
     }
     if (filters.callStatus !== 'all') {
-      criteria.call_status = filters.callStatus;
+      // Retell API requires call_status to be an array
+      criteria.call_status = [filters.callStatus];
     }
     
     return criteria;
