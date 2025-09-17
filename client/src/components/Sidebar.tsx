@@ -5,12 +5,12 @@ import { AuthService } from "@/lib/auth";
 
 const navigationItems = [
   { path: "/", label: "Dashboard", icon: BarChart3 },
-  { path: "/analytics", label: "Analytics", icon: BarChart3 },
-  { path: "/call-history", label: "Call History", icon: PhoneCall },
   { path: "/agents", label: "Agents", icon: Users },
-  { path: "/numbers", label: "Phone Numbers", icon: Phone },
+  { path: "/call-history", label: "Call History", icon: PhoneCall },
+  { path: "/analytics", label: "Analytics", icon: BarChart3 },
   { path: "/single-call", label: "Make Single Call", icon: Phone },
   { path: "/outbound-calls", label: "Send Outbound Calls", icon: Phone },
+  { path: "/numbers", label: "Phone Numbers", icon: Phone },
   { path: "/settings", label: "Settings", icon: Settings },
 ];
 
