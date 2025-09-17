@@ -67,7 +67,7 @@ export default function Sidebar({ onLogout, onStartTour }: SidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className="mt-auto space-y-4">
+      <div className="mt-auto space-y-4 pb-20">
         <button
           onClick={onLogoutHandler}
           className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-white/70 hover:text-white hover:bg-white/5 transition-all duration-200 group"
@@ -76,7 +76,7 @@ export default function Sidebar({ onLogout, onStartTour }: SidebarProps) {
           <span className="font-medium">Logout</span>
         </button>
 
-        <div className="px-4 mb-4 space-y-2">
+        <div className="px-4 space-y-2">
           {onStartTour && (
             <Button 
               variant="ghost" 
@@ -93,14 +93,14 @@ export default function Sidebar({ onLogout, onStartTour }: SidebarProps) {
           </Button>
         </div>
 
-        <div className="px-4 py-3 rounded-xl bg-gradient-to-r from-[hsl(var(--remax-red))] to-[hsl(var(--gold-manifest))] text-white text-center">
+        <div className="mx-4 py-2 rounded-lg bg-gradient-to-r from-[hsl(var(--remax-red))] to-[hsl(var(--gold-manifest))] text-white text-center">
           <p className="text-xs font-medium">🌙 Eclipse AI</p>
           <p className="text-xs opacity-80">Version 2.1</p>
         </div>
       </div>
 
       {/* User Profile */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10">
+      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10 bg-gradient-to-t from-black/20 to-transparent backdrop-blur-sm">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-to-br from-[hsl(var(--manifest-blue))] to-[hsl(var(--eclipse-glow))] rounded-full flex items-center justify-center lunar-shadow">
             <span className="text-white font-semibold">LW</span>
