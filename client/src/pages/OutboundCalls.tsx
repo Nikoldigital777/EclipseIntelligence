@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Upload, Download, Plus, Minus, Phone, Calendar, Clock, Users, DollarSign } from "lucide-react";
+import { Upload, Download, Plus, Minus, Phone, Calendar, Clock, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/auth";
@@ -96,16 +96,6 @@ export default function OutboundCalls() {
 
   const selectedAgentData = agents.find((agent: Agent) => agent.id.toString() === selectedAgent);
   const totalRecipients = recipients.length;
-
-  // Retell AI Pricing Components (per minute)
-  const voiceEngineRate = 0.07; // Elevenlabs/Cartesia voices
-  const llmRate = 0.04; // GPT-4 rate
-  const telephonyRate = 0.015; // US calls via Retell Twilio
-  const baseRatePerMinute = voiceEngineRate + llmRate + telephonyRate; // ~$0.125/min
-
-  const avgCallDuration = 2.5; // Average call duration in minutes
-  const costPerDial = baseRatePerMinute * avgCallDuration; // ~$0.31 per call
-  const estimatedCost = totalRecipients * costPerDial;
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -712,62 +702,6 @@ export default function OutboundCalls() {
 
         {/* Info Panel & Actions */}
         <div className="space-y-6">
-          {/* Cost Information */}
-          <GlassmorphicCard className="border border-[hsl(var(--manifest-blue))]/30 bg-gradient-to-br from-[hsl(var(--deep-night))]/80 to-[hsl(var(--lunar-glass))]/60">
-            <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
-              <DollarSign className="w-5 h-5 mr-2 text-[hsl(var(--manifest-blue))]" />
-              Cost Breakdown
-            </h3>
-            <div className="space-y-3">
-              <div className="text-sm space-y-2">
-                <div className="flex justify-between text-[hsl(var(--soft-gray))]">
-                  <span>Voice Engine:</span>
-                  <span>${voiceEngineRate.toFixed(3)}/min</span>
-                </div>
-                <div className="flex justify-between text-[hsl(var(--soft-gray))]">
-                  <span>LLM (GPT-4):</span>
-                  <span>${llmRate.toFixed(3)}/min</span>
-                </div>
-                <div className="flex justify-between text-[hsl(var(--soft-gray))]">
-                  <span>Telephony:</span>
-                  <span>${telephonyRate.toFixed(3)}/min</span>
-                </div>
-                <div className="flex justify-between text-white font-medium border-t border-white/10 pt-2">
-                  <span>Per Minute:</span>
-                  <span>${baseRatePerMinute.toFixed(3)}</span>
-                </div>
-              </div>
-
-              <div className="border-t border-white/10 pt-3 space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-[hsl(var(--soft-gray))]">Avg. Call Duration:</span>
-                  <span className="text-white font-semibold">{avgCallDuration} min</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[hsl(var(--soft-gray))]">Cost Per Call:</span>
-                  <span className="text-white font-semibold">${costPerDial.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[hsl(var(--soft-gray))]">Recipients:</span>
-                  <span className="text-white font-semibold">{totalRecipients}</span>
-                </div>
-              </div>
-
-              <div className="border-t border-white/10 pt-3">
-                <div className="flex justify-between">
-                  <span className="text-white font-medium">Total Estimated Cost:</span>
-                  <span className="text-[hsl(var(--success-green))] font-bold text-lg">${estimatedCost.toFixed(2)}</span>
-                </div>
-              </div>
-
-              <div className="mt-4 p-3 bg-[hsl(var(--eclipse-glow))]/10 rounded-lg border border-[hsl(var(--eclipse-glow))]/20">
-                <p className="text-[hsl(var(--eclipse-glow))] text-xs leading-relaxed">
-                  💡 Enterprise plans offer volume discounts as low as $0.05/min for high-volume usage
-                </p>
-              </div>
-            </div>
-          </GlassmorphicCard>
-
           {/* Batch Info */}
           <GlassmorphicCard className="border border-white/10">
             <h3 className="text-lg font-semibold text-white mb-4">Batch Information</h3>
