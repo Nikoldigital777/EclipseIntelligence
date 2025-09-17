@@ -1630,10 +1630,7 @@ Remember to be knowledgeable about the market, professional, and focused on help
     try {
       const { timeframe = '30d', metrics = 'all' } = req.query;
       const retellClient = createRetellClient();
-
-      if (!retellClient) {
-        return res.status(503).json({ error: "Retell AI integration not configured" });
-      }
+      let calls: RetellCall[] = [];
 
       // Calculate date range
       const endDate = new Date();
@@ -1656,17 +1653,55 @@ Remember to be knowledgeable about the market, professional, and focused on help
           startDate.setDate(startDate.getDate() - 30);
       }
 
-      const filterCriteria = {
-        start_timestamp: {
-          gte: Math.floor(startDate.getTime() / 1000)
-        },
-        end_timestamp: {
-          lte: Math.floor(endDate.getTime() / 1000)
-        }
-      };
+      if (retellClient) {
+        try {
+          const filterCriteria = {
+            start_timestamp: {
+              gte: Math.floor(startDate.getTime() / 1000)
+            },
+            end_timestamp: {
+              lte: Math.floor(endDate.getTime() / 1000)
+            }
+          };
 
-      const callsData = await retellClient.listCalls(filterCriteria, 'descending', 1000);
-      const calls = callsData.calls || [];
+          const callsData = await retellClient.listCalls(filterCriteria, 'descending', 1000);
+          calls = callsData.calls || [];
+        } catch (retellError) {
+          console.warn("Failed to fetch calls from Retell for detailed analytics:", retellError);
+          // Fall back to local storage data
+          const localCalls = await storage.getCalls();
+          calls = localCalls.map(call => ({
+            duration_ms: call.duration ? call.duration * 1000 : undefined,
+            call_cost_breakdown: { total_cost: call.cost?.toString() || '0' },
+            latency: { avg_latency_ms: call.latency || 0 },
+            call_analysis: {
+              call_successful: call.status === 'completed',
+              user_sentiment: call.sentiment || 'neutral'
+            },
+            direction: call.sessionId?.includes('inbound') ? 'inbound' : 'outbound',
+            start_timestamp: new Date().toISOString(),
+            agent_id: call.agentId?.toString(),
+            call_status: call.status || 'completed'
+          }));
+        }
+      } else {
+        // Use local storage data when no Retell client
+        console.log("No Retell client available, using local storage for detailed analytics");
+        const localCalls = await storage.getCalls();
+        calls = localCalls.map(call => ({
+          duration_ms: call.duration ? call.duration * 1000 : undefined,
+          call_cost_breakdown: { total_cost: call.cost?.toString() || '0' },
+          latency: { avg_latency_ms: call.latency || 0 },
+          call_analysis: {
+            call_successful: call.status === 'completed',
+            user_sentiment: call.sentiment || 'neutral'
+          },
+          direction: call.sessionId?.includes('inbound') ? 'inbound' : 'outbound',
+          start_timestamp: new Date().toISOString(),
+          agent_id: call.agentId?.toString(),
+          call_status: call.status || 'completed'
+        }));
+      }
 
       const analytics = {
         summary: {
