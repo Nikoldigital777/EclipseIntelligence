@@ -70,7 +70,7 @@ export default function OutboundCalls() {
       setSelectedAgent("");
       setSchedulingMode("now");
       setScheduledDateTime("");
-      setFromNumber(""); // Reset fromNumber
+      setFromNumber("");
     },
     onError: (error: any) => {
       console.error('Batch campaign creation error:', error);
@@ -163,11 +163,33 @@ export default function OutboundCalls() {
           const lastName = columns[2] || 'Contact';
 
           // Basic phone number validation
-          const cleanPhone = phone.replace(/[^\d+()-\s]/g, '');
-          if (cleanPhone && cleanPhone.length >= 10) {
+          let cleanPhone = phone.replace(/[^\d+()-\s]/g, '');
+          if (cleanPhone && cleanPhone.replace(/\D/g, '').length >= 10) {
+            // Remove all non-digits to check length and format
+            const digitsOnly = cleanPhone.replace(/\D/g, '');
+            
+            // Handle different phone number formats
+            let formattedPhone;
+            if (cleanPhone.startsWith('+1') && digitsOnly.length === 11) {
+              // Already has +1 prefix
+              formattedPhone = cleanPhone;
+            } else if (cleanPhone.startsWith('+') && !cleanPhone.startsWith('+1')) {
+              // Has international prefix but not +1
+              formattedPhone = cleanPhone;
+            } else if (digitsOnly.length === 11 && digitsOnly.startsWith('1')) {
+              // 11 digits starting with 1 (US format without +)
+              formattedPhone = `+${digitsOnly}`;
+            } else if (digitsOnly.length === 10) {
+              // 10 digits (US number without country code)
+              formattedPhone = `+1${digitsOnly}`;
+            } else {
+              // Use as-is for other formats
+              formattedPhone = cleanPhone.startsWith('+') ? cleanPhone : `+1${digitsOnly}`;
+            }
+            
             parsedRecipients.push({
               id: parsedRecipients.length + 1,
-              phone: cleanPhone.startsWith('+') ? cleanPhone : `+1${cleanPhone.replace(/\D/g, '')}`,
+              phone: formattedPhone,
               firstName,
               lastName
             });
@@ -266,6 +288,16 @@ export default function OutboundCalls() {
       toast({
         title: "Too Many Recipients",
         description: "Maximum 10,000 recipients allowed per batch campaign.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // From Number validation
+    if (!fromNumber) {
+      toast({
+        title: "From Number Required",
+        description: "Please select a phone number to make calls from.",
         variant: "destructive",
       });
       return false;
@@ -464,6 +496,48 @@ export default function OutboundCalls() {
                   placeholder="Enter batch campaign name"
                   className="bg-[hsl(var(--lunar-glass))]/30 border-white/20 text-white placeholder-gray-400"
                 />
+              </div>
+
+              {/* From Number Selection */}
+              <div>
+                <Label htmlFor="from-number-select" className="text-white mb-2 block">From Number</Label>
+                <Select value={fromNumber} onValueChange={setFromNumber} data-testid="select-from-number">
+                  <SelectTrigger className="bg-[hsl(var(--lunar-glass))]/30 border-white/20 text-white">
+                    <SelectValue placeholder="Choose a phone number" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[hsl(var(--lunar-glass))] border-white/20">
+                    <SelectItem value="+1 (248) 283-4183" className="text-white">
+                      <div className="flex items-center justify-between w-full">
+                        <span className="font-mono">+1 (248) 283-4183</span>
+                        <span className="text-xs text-gray-300 ml-2">Recruiting</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="+1(248)653-1643" className="text-white">
+                      <div className="flex items-center justify-between w-full">
+                        <span className="font-mono">+1(248)653-1643</span>
+                        <span className="text-xs text-gray-300 ml-2">Recruiting Outbound</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="+1 (248) 599-0019" className="text-white">
+                      <div className="flex items-center justify-between w-full">
+                        <span className="font-mono">+1 (248) 599-0019</span>
+                        <span className="text-xs text-gray-300 ml-2">Test Recruit</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="+1 (248) 780-0017" className="text-white">
+                      <div className="flex items-center justify-between w-full">
+                        <span className="font-mono">+1 (248) 780-0017</span>
+                        <span className="text-xs text-gray-300 ml-2">Madison Backup</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="+1 (586) 500-6801" className="text-white">
+                      <div className="flex items-center justify-between w-full">
+                        <span className="font-mono">+1 (586) 500-6801</span>
+                        <span className="text-xs text-gray-300 ml-2">Office</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Agent Selection */}
@@ -750,7 +824,7 @@ export default function OutboundCalls() {
               <CosmicButton
                 variant="remax"
                 className="w-full"
-                disabled={!batchName || !selectedAgent || recipients.length === 0 || !termsAccepted || createBatchCampaignMutation.isPending || !fromNumber} // Added fromNumber validation
+                disabled={!batchName || !selectedAgent || recipients.length === 0 || !termsAccepted || createBatchCampaignMutation.isPending}
                 onClick={handleLaunchBatchCampaign}
                 data-testid="button-launch-campaign"
               >
