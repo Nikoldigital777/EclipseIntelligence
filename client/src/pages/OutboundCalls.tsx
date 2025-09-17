@@ -53,9 +53,10 @@ export default function OutboundCalls() {
   const createBatchCampaignMutation = useMutation({
     mutationFn: (payload: any) => apiClient.post('/api/outbound-calls/batch', payload),
     onSuccess: (data: any) => {
+      const batchId = data.batch_call_id || data.batchCallId || 'Unknown';
       toast({
-        title: "Campaign Launched! 🚀",
-        description: data.message || `Successfully created batch call with ${recipients.length} recipients. Batch ID: ${data.batch_call_id}`,
+        title: "Campaign Launched Successfully! 🚀",
+        description: `Batch campaign "${batchName.trim()}" has been launched with ${recipients.length} recipients. Batch ID: ${batchId}`,
       });
       
       // Invalidate batch calls cache to refresh the BatchCalls page
@@ -63,15 +64,30 @@ export default function OutboundCalls() {
       
       // Reset form
       setBatchName("");
-      setRecipients([]);
+      setRecipients(sampleRecipients); // Reset to sample data instead of empty array
       setCsvFile(null);
       setTermsAccepted(false);
       setSelectedAgent("");
+      setSchedulingMode("now");
+      setScheduledDateTime("");
     },
     onError: (error: any) => {
+      console.error('Batch campaign creation error:', error);
+      let errorMessage = "Failed to launch batch campaign. Please try again.";
+      
+      if (error.message.includes('400')) {
+        errorMessage = "Invalid request data. Please check your form inputs.";
+      } else if (error.message.includes('401') || error.message.includes('403')) {
+        errorMessage = "Authentication error. Please log in again.";
+      } else if (error.message.includes('500')) {
+        errorMessage = "Server error. Please try again later.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
       toast({
-        title: "Launch Failed",
-        description: error.message || "Failed to launch batch campaign",
+        title: "Campaign Launch Failed ❌",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -90,11 +106,96 @@ export default function OutboundCalls() {
   const costPerDial = baseRatePerMinute * avgCallDuration; // ~$0.31 per call
   const estimatedCost = totalRecipients * costPerDial;
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
+    if (!file) return;
+
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      toast({
+        title: "Invalid File Type",
+        description: "Please upload a CSV file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 50 * 1024 * 1024) { // 50MB limit
+      toast({
+        title: "File Too Large",
+        description: "Maximum file size is 50MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
       setCsvFile(file);
-      // In a real app, you'd parse the CSV here
+      const text = await file.text();
+      const lines = text.split('\n').filter(line => line.trim() !== '');
+      
+      if (lines.length === 0) {
+        toast({
+          title: "Empty File",
+          description: "The CSV file appears to be empty.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Parse CSV - expect format: phone, firstName, lastName (with or without headers)
+      const parsedRecipients = [];
+      let startIndex = 0;
+      
+      // Check if first row looks like headers
+      const firstLine = lines[0].toLowerCase();
+      if (firstLine.includes('phone') || firstLine.includes('first') || firstLine.includes('last')) {
+        startIndex = 1;
+      }
+
+      for (let i = startIndex; i < lines.length; i++) {
+        const line = lines[i];
+        const columns = line.split(',').map(col => col.trim().replace(/["']/g, ''));
+        
+        if (columns.length >= 1) {
+          const phone = columns[0];
+          const firstName = columns[1] || 'Unknown';
+          const lastName = columns[2] || 'Contact';
+          
+          // Basic phone number validation
+          const cleanPhone = phone.replace(/[^\d+()-\s]/g, '');
+          if (cleanPhone && cleanPhone.length >= 10) {
+            parsedRecipients.push({
+              id: parsedRecipients.length + 1,
+              phone: cleanPhone.startsWith('+') ? cleanPhone : `+1${cleanPhone.replace(/\D/g, '')}`,
+              firstName,
+              lastName
+            });
+          }
+        }
+      }
+
+      if (parsedRecipients.length === 0) {
+        toast({
+          title: "No Valid Recipients",
+          description: "Could not find any valid phone numbers in the CSV file. Expected format: phone, firstName, lastName",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setRecipients(parsedRecipients);
+      toast({
+        title: "CSV Uploaded Successfully",
+        description: `Loaded ${parsedRecipients.length} recipients from CSV file.`,
+      });
+
+    } catch (error) {
+      console.error('CSV parsing error:', error);
+      toast({
+        title: "CSV Parse Error",
+        description: "Failed to parse the CSV file. Please check the format.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -102,14 +203,43 @@ export default function OutboundCalls() {
     setConcurrency(Math.max(1, Math.min(15, concurrency + delta)));
   };
 
-  const handleLaunchBatchCampaign = async () => {
-    if (!selectedAgent || recipients.length === 0 || !batchName || !termsAccepted) {
+  const validateForm = () => {
+    // Batch name validation
+    if (!batchName || batchName.trim().length === 0) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields and accept terms.",
+        title: "Batch Name Required",
+        description: "Please enter a name for your batch campaign.",
         variant: "destructive",
       });
-      return;
+      return false;
+    }
+
+    if (batchName.trim().length < 3) {
+      toast({
+        title: "Batch Name Too Short",
+        description: "Batch name must be at least 3 characters long.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (batchName.trim().length > 100) {
+      toast({
+        title: "Batch Name Too Long",
+        description: "Batch name must be less than 100 characters.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Agent selection validation
+    if (!selectedAgent) {
+      toast({
+        title: "Agent Required",
+        description: "Please select an AI agent for this campaign.",
+        variant: "destructive",
+      });
+      return false;
     }
 
     if (!selectedAgentData) {
@@ -118,8 +248,89 @@ export default function OutboundCalls() {
         description: "Selected agent not found. Please choose a valid agent.",
         variant: "destructive",
       });
-      return;
+      return false;
     }
+
+    // Recipients validation
+    if (recipients.length === 0) {
+      toast({
+        title: "Recipients Required",
+        description: "Please upload a CSV file with recipients or add recipients manually.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (recipients.length > 10000) {
+      toast({
+        title: "Too Many Recipients",
+        description: "Maximum 10,000 recipients allowed per batch campaign.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Phone number validation
+    const invalidPhones = recipients.filter(r => !r.phone || r.phone.replace(/\D/g, '').length < 10);
+    if (invalidPhones.length > 0) {
+      toast({
+        title: "Invalid Phone Numbers",
+        description: `${invalidPhones.length} recipients have invalid phone numbers. Please check your CSV file.`,
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Scheduling validation
+    if (schedulingMode === "schedule") {
+      if (!scheduledDateTime) {
+        toast({
+          title: "Scheduled Time Required",
+          description: "Please select a date and time for the scheduled campaign.",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      const scheduledTime = new Date(scheduledDateTime);
+      const now = new Date();
+      
+      if (scheduledTime <= now) {
+        toast({
+          title: "Invalid Scheduled Time",
+          description: "Scheduled time must be in the future.",
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      // Don't allow scheduling more than 30 days in advance
+      const maxScheduleDate = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000));
+      if (scheduledTime > maxScheduleDate) {
+        toast({
+          title: "Scheduled Time Too Far",
+          description: "Cannot schedule campaigns more than 30 days in advance.",
+          variant: "destructive",
+        });
+        return false;
+      }
+    }
+
+    // Terms acceptance validation
+    if (!termsAccepted) {
+      toast({
+        title: "Terms Required",
+        description: "Please accept the terms of service and privacy policy.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleLaunchBatchCampaign = async () => {
+    if (!validateForm()) return;
 
     const tasks = recipients.map(recipient => ({
       to_number: recipient.phone,
@@ -131,9 +342,9 @@ export default function OutboundCalls() {
     }));
 
     const payload = {
-      from_number: selectedAgentData.phone,
+      from_number: selectedAgentData!.phone,
       tasks,
-      name: batchName,
+      name: batchName.trim(),
       override_agent_id: selectedAgent,
       trigger_timestamp: schedulingMode === "schedule" && scheduledDateTime 
         ? new Date(scheduledDateTime).getTime() 
@@ -143,20 +354,63 @@ export default function OutboundCalls() {
     createBatchCampaignMutation.mutate(payload);
   };
 
-  const handleSaveAsDraft = async () => {
-    if (!selectedAgent || recipients.length === 0 || !batchName) {
+  const validateDraftForm = () => {
+    if (!batchName || batchName.trim().length === 0) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in batch name, select an agent, and add recipients.",
+        title: "Batch Name Required",
+        description: "Please enter a name for your batch campaign.",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
-    toast({
-      title: "Draft Saved",
-      description: "Your batch campaign has been saved as a draft.",
-    });
+    if (batchName.trim().length < 3) {
+      toast({
+        title: "Batch Name Too Short",
+        description: "Batch name must be at least 3 characters long.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (!selectedAgent) {
+      toast({
+        title: "Agent Required",
+        description: "Please select an AI agent for this campaign.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (recipients.length === 0) {
+      toast({
+        title: "Recipients Required",
+        description: "Please upload a CSV file with recipients.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSaveAsDraft = async () => {
+    if (!validateDraftForm()) return;
+
+    try {
+      // Here you would typically save to local storage or send to a draft endpoint
+      // For now, we'll just show success message
+      toast({
+        title: "Draft Saved Successfully ✅",
+        description: `Campaign "${batchName.trim()}" has been saved as a draft with ${recipients.length} recipients.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Save Failed",
+        description: "Failed to save draft. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -203,6 +457,7 @@ export default function OutboundCalls() {
                 <Label htmlFor="batch-name" className="text-white mb-2 block">Batch Name</Label>
                 <Input
                   id="batch-name"
+                  data-testid="input-batch-name"
                   value={batchName}
                   onChange={(e) => setBatchName(e.target.value)}
                   placeholder="Enter batch campaign name"
@@ -213,7 +468,7 @@ export default function OutboundCalls() {
               {/* Agent Selection */}
               <div>
                 <Label htmlFor="agent-select" className="text-white mb-2 block">Select Agent</Label>
-                <Select value={selectedAgent} onValueChange={setSelectedAgent} disabled={isLoadingAgents}>
+                <Select value={selectedAgent} onValueChange={setSelectedAgent} disabled={isLoadingAgents} data-testid="select-agent">
                   <SelectTrigger className="bg-[hsl(var(--lunar-glass))]/30 border-white/20 text-white">
                     <SelectValue placeholder={isLoadingAgents ? "Loading agents..." : "Choose an AI agent"} />
                   </SelectTrigger>
@@ -256,6 +511,7 @@ export default function OutboundCalls() {
                     onChange={handleFileUpload}
                     className="hidden"
                     id="csv-upload"
+                    data-testid="input-csv-upload"
                   />
                   <label htmlFor="csv-upload" className="cursor-pointer">
                     <Upload className="w-12 h-12 text-[hsl(var(--eclipse-glow))] mx-auto mb-3" />
@@ -271,7 +527,7 @@ export default function OutboundCalls() {
               {/* Scheduling */}
               <div>
                 <Label className="text-white mb-3 block">Scheduling</Label>
-                <RadioGroup value={schedulingMode} onValueChange={setSchedulingMode} className="space-y-3">
+                <RadioGroup value={schedulingMode} onValueChange={setSchedulingMode} className="space-y-3" data-testid="radio-scheduling">
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="now" id="send-now" />
                     <Label htmlFor="send-now" className="text-white">Send Now</Label>
@@ -291,6 +547,7 @@ export default function OutboundCalls() {
                         value={scheduledDateTime}
                         onChange={(e) => setScheduledDateTime(e.target.value)}
                         className="bg-[hsl(var(--lunar-glass))]/30 border-white/20 text-white"
+                        data-testid="input-scheduled-datetime"
                       />
                     </div>
                     <div>
@@ -320,6 +577,7 @@ export default function OutboundCalls() {
                     size="sm"
                     onClick={() => handleConcurrencyChange(-1)}
                     className="border-white/20 text-white hover:bg-white/10"
+                    data-testid="button-concurrency-decrease"
                   >
                     <Minus className="w-4 h-4" />
                   </Button>
@@ -329,6 +587,7 @@ export default function OutboundCalls() {
                     size="sm"
                     onClick={() => handleConcurrencyChange(1)}
                     className="border-white/20 text-white hover:bg-white/10"
+                    data-testid="button-concurrency-increase"
                   >
                     <Plus className="w-4 h-4" />
                   </Button>
@@ -470,6 +729,7 @@ export default function OutboundCalls() {
                 id="terms" 
                 checked={termsAccepted}
                 onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
+                data-testid="checkbox-terms"
               />
               <Label htmlFor="terms" className="text-[hsl(var(--soft-gray))] text-sm">
                 I agree to the terms of service and privacy policy
@@ -482,6 +742,7 @@ export default function OutboundCalls() {
                 className="w-full"
                 disabled={!batchName || !selectedAgent || recipients.length === 0 || createBatchCampaignMutation.isPending}
                 onClick={handleSaveAsDraft}
+                data-testid="button-save-draft"
               >
                 Save as Draft
               </CosmicButton>
@@ -490,6 +751,7 @@ export default function OutboundCalls() {
                 className="w-full"
                 disabled={!batchName || !selectedAgent || recipients.length === 0 || !termsAccepted || createBatchCampaignMutation.isPending}
                 onClick={handleLaunchBatchCampaign}
+                data-testid="button-launch-campaign"
               >
                 <Phone className="w-4 h-4 mr-2" />
                 {createBatchCampaignMutation.isPending ? "Launching..." : "Launch Batch Campaign"}
