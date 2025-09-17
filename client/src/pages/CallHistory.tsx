@@ -37,22 +37,48 @@ export default function CallHistory() {
     queryKey: ['/api/calls', filters],
     queryFn: async () => {
       try {
-        // First try to get detailed call data with filters
+        // Build filter criteria with 30-day default
         const filterCriteria = buildFilterCriteria();
-        const callsData = await apiClient.post('/api/calls/list', {
+        
+        // Always add 30-day filter if no start_timestamp is provided
+        if (!filterCriteria.start_timestamp) {
+          const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+          filterCriteria.start_timestamp = {
+            lower_threshold: Math.floor(thirtyDaysAgo / 1000) // Convert to seconds for Retell API
+          };
+        }
+        
+        console.log('Fetching calls with 30-day filter:', filterCriteria);
+        
+        const callsResponse = await apiClient.post('/api/calls/list', {
           filter_criteria: filterCriteria,
           sort_order: 'descending',
-          limit: 50
+          limit: 100, // Increase limit to get more recent calls
+          includeDetails: true // Request detailed call data including transcripts
         });
-        return Array.isArray(callsData) ? callsData : [];
+        
+        // Handle both array response and object with data property
+        const callsData = Array.isArray(callsResponse) ? callsResponse : 
+                         (callsResponse.data || callsResponse.calls || []);
+        
+        console.log(`Retrieved ${callsData.length} calls from last 30 days`);
+        
+        return callsData;
       } catch (error) {
-        console.error('Failed to fetch detailed calls, trying fallback:', error);
-        // Fallback to basic calls endpoint and filter client-side
+        console.error('Failed to fetch calls with enhanced filter:', error);
+        
+        // Fallback to basic endpoint with client-side 30-day filtering
         try {
           const fallbackCalls = await apiClient.get('/api/calls');
           if (Array.isArray(fallbackCalls)) {
-            // Apply client-side filtering for fallback data
+            const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+            
             return fallbackCalls.filter((call: any) => {
+              // Apply 30-day filter
+              const callDate = new Date(call.createdAt || call.startTimestamp || call.start_timestamp || Date.now()).getTime();
+              if (callDate < thirtyDaysAgo) return false;
+              
+              // Apply other filters
               if (filters.sentiment !== 'all' && call.sentiment !== filters.sentiment && call.userSentiment !== filters.sentiment) {
                 return false;
               }
@@ -60,7 +86,7 @@ export default function CallHistory() {
                 return false;
               }
               if (filters.successStatus !== 'all') {
-                const isSuccessful = call.callSuccessful || call.status === 'completed';
+                const isSuccessful = call.callSuccessful || call.call_analysis?.call_successful || call.status === 'completed';
                 if (filters.successStatus === 'successful' && !isSuccessful) return false;
                 if (filters.successStatus === 'failed' && isSuccessful) return false;
               }
@@ -90,8 +116,16 @@ export default function CallHistory() {
   }, []);
 
   const formatDuration = (durationMs: number | null | undefined): string => {
-    if (!durationMs) return 'N/A';
-    const seconds = Math.floor(durationMs / 1000);
+    // Handle both durationMs (milliseconds) and duration (seconds) fields
+    let duration = durationMs;
+    if (!duration) return 'N/A';
+    
+    // If the value is very small, it might be in seconds, convert to ms
+    if (duration < 1000 && duration > 0) {
+      duration = duration * 1000;
+    }
+    
+    const seconds = Math.floor(duration / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
     
@@ -113,11 +147,24 @@ export default function CallHistory() {
   };
 
   const hasRecordings = (call: Call): boolean => {
-    return !!(call.recordingUrl || call.recordingMultiChannelUrl || call.scrubbedRecordingUrl);
+    return !!(
+      call.recordingUrl || 
+      call.recordingMultiChannelUrl || 
+      call.scrubbedRecordingUrl ||
+      call.recording_url || 
+      call.recording_multi_channel_url || 
+      call.scrubbed_recording_url ||
+      call.scrubbed_recording_multi_channel_url
+    );
   };
 
   const hasTranscript = (call: Call): boolean => {
-    return !!(call.transcript && call.transcript.trim().length > 0);
+    // Check multiple possible transcript fields
+    return !!(
+      (call.transcript && call.transcript.trim().length > 0) ||
+      (call.transcript_object && Array.isArray(call.transcript_object) && call.transcript_object.length > 0) ||
+      (call.transcript_with_tool_calls && Array.isArray(call.transcript_with_tool_calls) && call.transcript_with_tool_calls.length > 0)
+    );
   };
 
   const getCallQualityIndicator = (call: Call): string => {
@@ -149,9 +196,28 @@ export default function CallHistory() {
     return '↔️';
   };
 
-  const formatDateTime = (dateString: string | null | undefined): string => {
+  const formatDateTime = (dateString: string | number | null | undefined): string => {
     if (!dateString) return 'N/A';
-    return new Date(dateString.toString()).toLocaleString();
+    
+    let date: Date;
+    
+    // Handle different timestamp formats
+    if (typeof dateString === 'number') {
+      // If it's a Unix timestamp in seconds, convert to milliseconds
+      date = new Date(dateString < 10000000000 ? dateString * 1000 : dateString);
+    } else {
+      date = new Date(dateString.toString());
+    }
+    
+    if (isNaN(date.getTime())) return 'N/A';
+    
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   const getStatusBadge = (status: string): string => {
@@ -192,7 +258,10 @@ export default function CallHistory() {
   };
 
   const getSentimentDisplay = (call: Call): { emoji: string; text: string; color: string } => {
-    const sentiment = call.userSentiment || call.sentiment;
+    // Check multiple possible sentiment fields
+    const sentiment = call.userSentiment || 
+                     call.call_analysis?.user_sentiment || 
+                     call.sentiment;
     const normalizedSentiment = sentiment?.toLowerCase();
     
     switch (normalizedSentiment) {
@@ -564,7 +633,7 @@ export default function CallHistory() {
                         {/* Time & Direction */}
                         <td className="py-4 px-6" data-testid={`call-time-${call.id}`}>
                           <div className="text-white text-sm font-medium">
-                            {formatDateTime(call.createdAt)}
+                            {formatDateTime(call.start_timestamp || call.startTimestamp || call.createdAt)}
                           </div>
                           <div className="flex items-center mt-1 text-xs text-gray-400">
                             <span className="mr-1">{getDirectionIcon(call.direction)}</span>
@@ -576,7 +645,7 @@ export default function CallHistory() {
                         <td className="py-4 px-6" data-testid={`call-duration-${call.id}`}>
                           <div className="flex items-center text-[hsl(var(--soft-gray))]">
                             <Clock className="w-4 h-4 mr-1" />
-                            <span>{formatDuration(call.durationMs || call.duration)}</span>
+                            <span>{formatDuration(call.duration_ms || call.durationMs || call.duration)}</span>
                           </div>
                         </td>
                         
@@ -595,14 +664,18 @@ export default function CallHistory() {
                         <td className="py-4 px-6" data-testid={`call-cost-${call.id}`}>
                           <div className="flex items-center text-[hsl(var(--soft-gray))]">
                             <DollarSign className="w-4 h-4 mr-1" />
-                            <span>{formatCost(call.cost)}</span>
+                            <span>{formatCost(
+                              call.call_cost?.combined_cost || 
+                              call.call_cost_breakdown?.total_cost || 
+                              call.cost
+                            )}</span>
                           </div>
                         </td>
                         
                         {/* Status */}
                         <td className="py-4 px-6" data-testid={`call-status-${call.id}`}>
-                          <Badge className={`${getStatusBadge(call.callStatus || call.status)} text-white border-0`}>
-                            {call.callSuccessful ? (
+                          <Badge className={`${getStatusBadge(call.call_status || call.callStatus || call.status)} text-white border-0`}>
+                            {(call.callSuccessful || call.call_analysis?.call_successful) ? (
                               <span className="flex items-center">
                                 <CheckCircle className="w-3 h-3 mr-1" />
                                 Success
@@ -610,7 +683,7 @@ export default function CallHistory() {
                             ) : (
                               <span className="flex items-center">
                                 <AlertCircle className="w-3 h-3 mr-1" />
-                                {call.callStatus || call.status || 'Failed'}
+                                {call.call_status || call.callStatus || call.status || 'Failed'}
                               </span>
                             )}
                           </Badge>
