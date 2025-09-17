@@ -134,6 +134,13 @@ export default function AgentDetail() {
 
       const agentData = await response.json();
       
+      // Debug logging to see exactly what data we received
+      console.log("📊 Raw Agent Data from API:", agentData);
+      console.log("🧠 LLM Details:", agentData.llm_details);
+      console.log("📝 General Prompt:", agentData.llm_details?.general_prompt);
+      console.log("🎙️ Voice Config:", agentData.voice_config);
+      console.log("⚙️ Response Engine:", agentData.response_engine);
+      
       // Map comprehensive agent data to our interface
       const mappedAgent: Agent = {
         id: agentData.id || parseInt(agentId),
@@ -143,11 +150,11 @@ export default function AgentDetail() {
         type: agentData.response_engine?.type || "Single Prompt",
         voice: agentData.voice_config?.voice_id || agentData.voice_id || "Default Voice",
         voice_id: agentData.voice_config?.voice_id || agentData.voice_id,
-        phone: agentData.phone || "+1(555)000-0000",
-        description: agentData.description || "AI Agent",
-        editedBy: "System",
+        phone: agentData.phone || agentData.phone_number || "+1(555)000-0000",
+        description: agentData.description || `AI Agent - ${agentData.response_engine?.type || 'Single Prompt'}`,
+        editedBy: "Retell AI",
         editedAt: agentData.last_modification_timestamp ? 
-          new Date(agentData.last_modification_timestamp).toLocaleDateString() : "Unknown",
+          new Date(agentData.last_modification_timestamp * 1000).toLocaleDateString() : "Unknown",
         avatar: (agentData.agent_name || agentData.name || "AG").split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase(),
         prompt: agentData.llm_details?.general_prompt || agentData.general_prompt || agentData.prompt || "",
         general_prompt: agentData.llm_details?.general_prompt || agentData.general_prompt,
@@ -163,6 +170,9 @@ export default function AgentDetail() {
         version: agentData.version,
         is_published: agentData.is_published
       };
+
+      console.log("✅ Mapped Agent Object:", mappedAgent);
+      console.log("📝 Final Prompt to Display:", mappedAgent.prompt);
 
       setAgent(mappedAgent);
       setPrompt(mappedAgent.prompt || "");

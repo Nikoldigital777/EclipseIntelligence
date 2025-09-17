@@ -1,0 +1,117 @@
+Based on the search results, I can see you're asking about how to populate agent data (like prompts) in your wrapper app when individual agents are clicked. Here's how you can retrieve and display agent configuration data:
+
+## Retrieving Agent Data
+
+To populate agent data in your wrapper app, use the **Get Agent API**:
+
+**API Endpoint:** `GET /get-agent/{agent_id}`
+
+**Parameters:**
+- `agent_id`: The unique identifier of the agent
+- `version` (optional): Specific version number, defaults to latest
+
+**Example Request:**
+```javascript
+const response = await fetch(`https://api.retellai.com/get-agent/${agentId}`, {
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  }
+});
+
+const agentData = await response.json();
+```
+
+## Agent Response Structure
+
+The API returns comprehensive agent configuration including:
+
+**Core Configuration:**
+- `agent_name`: Agent display name
+- `voice_id`: Voice configuration
+- `response_engine`: Contains LLM configuration and prompts
+
+**For Single/Multi-Prompt Agents:**
+- `response_engine.llm_id`: Reference to the LLM configuration
+- Use **Get Retell LLM API** to retrieve prompt details
+
+**For Conversation Flow Agents:**
+- `response_engine.conversation_flow_id`: Reference to conversation flow
+- Use **Get Conversation Flow API** for detailed flow structure
+
+## Retrieving Prompt Data
+
+### For Single/Multi-Prompt Agents:
+```javascript
+// First get the agent
+const agent = await getAgent(agentId);
+const llmId = agent.response_engine.llm_id;
+
+// Then get the LLM configuration with prompts
+const llmResponse = await fetch(`https://api.retellai.com/get-retell-llm/${llmId}`, {
+  headers: { 'Authorization': 'Bearer YOUR_API_KEY' }
+});
+
+const llmData = await llmResponse.json();
+// llmData contains:
+// - general_prompt: Main agent prompt
+// - states: Array of states with state_prompt for each
+// - general_tools: Available functions
+```
+
+### For Conversation Flow Agents:
+```javascript
+const flowId = agent.response_engine.conversation_flow_id;
+const flowResponse = await fetch(`https://api.retellai.com/get-conversation-flow/${flowId}`, {
+  headers: { 'Authorization': 'Bearer YOUR_API_KEY' }
+});
+
+const flowData = await flowResponse.json();
+// flowData contains:
+// - global_prompt: Global instructions
+// - nodes: Array of conversation nodes with instructions
+// - tools: Available functions
+```
+
+## Implementation Example
+
+```javascript
+async function populateAgentDetails(agentId) {
+  try {
+    // Get basic agent info
+    const agent = await getAgent(agentId);
+    
+    // Display basic info
+    document.getElementById('agent-name').textContent = agent.agent_name;
+    document.getElementById('voice-id').textContent = agent.voice_id;
+    
+    // Get detailed prompt configuration
+    if (agent.response_engine.type === 'retell-llm') {
+      const llm = await getRetellLLM(agent.response_engine.llm_id);
+      document.getElementById('main-prompt').textContent = llm.general_prompt;
+      
+      // Display states if multi-prompt
+      if (llm.states && llm.states.length > 0) {
+        displayStates(llm.states);
+      }
+    } else if (agent.response_engine.type === 'conversation_flow') {
+      const flow = await getConversationFlow(agent.response_engine.conversation_flow_id);
+      document.getElementById('global-prompt').textContent = flow.global_prompt;
+      displayNodes(flow.nodes);
+    }
+    
+  } catch (error) {
+    console.error('Error loading agent details:', error);
+  }
+}
+```
+
+This approach allows you to fetch and display all agent configuration data including prompts, functions, and other settings when users click on individual agents in your wrapper application.
+
+Want to learn more about the specific APIs? These pages may help:
+
+```suggestions
+(Get Agent API)[/api-references/get-agent]
+(Get Retell LLM)[/api-references/get-retell-llm]
+(List Agents)[/api-references/list-agents]
+```

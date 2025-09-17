@@ -625,13 +625,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (retellClient) {
           try {
             // Get comprehensive agent data from Retell API
+            console.log(`🔍 Fetching agent details for: ${agentId}`);
             const retellAgent = await retellClient.getAgent(agentId);
+            console.log("📊 Retell Agent Response:", JSON.stringify(retellAgent, null, 2));
             agent = localAgent ? { ...localAgent, ...retellAgent } : retellAgent;
 
             // Get comprehensive LLM details if response_engine contains llm_id
             if (retellAgent.response_engine?.llm_id) {
               try {
+                console.log(`🧠 Fetching LLM details for: ${retellAgent.response_engine.llm_id}`);
                 const llmData = await retellClient.getLlm(retellAgent.response_engine.llm_id);
+                console.log("📝 LLM Data Response:", JSON.stringify(llmData, null, 2));
                 comprehensiveAgentData.llm_details = {
                   llm_id: llmData.llm_id,
                   version: llmData.version,
@@ -892,10 +896,12 @@ Remember to be knowledgeable about the market, professional, and focused on help
       }
 
       // Return agent with comprehensive configuration data
-      res.json({
+      const finalResponse = {
         ...agent,
         ...comprehensiveAgentData
-      });
+      };
+      console.log("✅ Final Agent Response being sent to frontend:", JSON.stringify(finalResponse, null, 2));
+      res.json(finalResponse);
     } catch (error) {
       console.error("Failed to fetch agent:", error);
       res.status(500).json({ error: "Failed to fetch agent" });
