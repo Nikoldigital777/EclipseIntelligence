@@ -206,19 +206,29 @@ export class AuthService {
     const headers = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
+      'Accept': 'application/json',
+      'Cache-Control': 'no-cache',
       ...options.headers,
     };
 
     console.log(`Making authenticated request: ${options.method || 'GET'} ${url}`);
 
     try {
-      // Ensure we're making requests to the correct base URL
-      const baseUrl = import.meta.env.PROD ? '' : 'http://localhost:5000';
+      // Determine base URL - in Replit, we use the current origin
+      let baseUrl = '';
+      
+      if (typeof window !== 'undefined') {
+        // Use current window origin for Replit environment
+        baseUrl = window.location.origin;
+      }
+      
       const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
 
       const response = await fetch(fullUrl, {
         ...options,
         headers,
+        credentials: 'same-origin',
+        mode: 'cors'
       });
 
       // Handle token expiration
@@ -231,15 +241,39 @@ export class AuthService {
       // Check if response is ok
       if (!response.ok) {
         console.error(`HTTP error for ${url}: ${response.status} ${response.statusText}`);
+        
+        // Try to get error details from response
+        try {
+          const errorText = await response.text();
+          console.error(`Error response body:`, errorText);
+        } catch (e) {
+          console.error('Could not read error response');
+        }
+        
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       return response;
     } catch (error) {
       console.error(`Network error for ${url}:`, error);
+      
+      // Log additional details for debugging
+      if (error instanceof Error) {
+        console.error('Error details:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        });
+      }
+      
       // Re-throw with more context
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error(`Network connection failed for ${url}`);
+      if (error instanceof TypeError) {
+        if (error.message.includes('fetch') || error.message.includes('Failed to fetch')) {
+          throw new Error(`Network connection failed for ${url}. Please check if the server is running.`);
+        }
+        if (error.message.includes('Load failed')) {
+          throw new Error(`Resource failed to load: ${url}. This may be a CORS or server issue.`);
+        }
       }
       throw error;
     }
