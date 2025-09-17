@@ -1456,6 +1456,11 @@ Remember to be knowledgeable about the market, professional, and focused on help
 
       console.log('🚀 Sending to Retell API:', retellPayload);
 
+      const retellClient = createRetellClient();
+      if (!retellClient) {
+        return res.status(500).json({ error: "Retell API client not available" });
+      }
+
       const retellResponse = await retellClient.batchCall.createBatchCall(retellPayload);
       
       console.log('✅ Retell batch call created:', retellResponse);
@@ -1481,104 +1486,10 @@ Remember to be knowledgeable about the market, professional, and focused on help
         details: error.response?.data || error.message
       });
     }
-  });quired" });
-      }
-
-      // Validate tasks
-      for (const task of tasks) {
-        if (!task.to_number) {
-          return res.status(400).json({ error: "Each task must have a to_number" });
-        }
-      }
-
-      // Validate agent exists
-      const agent = await storage.getAgent(parseInt(override_agent_id));
-      if (!agent) {
-        return res.status(400).json({ error: "Selected agent not found" });
-      }
-
-      const retellClient = createRetellClient();
-      let retellResponse;
-
-      if (retellClient) {
-        // Use actual Retell AI Batch API
-        try {
-          retellResponse = await retellClient.createBatchCall({
-            from_number,
-            tasks,
-            name: name.trim(),
-            trigger_timestamp,
-            override_agent_id
-          });
-        } catch (retellError) {
-          console.error("Retell Batch API error:", retellError);
-          return res.status(500).json({ error: "Failed to create batch call with Retell AI" });
-        }
-      } else {
-        // Fallback to mock response when API key is not available
-        const batchCallId = `batch_call_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        retellResponse = {
-          batch_call_id: batchCallId,
-          name: name.trim(),
-          from_number,
-          scheduled_timestamp: trigger_timestamp || Math.floor(Date.now() / 1000),
-          total_task_count: tasks.length,
-          agent_id: override_agent_id
-        };
-      }
-
-      // First create the batch call record
-      const batchCallData = {
-        batchCallId: retellResponse.batch_call_id,
-        name: name.trim(),
-        fromNumber: from_number,
-        status: trigger_timestamp ? "scheduled" : "registered",
-        totalTaskCount: tasks.length,
-        completedCount: 0,
-        successfulCount: 0,
-        scheduledTimestamp: trigger_timestamp,
-        agentId: parseInt(override_agent_id),
-        createdBy: req.user!.id
-      };
-
-      const batchCall = await storage.createBatchCall(batchCallData);
-
-      // Store individual calls for each task
-      const createdCalls = [];
-      for (let i = 0; i < tasks.length; i++) {
-        const task = tasks[i];
-        const callData = {
-          sessionId: `${retellResponse.batch_call_id}_task_${i + 1}`,
-          fromNumber: from_number,
-          toNumber: task.to_number,
-          status: trigger_timestamp ? "scheduled" : "registered",
-          agentId: parseInt(override_agent_id),
-          batchCallId: batchCall.id,
-          endReason: null,
-          sentiment: null,
-          outcome: null,
-          duration: null,
-          cost: null,
-          latency: null,
-          leadId: null
-        };
-
-        const call = await storage.createCall(callData);
-        createdCalls.push(call);
-      }
-
-      res.status(201).json({
-        ...retellResponse,
-        batch_id: batchCall.id,
-        created_calls: createdCalls.map(call => ({ id: call.id, session_id: call.sessionId })),
-        message: `Batch call "${name.trim()}" created successfully with ${tasks.length} tasks`,
-        success: true
-      });
-    } catch (error) {
-      console.error("Error creating batch call:", error);
-      res.status(500).json({ error: "Failed to create batch call" });
-    }
   });
+      }
+
+      
 
   // Web call creation for testing (protected)
   router.post("/web-calls", authenticateToken, async (req: AuthRequest, res) => {
