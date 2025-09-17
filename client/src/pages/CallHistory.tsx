@@ -638,7 +638,7 @@ export default function CallHistory() {
                           </div>
                           <div className="flex items-center mt-1 text-xs text-gray-400">
                             <span className="mr-1">{getDirectionIcon(call.direction)}</span>
-                            <span>{String(call.direction || 'Unknown')}</span>
+                            <span>{call.direction || 'Unknown'}</span>
                           </div>
                         </td>
 
@@ -707,11 +707,11 @@ export default function CallHistory() {
                           <div className="text-[hsl(var(--soft-gray))] text-sm">
                             <div className="flex items-center mb-1">
                               <span className="text-xs text-gray-500 mr-1">From:</span>
-                              <span>{String(call.fromNumber || 'N/A')}</span>
+                              <span>{call.fromNumber || 'N/A'}</span>
                             </div>
                             <div className="flex items-center">
                               <span className="text-xs text-gray-500 mr-1">To:</span>
-                              <span>{String(call.toNumber || 'N/A')}</span>
+                              <span>{call.toNumber || 'N/A'}</span>
                             </div>
                           </div>
                         </td>
@@ -814,10 +814,10 @@ export default function CallHistory() {
                         <div>
                           <h3 className="text-lg font-semibold text-white flex items-center">
                             <span className="mr-2">{getDirectionIcon(call.direction)}</span>
-                            {String(call.fromNumber || call.toNumber || `+1 (555) ${100 + index}-${1000 + index}`)}
+                            {call.fromNumber || call.toNumber || `+1 (555) ${100 + index}-${1000 + index}`}
                           </h3>
                           <p className="text-gray-300 text-sm">
-                            {getCallTypeDisplay(call)} • Agent: {String(call.agentId || call.retellAgentId || 'AI Agent')}
+                            {getCallTypeDisplay(call)} • Agent: {call.agentId || call.retellAgentId || 'AI Agent'}
                           </p>
                           <div className="flex items-center space-x-4 text-gray-400 text-xs mt-1">
                             <span>{call.createdAt ? new Date(call.createdAt.toString()).toLocaleTimeString() : 'Time N/A'}</span>
@@ -932,7 +932,7 @@ export default function CallHistory() {
                         {call.disconnectionReason && (
                           <div className="flex items-center space-x-1">
                             <AlertCircle className="w-3 h-3" />
-                            <span className="truncate max-w-24">{call.disconnectionReason}</span>
+                            <span className="truncate max-w-24">{typeof call.disconnectionReason === 'string' ? call.disconnectionReason : 'Disconnected'}</span>
                           </div>
                         )}
                       </div>
@@ -945,7 +945,7 @@ export default function CallHistory() {
                           <FileText className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
                           <div>
                             <p className="text-sm font-medium text-white mb-1">Call Summary:</p>
-                            <p className="text-sm text-gray-300">{String(call.outcome)}</p>
+                            <p className="text-sm text-gray-300">{typeof call.outcome === 'string' ? call.outcome : JSON.stringify(call.outcome)}</p>
                           </div>
                         </div>
                       </div>
@@ -962,7 +962,7 @@ export default function CallHistory() {
                         )}
                         {call.endReason && (
                           <Badge className="bg-gray-500/20 text-gray-400 border-gray-500/30">
-                            {String(call.endReason)}
+                            {typeof call.endReason === 'string' ? call.endReason : 'Ended'}
                           </Badge>
                         )}
                       </div>
