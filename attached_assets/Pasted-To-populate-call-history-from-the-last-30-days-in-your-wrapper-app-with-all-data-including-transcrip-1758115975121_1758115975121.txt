@@ -1,0 +1,129 @@
+To populate call history from the last 30 days in your wrapper app with all data including transcripts, use the **List Calls API**:
+
+## API Endpoint
+`POST /v2/list-calls`
+
+## Filter for Last 30 Days
+
+Use the `start_timestamp` filter to get calls from the last 30 days:
+
+```javascript
+const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000); // 30 days in milliseconds
+
+const requestBody = {
+  filter_criteria: {
+    start_timestamp: {
+      lower_threshold: thirtyDaysAgo
+    }
+  },
+  sort_order: "descending",
+  limit: 50 // Adjust as needed
+};
+```
+
+## Complete Implementation
+
+```javascript
+async function getCallHistory() {
+  const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+  
+  const response = await fetch('https://api.retellai.com/v2/list-calls', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer YOUR_API_KEY',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      filter_criteria: {
+        start_timestamp: {
+          lower_threshold: thirtyDaysAgo
+        }
+      },
+      sort_order: "descending",
+      limit: 100
+    })
+  });
+
+  const calls = await response.json();
+  return calls;
+}
+```
+
+## Available Call Data
+
+Each call object includes comprehensive data:
+
+**Basic Info:**
+- `call_id`, `agent_id`, `call_status`
+- `start_timestamp`, `end_timestamp`, `duration_ms`
+- `from_number`, `to_number` (for phone calls)
+
+**Transcripts & Recordings:**
+- `transcript`: Full conversation text
+- `transcript_object`: Structured transcript with timestamps
+- `transcript_with_tool_calls`: Includes function calls
+- `recording_url`: Call recording link
+- `recording_multi_channel_url`: Separate audio channels
+
+**Analysis Data:**
+- `call_analysis`: Summary, sentiment, success status
+- `call_cost`: Detailed cost breakdown
+- `latency`: Performance metrics
+
+## Pagination for Large Datasets
+
+For accounts with many calls, use pagination:
+
+```javascript
+async function getAllCallsLast30Days() {
+  let allCalls = [];
+  let paginationKey = null;
+  
+  do {
+    const response = await fetch('https://api.retellai.com/v2/list-calls', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer YOUR_API_KEY',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        filter_criteria: {
+          start_timestamp: {
+            lower_threshold: Date.now() - (30 * 24 * 60 * 60 * 1000)
+          }
+        },
+        sort_order: "descending",
+        limit: 100,
+        pagination_key: paginationKey
+      })
+    });
+    
+    const result = await response.json();
+    allCalls.push(...result.calls);
+    paginationKey = result.pagination_key;
+    
+  } while (paginationKey);
+  
+  return allCalls;
+}
+```
+
+## Additional Filtering Options
+
+You can also filter by:
+- `agent_id`: Specific agents
+- `call_status`: "ended", "ongoing", etc.
+- `call_type`: "phone_call", "web_call"
+- `direction`: "inbound", "outbound"
+- `user_sentiment`: "Positive", "Negative", "Neutral"
+- `call_successful`: true/false
+
+This approach gives you complete access to all call data from the last 30 days, including transcripts, recordings, analysis, and metadata for your wrapper application.
+
+Want to learn more about the API details? These pages may help:
+
+```suggestions
+(List Calls API)[/api-references/list-calls]
+(Get Call API)[/api-references/get-call]
+(Session History Dashboard)[/features/session-history]
+```

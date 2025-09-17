@@ -1429,30 +1429,417 @@ Remember to be knowledgeable about the market, professional, and focused on help
     }
   });
 
-  // List calls with filtering (protected)
+  // Enhanced list calls with comprehensive filtering and call enrichment (protected)
   router.post("/calls/list", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const { filter_criteria, sort_order, limit, pagination_key } = req.body;
+      // Input validation schema
+      const validateFilterCriteria = (criteria: any) => {
+        if (!criteria || typeof criteria !== 'object') return {};
+        
+        const validatedCriteria: any = {};
+        
+        // Validate array fields
+        const arrayFields = ['agent_id', 'version', 'call_status', 'in_voicemail', 'disconnection_reason', 
+                            'from_number', 'to_number', 'batch_call_id', 'call_type', 'direction', 
+                            'user_sentiment', 'call_successful'];
+        
+        arrayFields.forEach(field => {
+          if (criteria[field]) {
+            if (Array.isArray(criteria[field])) {
+              validatedCriteria[field] = criteria[field];
+            } else {
+              // Convert single values to array for backward compatibility
+              validatedCriteria[field] = [criteria[field]];
+            }
+          }
+        });
+        
+        // Validate threshold objects (start_timestamp, duration_ms, e2e_latency_p50)
+        const thresholdFields = ['start_timestamp', 'duration_ms', 'e2e_latency_p50'];
+        thresholdFields.forEach(field => {
+          if (criteria[field] && typeof criteria[field] === 'object') {
+            const threshold: any = {};
+            if (typeof criteria[field].lower_threshold === 'number') {
+              threshold.lower_threshold = criteria[field].lower_threshold;
+            }
+            if (typeof criteria[field].upper_threshold === 'number') {
+              threshold.upper_threshold = criteria[field].upper_threshold;
+            }
+            if (Object.keys(threshold).length > 0) {
+              validatedCriteria[field] = threshold;
+            }
+          }
+        });
+        
+        return validatedCriteria;
+      };
+
+      // Utility function to enrich calls with detailed data
+      const enrichCallsWithDetails = async (calls: any[], retellClient: any, maxConcurrency = 5) => {
+        if (!retellClient || !calls.length) return calls;
+        
+        console.log(`🔍 Enriching ${calls.length} calls with detailed data (concurrency: ${maxConcurrency})`);
+        
+        // Process calls in batches to control concurrency
+        const enrichedCalls = [];
+        
+        for (let i = 0; i < calls.length; i += maxConcurrency) {
+          const batch = calls.slice(i, i + maxConcurrency);
+          
+          // Fetch detailed data for each call in the batch concurrently
+          const batchPromises = batch.map(async (call) => {
+            try {
+              const callId = call.call_id;
+              if (!callId) {
+                console.warn('⚠️  Call missing call_id, skipping enrichment:', call);
+                return call;
+              }
+              
+              const detailedData = await retellClient.getCall(callId);
+              
+              // Merge basic call data with detailed data, preserving all fields
+              return {
+                ...call,
+                ...detailedData,
+                // Ensure original call_id is preserved if there's any mismatch
+                call_id: callId,
+                // Mark as enriched
+                _enriched: true,
+                _enriched_at: new Date().toISOString()
+              };
+            } catch (error: any) {
+              console.error(`❌ Failed to enrich call ${call.call_id}:`, error.message);
+              // Return original call data if enrichment fails
+              return {
+                ...call,
+                _enrichment_failed: true,
+                _enrichment_error: error.message
+              };
+            }
+          });
+          
+          const batchResults = await Promise.all(batchPromises);
+          enrichedCalls.push(...batchResults);
+          
+          // Add small delay between batches to be respectful of API limits
+          if (i + maxConcurrency < calls.length) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+        }
+        
+        console.log(`✅ Successfully enriched ${enrichedCalls.filter(c => c._enriched).length}/${calls.length} calls`);
+        return enrichedCalls;
+      };
+
+      const {
+        filter_criteria = {},
+        sort_order = 'descending',
+        limit = 50,
+        pagination_key,
+        includeDetails = false,
+        concurrency = 5,
+        // Support legacy field names for backward compatibility
+        filterCriteria,
+        sortOrder,
+        paginationKey
+      } = req.body;
+
+      // Validate inputs
+      const validSortOrders = ['ascending', 'descending'];
+      const finalSortOrder = validSortOrders.includes(sort_order || sortOrder) ? 
+        (sort_order || sortOrder) : 'descending';
+      
+      const rawLimit = limit || 50;
+      const finalLimit = Math.min(Math.max(1, parseInt(rawLimit)), 1000); // Ensure limit is between 1 and 1000
+      
+      if (isNaN(finalLimit)) {
+        return res.status(400).json({ 
+          error: "Invalid limit parameter. Must be a number between 1 and 1000." 
+        });
+      }
+
+      // Validate includeDetails parameter
+      const shouldIncludeDetails = Boolean(includeDetails);
+      
+      // Validate concurrency parameter 
+      const maxConcurrency = Math.min(Math.max(1, parseInt(concurrency) || 5), 10); // Between 1 and 10
+      
+      console.log(`📋 Request parameters: includeDetails=${shouldIncludeDetails}, concurrency=${maxConcurrency}, limit=${finalLimit}`);
+
+      // Validate and merge filter criteria
+      const rawFilterCriteria = { ...filterCriteria, ...filter_criteria };
+      const finalFilterCriteria = validateFilterCriteria(rawFilterCriteria);
+      const finalPaginationKey = pagination_key || paginationKey;
+
+      // Validate pagination key if provided
+      if (finalPaginationKey && typeof finalPaginationKey !== 'string') {
+        return res.status(400).json({ 
+          error: "Invalid pagination_key parameter. Must be a string." 
+        });
+      }
+
+      // Add default 30-day filter if no start_timestamp is provided
+      if (!finalFilterCriteria.start_timestamp) {
+        const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000); // 30 days in milliseconds
+        finalFilterCriteria.start_timestamp = {
+          lower_threshold: thirtyDaysAgo
+        };
+        console.log(`Applied default 30-day filter: ${new Date(thirtyDaysAgo).toISOString()}`);
+      }
+
       const retellClient = createRetellClient();
 
       if (retellClient) {
         try {
-          const callsData = await retellClient.listCalls(filter_criteria, sort_order, limit, pagination_key);
-          res.json(callsData);
-        } catch (retellError) {
+          console.log("Fetching calls with comprehensive filters:", {
+            filter_criteria: finalFilterCriteria,
+            sort_order: finalSortOrder,
+            limit: finalLimit,
+            has_pagination_key: !!finalPaginationKey
+          });
+
+          const callsResponse = await retellClient.listCalls({
+            filter_criteria: finalFilterCriteria,
+            sort_order: finalSortOrder,
+            limit: finalLimit,
+            ...(finalPaginationKey && { pagination_key: finalPaginationKey })
+          });
+
+          console.log(`📊 Retell API response structure:`, {
+            isArray: Array.isArray(callsResponse),
+            hasData: !!callsResponse.data,
+            hasCalls: !!callsResponse.calls,
+            hasPaginationKey: !!callsResponse.pagination_key,
+            responseKeys: Object.keys(callsResponse || {})
+          });
+
+          // Extract calls and pagination info from Retell response
+          const calls = Array.isArray(callsResponse) ? callsResponse : callsResponse.calls || callsResponse.data || [];
+          const retellPaginationKey = callsResponse.pagination_key || null;
+          
+          console.log(`📝 Retrieved ${calls.length} calls from Retell API`);
+          
+          // Enrich calls with detailed data if requested
+          let finalCalls = calls;
+          if (shouldIncludeDetails && calls.length > 0) {
+            console.log(`🔍 Starting call enrichment for ${calls.length} calls...`);
+            finalCalls = await enrichCallsWithDetails(calls, retellClient, maxConcurrency);
+          }
+          
+          // Build response structure following consistent format
+          const enhancedResponse = {
+            data: finalCalls,
+            pagination_key: retellPaginationKey,
+            meta: {
+              total_returned: finalCalls.length,
+              sort_order: finalSortOrder,
+              filters_applied: finalFilterCriteria,
+              include_details: shouldIncludeDetails,
+              enriched_count: shouldIncludeDetails ? finalCalls.filter((c: any) => c._enriched).length : 0,
+              source: 'retell_api',
+              response_timestamp: new Date().toISOString()
+            }
+          };
+
+          res.json(enhancedResponse);
+        } catch (retellError: any) {
           console.error("Failed to fetch calls from Retell:", retellError);
-          // Fallback to local data
-          const localCalls = await storage.getCalls();
-          res.json(localCalls);
+          
+          // Enhanced fallback response with local data
+          try {
+            const localCalls = await storage.getCalls();
+            
+            // Apply basic filtering to local data if possible
+            let filteredCalls = localCalls;
+            
+            if (finalFilterCriteria.agent_id && finalFilterCriteria.agent_id.length > 0) {
+              filteredCalls = filteredCalls.filter(call => 
+                finalFilterCriteria.agent_id.includes(call.agentId?.toString() || '')
+              );
+            }
+            
+            if (finalFilterCriteria.call_status && finalFilterCriteria.call_status.length > 0) {
+              filteredCalls = filteredCalls.filter(call => 
+                finalFilterCriteria.call_status.includes(call.status || '')
+              );
+            }
+            
+            if (finalFilterCriteria.direction && finalFilterCriteria.direction.length > 0) {
+              filteredCalls = filteredCalls.filter(call => 
+                finalFilterCriteria.direction.includes(call.direction)
+              );
+            }
+
+            // Apply time filtering
+            if (finalFilterCriteria.start_timestamp) {
+              const { lower_threshold, upper_threshold } = finalFilterCriteria.start_timestamp;
+              filteredCalls = filteredCalls.filter(call => {
+                const getTimeValue = (timestamp: any) => {
+                  if (timestamp instanceof Date) return timestamp.getTime();
+                  if (typeof timestamp === 'number') return timestamp;
+                  if (typeof timestamp === 'string') return new Date(timestamp).getTime();
+                  return null;
+                };
+                const startTime = getTimeValue(call.startTimestamp);
+                const createdTime = getTimeValue(call.createdAt);
+                const callTime = startTime || createdTime || Date.now();
+                if (lower_threshold && callTime < lower_threshold) return false;
+                if (upper_threshold && callTime > upper_threshold) return false;
+                return true;
+              });
+            }
+
+            // Sort calls
+            const getTimeValue = (timestamp: any) => {
+              if (timestamp instanceof Date) return timestamp.getTime();
+              if (typeof timestamp === 'number') return timestamp;
+              if (typeof timestamp === 'string') return new Date(timestamp).getTime();
+              return null;
+            };
+            
+            if (finalSortOrder === 'ascending') {
+              filteredCalls.sort((a, b) => {
+                const aTime = getTimeValue(a.startTimestamp) || getTimeValue(a.createdAt) || 0;
+                const bTime = getTimeValue(b.startTimestamp) || getTimeValue(b.createdAt) || 0;
+                return aTime - bTime;
+              });
+            } else {
+              filteredCalls.sort((a, b) => {
+                const aTime = getTimeValue(a.startTimestamp) || getTimeValue(a.createdAt) || 0;
+                const bTime = getTimeValue(b.startTimestamp) || getTimeValue(b.createdAt) || 0;
+                return bTime - aTime;
+              });
+            }
+
+            // Apply limit
+            const limitedCalls = filteredCalls.slice(0, finalLimit);
+
+            const fallbackResponse = {
+              data: limitedCalls,
+              pagination_key: null,
+              meta: {
+                total_returned: limitedCalls.length,
+                sort_order: finalSortOrder,
+                filters_applied: finalFilterCriteria,
+                include_details: false, // Local data doesn't support enrichment
+                enriched_count: 0,
+                source: "local_fallback",
+                note: "Retell API unavailable, using local data with limited filtering",
+                response_timestamp: new Date().toISOString()
+              }
+            };
+
+            res.json(fallbackResponse);
+          } catch (storageError) {
+            console.error("Failed to fetch from local storage:", storageError);
+            res.status(500).json({ 
+              error: "Failed to fetch calls from both Retell API and local storage",
+              details: retellError?.message || 'Unknown error'
+            });
+          }
         }
       } else {
-        // Use local data when no API key
-        const localCalls = await storage.getCalls();
-        res.json(localCalls);
+        console.log("No Retell client available, using local storage only");
+        
+        // Enhanced local data handling when no API key is available
+        try {
+          const localCalls = await storage.getCalls();
+          
+          // Apply the same filtering logic as in the fallback case
+          let filteredCalls = localCalls;
+          
+          if (finalFilterCriteria.agent_id && finalFilterCriteria.agent_id.length > 0) {
+            filteredCalls = filteredCalls.filter(call => 
+              finalFilterCriteria.agent_id.includes(call.agentId?.toString() || '')
+            );
+          }
+          
+          if (finalFilterCriteria.call_status && finalFilterCriteria.call_status.length > 0) {
+            filteredCalls = filteredCalls.filter(call => 
+              finalFilterCriteria.call_status.includes(call.status || '')
+            );
+          }
+          
+          if (finalFilterCriteria.direction && finalFilterCriteria.direction.length > 0) {
+            filteredCalls = filteredCalls.filter(call => 
+              finalFilterCriteria.direction.includes(call.direction)
+            );
+          }
+
+          // Apply time filtering
+          if (finalFilterCriteria.start_timestamp) {
+            const { lower_threshold, upper_threshold } = finalFilterCriteria.start_timestamp;
+            filteredCalls = filteredCalls.filter(call => {
+              const getTimeValue = (timestamp: any) => {
+                if (timestamp instanceof Date) return timestamp.getTime();
+                if (typeof timestamp === 'number') return timestamp;
+                if (typeof timestamp === 'string') return new Date(timestamp).getTime();
+                return null;
+              };
+              const startTime = getTimeValue(call.startTimestamp);
+              const createdTime = getTimeValue(call.createdAt);
+              const callTime = startTime || createdTime || Date.now();
+              if (lower_threshold && callTime < lower_threshold) return false;
+              if (upper_threshold && callTime > upper_threshold) return false;
+              return true;
+            });
+          }
+
+          // Sort calls
+          const getTimeValue = (timestamp: any) => {
+            if (timestamp instanceof Date) return timestamp.getTime();
+            if (typeof timestamp === 'number') return timestamp;
+            if (typeof timestamp === 'string') return new Date(timestamp).getTime();
+            return null;
+          };
+          
+          if (finalSortOrder === 'ascending') {
+            filteredCalls.sort((a, b) => {
+              const aTime = getTimeValue(a.startTimestamp) || getTimeValue(a.createdAt) || 0;
+              const bTime = getTimeValue(b.startTimestamp) || getTimeValue(b.createdAt) || 0;
+              return aTime - bTime;
+            });
+          } else {
+            filteredCalls.sort((a, b) => {
+              const aTime = getTimeValue(a.startTimestamp) || getTimeValue(a.createdAt) || 0;
+              const bTime = getTimeValue(b.startTimestamp) || getTimeValue(b.createdAt) || 0;
+              return bTime - aTime;
+            });
+          }
+
+          // Apply limit
+          const limitedCalls = filteredCalls.slice(0, finalLimit);
+
+          const localResponse = {
+            data: limitedCalls,
+            pagination_key: null,
+            meta: {
+              total_returned: limitedCalls.length,
+              sort_order: finalSortOrder,
+              filters_applied: finalFilterCriteria,
+              include_details: false, // Local data doesn't support enrichment
+              enriched_count: 0,
+              source: "local_storage",
+              note: "No Retell API key configured, using local data with basic filtering",
+              response_timestamp: new Date().toISOString()
+            }
+          };
+
+          res.json(localResponse);
+        } catch (storageError) {
+          console.error("Failed to fetch from local storage:", storageError);
+          res.status(500).json({ 
+            error: "Failed to fetch calls from local storage",
+            details: "No Retell API key configured and local storage failed"
+          });
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to list calls:", error);
-      res.status(500).json({ error: "Failed to list calls" });
+      res.status(500).json({ 
+        error: "Failed to list calls",
+        details: error?.message || 'Unknown error'
+      });
     }
   });
 
@@ -1500,7 +1887,11 @@ Remember to be knowledgeable about the market, professional, and focused on help
       // If Retell client is available, get comprehensive analytics
       if (retellClient) {
         try {
-          const retellCalls = await retellClient.listCalls({}, 'descending', 500); // Get more data for better analytics
+          const retellCalls = await retellClient.listCalls({
+            filter_criteria: {},
+            sort_order: 'descending',
+            limit: 500
+          });
 
           if (retellCalls && retellCalls.calls && Array.isArray(retellCalls.calls)) {
             const validCalls = retellCalls.calls;
@@ -1702,14 +2093,15 @@ Remember to be knowledgeable about the market, professional, and focused on help
         try {
           const filterCriteria = {
             start_timestamp: {
-              gte: Math.floor(startDate.getTime() / 1000)
-            },
-            end_timestamp: {
-              lte: Math.floor(endDate.getTime() / 1000)
+              lower_threshold: Math.floor(startDate.getTime() / 1000)
             }
           };
 
-          const callsData = await retellClient.listCalls(filterCriteria, 'descending', 1000);
+          const callsData = await retellClient.listCalls({
+            filter_criteria: filterCriteria,
+            sort_order: 'descending',
+            limit: 1000
+          });
           calls = callsData.calls || [];
         } catch (retellError) {
           console.warn("Failed to fetch calls from Retell for detailed analytics:", retellError);

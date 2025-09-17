@@ -27,6 +27,41 @@ interface CreateBatchCallRequest {
   override_agent_id?: string;
 }
 
+// Comprehensive filter criteria interface for list calls
+interface ListCallsFilterCriteria {
+  agent_id?: string[];
+  version?: number[];
+  call_status?: ('registered' | 'not_connected' | 'ongoing' | 'ended' | 'error')[];
+  in_voicemail?: boolean[];
+  disconnection_reason?: string[];
+  from_number?: string[];
+  to_number?: string[];
+  batch_call_id?: string[];
+  call_type?: ('web_call' | 'phone_call')[];
+  direction?: ('inbound' | 'outbound')[];
+  user_sentiment?: ('Negative' | 'Positive' | 'Neutral' | 'Unknown')[];
+  call_successful?: boolean[];
+  start_timestamp?: {
+    upper_threshold?: number;
+    lower_threshold?: number;
+  };
+  duration_ms?: {
+    upper_threshold?: number;
+    lower_threshold?: number;
+  };
+  e2e_latency_p50?: {
+    upper_threshold?: number;
+    lower_threshold?: number;
+  };
+}
+
+interface ListCallsRequest {
+  filter_criteria?: ListCallsFilterCriteria;
+  sort_order?: 'ascending' | 'descending';
+  limit?: number;
+  pagination_key?: string;
+}
+
 export class RetellClient {
   private apiKey: string;
   private baseUrl: string;
@@ -83,14 +118,16 @@ export class RetellClient {
     return response.json();
   }
 
-  // List calls with filtering options
-  async listCalls(filterCriteria?: any, sortOrder?: 'ascending' | 'descending', limit?: number, paginationKey?: string) {
-    const body = {
-      filter_criteria: filterCriteria || {},
-      sort_order: sortOrder || 'descending',
-      limit: limit || 50,
-      ...(paginationKey && { pagination_key: paginationKey })
+  // List calls with comprehensive filtering options
+  async listCalls(request?: ListCallsRequest) {
+    // Set defaults if no request provided
+    const defaultRequest: ListCallsRequest = {
+      filter_criteria: {},
+      sort_order: 'descending',
+      limit: 50
     };
+
+    const body = { ...defaultRequest, ...request };
 
     const response = await fetch(`${this.baseUrl}/v2/list-calls`, {
       method: 'POST',
@@ -107,6 +144,16 @@ export class RetellClient {
     }
 
     return response.json();
+  }
+
+  // Legacy method for backward compatibility
+  async listCallsLegacy(filterCriteria?: any, sortOrder?: 'ascending' | 'descending', limit?: number, paginationKey?: string) {
+    return this.listCalls({
+      filter_criteria: filterCriteria || {},
+      sort_order: sortOrder || 'descending',
+      limit: limit || 50,
+      ...(paginationKey && { pagination_key: paginationKey })
+    });
   }
 
   async getAgent(agentId: string) {
@@ -237,13 +284,11 @@ export async function getRetellAgents() {
 
     // Mocking the response for now as `retellClient` is not defined in this snippet.
     // Replace this mock with the actual API call.
-    const mockResponse = {
-      agents: [
-        { agent_id: 'agent_1', agent_name: 'Agent One', voice_id: 'voice_abc' },
-        { agent_id: 'agent_2', agent_name: 'Agent Two', voice_id: 'voice_def' },
-      ]
-    };
-    const response = mockResponse; // Use the mock response
+    const mockResponse = [
+      { agent_id: 'agent_1', agent_name: 'Agent One', voice_id: 'voice_abc' },
+      { agent_id: 'agent_2', agent_name: 'Agent Two', voice_id: 'voice_def' },
+    ];
+    const response = { agents: mockResponse }; // Use the mock response
 
 
     console.log('Raw Retell response:', response);
@@ -256,12 +301,14 @@ export async function getRetellAgents() {
     }
 
     // Handle different response structures
-    let agentList = response;
-    if (response.agents && Array.isArray(response.agents)) {
+    let agentList = [];
+    if (response && response.agents && Array.isArray(response.agents)) {
       agentList = response.agents;
-    } else if (response.data && Array.isArray(response.data)) {
+    } else if (response && 'data' in response && Array.isArray(response.data)) {
       agentList = response.data;
-    } else if (!Array.isArray(response)) {
+    } else if (Array.isArray(response)) {
+      agentList = response;
+    } else {
       console.log('Unexpected response structure:', response);
       return [];
     }
@@ -287,12 +334,12 @@ export async function getRetellAgents() {
 
     console.log('Final transformed agents:', agents);
     return agents;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching agents from Retell:', error);
     console.error('Error details:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name
     });
     return [];
   }
