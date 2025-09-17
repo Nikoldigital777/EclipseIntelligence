@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Phone, User, Clock, MessageSquare, Settings } from "lucide-react";
+import { Phone, User, Clock, MessageSquare, Settings, Globe } from "lucide-react";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
 import CosmicButton from "@/components/CosmicButton";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface Agent {
   id: string;
@@ -18,8 +19,11 @@ interface Agent {
   phone: string;
 }
 
+type CallType = "phone" | "web";
+
 export default function SingleCall() {
   const [formData, setFormData] = useState({
+    callType: "phone" as CallType,
     fromNumber: "",
     toNumber: "",
     selectedAgent: "",
@@ -45,22 +49,14 @@ export default function SingleCall() {
 
   const fetchAgents = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch('/api/agents/simple', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      
-      if (response.ok) {
-        const agentsData = await response.json();
-        setAgents(agentsData);
-      }
+      const response = await apiRequest('GET', '/api/agents/simple');
+      const agentsData = await response.json();
+      setAgents(agentsData);
     } catch (error) {
       console.error('Error fetching agents:', error);
       toast({
         title: "Error",
-        description: "Failed to load agents",
+        description: "Failed to load agents. Please check your connection and try again.",
         variant: "destructive",
       });
     }
@@ -85,24 +81,28 @@ export default function SingleCall() {
   };
 
   const validateForm = () => {
-    if (!formData.fromNumber.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "From number is required",
-        variant: "destructive",
-      });
-      return false;
+    // Phone calls require both from and to numbers
+    if (formData.callType === "phone") {
+      if (!formData.fromNumber.trim()) {
+        toast({
+          title: "Validation Error",
+          description: "From number is required for phone calls",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      if (!formData.toNumber.trim()) {
+        toast({
+          title: "Validation Error", 
+          description: "To number is required for phone calls",
+          variant: "destructive",
+        });
+        return false;
+      }
     }
     
-    if (!formData.toNumber.trim()) {
-      toast({
-        title: "Validation Error", 
-        description: "To number is required",
-        variant: "destructive",
-      });
-      return false;
-    }
-    
+    // Both call types require an agent
     if (!formData.selectedAgent) {
       toast({
         title: "Validation Error",
@@ -120,66 +120,74 @@ export default function SingleCall() {
 
     setIsLoading(true);
     setCallInProgress(true);
-    setCallStatus("Initiating call...");
+    setCallStatus(`Initiating ${formData.callType} call...`);
 
     try {
-      const token = localStorage.getItem('auth_token');
+      let result;
       
-      const callData = {
-        from_number: formData.fromNumber,
-        to_number: formData.toNumber,
-        override_agent_id: formData.selectedAgent, // This will be the real agent ID
-        metadata: {
-          ...formData.metadata,
-          custom_message: formData.customMessage || undefined,
-          initiated_from: "single_call_interface",
-          initiated_at: new Date().toISOString(),
-          agent_name: selectedAgentData?.name || "Unknown Agent"
-        },
-        retell_llm_dynamic_variables: formData.customMessage ? {
-          custom_intro: formData.customMessage
-        } : {}
-      };
+      if (formData.callType === "phone") {
+        const callData = {
+          from_number: formData.fromNumber,
+          to_number: formData.toNumber,
+          override_agent_id: formData.selectedAgent,
+          metadata: {
+            ...formData.metadata,
+            custom_message: formData.customMessage || undefined,
+            initiated_from: "single_call_interface",
+            initiated_at: new Date().toISOString(),
+            agent_name: selectedAgentData?.name || "Unknown Agent"
+          },
+          retell_llm_dynamic_variables: formData.customMessage ? {
+            custom_intro: formData.customMessage
+          } : {}
+        };
 
-      const response = await fetch('/api/outbound-calls/single', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(callData),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
+        const response = await apiRequest('POST', '/api/outbound-calls/single', callData);
+        result = await response.json();
         
-        setCallStatus(`Call initiated successfully! Call ID: ${result.call_id}`);
-        
+        setCallStatus(`Phone call initiated! Call ID: ${result.call_id}`);
         toast({
-          title: "Call Initiated",
-          description: `Successfully started call to ${formData.toNumber}`,
+          title: "Phone Call Initiated",
+          description: `Successfully started phone call to ${formData.toNumber}`,
         });
 
-        // Simulate call progress updates
+        // Simulate call progress updates for phone calls
         setTimeout(() => setCallStatus("Ringing..."), 2000);
         setTimeout(() => setCallStatus("Call in progress..."), 5000);
         setTimeout(() => {
           setCallStatus("Call completed");
           setCallInProgress(false);
         }, 15000);
+        
+      } else if (formData.callType === "web") {
+        const webCallData = {
+          agent_id: formData.selectedAgent
+        };
 
-      } else {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to initiate call');
+        const response = await apiRequest('POST', '/api/web-calls', webCallData);
+        result = await response.json();
+        
+        setCallStatus(`Web call session created! Session ID: ${result.web_call_id}`);
+        toast({
+          title: "Web Call Session Created",
+          description: "Web call session is ready. You can now connect via browser.",
+        });
+        
+        // For web calls, they're ready immediately
+        setTimeout(() => {
+          setCallStatus("Web call session ready");
+          setCallInProgress(false);
+        }, 2000);
       }
+
     } catch (error) {
-      console.error('Error initiating call:', error);
-      setCallStatus("Call failed");
+      console.error(`Error initiating ${formData.callType} call:`, error);
+      setCallStatus(`${formData.callType} call failed`);
       setCallInProgress(false);
       
       toast({
         title: "Call Failed",
-        description: error instanceof Error ? error.message : "Failed to initiate call",
+        description: error instanceof Error ? error.message : `Failed to initiate ${formData.callType} call`,
         variant: "destructive",
       });
     } finally {
@@ -200,11 +208,15 @@ export default function SingleCall() {
         
         <div className="relative z-10">
           <h1 className="text-5xl font-bold text-white mb-3 drop-shadow-2xl flex items-center">
-            <Phone className="w-12 h-12 mr-4 text-[hsl(var(--remax-red))]" />
+            {formData.callType === "phone" ? (
+              <Phone className="w-12 h-12 mr-4 text-[hsl(var(--remax-red))]" />
+            ) : (
+              <Globe className="w-12 h-12 mr-4 text-[hsl(var(--remax-red))]" />
+            )}
             Single Call
           </h1>
           <p className="text-gray-200 text-xl drop-shadow-lg">
-            Initiate individual AI-powered voice calls
+            Initiate individual AI-powered {formData.callType === "phone" ? "voice" : "web"} calls
           </p>
         </div>
       </div>
@@ -218,43 +230,81 @@ export default function SingleCall() {
           </h3>
           
           <div className="space-y-6">
-            {/* Phone Numbers */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="from-number" className="text-white font-medium">
-                  From Number
-                </Label>
-                <Input
-                  id="from-number"
-                  type="tel"
-                  placeholder="+1 (555) 000-0000"
-                  value={formData.fromNumber}
-                  onChange={(e) => handleInputChange('fromNumber', e.target.value)}
-                  className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white placeholder-gray-400 focus:border-[hsl(var(--remax-red))]/50"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="to-number" className="text-white font-medium">
-                  To Number *
-                </Label>
-                <Input
-                  id="to-number"
-                  type="tel"
-                  placeholder="+1 (555) 123-4567"
-                  value={formData.toNumber}
-                  onChange={(e) => handleInputChange('toNumber', e.target.value)}
-                  className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white placeholder-gray-400 focus:border-[hsl(var(--remax-red))]/50"
-                />
-              </div>
+            {/* Call Type Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="call-type" className="text-white font-medium">
+                Call Type *
+              </Label>
+              <Select 
+                value={formData.callType} 
+                onValueChange={(value: CallType) => handleInputChange('callType', value)}
+                data-testid="select-call-type"
+              >
+                <SelectTrigger className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white focus:border-[hsl(var(--remax-red))]/50">
+                  <SelectValue placeholder="Choose call type" />
+                </SelectTrigger>
+                <SelectContent className="bg-[hsl(var(--deep-night))] border-white/20">
+                  <SelectItem value="phone" className="text-white hover:bg-white/10">
+                    <div className="flex items-center space-x-3">
+                      <Phone className="w-4 h-4" />
+                      <span>Phone Call</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="web" className="text-white hover:bg-white/10">
+                    <div className="flex items-center space-x-3">
+                      <Globe className="w-4 h-4" />
+                      <span>Web Call</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+
+            {/* Phone Numbers - Show only for phone calls */}
+            {formData.callType === "phone" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="from-number" className="text-white font-medium">
+                    From Number *
+                  </Label>
+                  <Input
+                    id="from-number"
+                    data-testid="input-from-number"
+                    type="tel"
+                    placeholder="+1 (555) 000-0000"
+                    value={formData.fromNumber}
+                    onChange={(e) => handleInputChange('fromNumber', e.target.value)}
+                    className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white placeholder-gray-400 focus:border-[hsl(var(--remax-red))]/50"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="to-number" className="text-white font-medium">
+                    To Number *
+                  </Label>
+                  <Input
+                    id="to-number"
+                    data-testid="input-to-number"
+                    type="tel"
+                    placeholder="+1 (555) 123-4567"
+                    value={formData.toNumber}
+                    onChange={(e) => handleInputChange('toNumber', e.target.value)}
+                    className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white placeholder-gray-400 focus:border-[hsl(var(--remax-red))]/50"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Agent Selection */}
             <div className="space-y-2">
               <Label htmlFor="agent-select" className="text-white font-medium">
                 Select Agent *
               </Label>
-              <Select value={formData.selectedAgent} onValueChange={(value) => handleInputChange('selectedAgent', value)}>
+              <Select 
+                value={formData.selectedAgent} 
+                onValueChange={(value) => handleInputChange('selectedAgent', value)}
+                data-testid="select-agent"
+              >
                 <SelectTrigger className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white focus:border-[hsl(var(--remax-red))]/50">
                   <SelectValue placeholder="Choose an AI agent" />
                 </SelectTrigger>
@@ -287,6 +337,7 @@ export default function SingleCall() {
                 </Label>
                 <Input
                   id="customer-name"
+                  data-testid="input-customer-name"
                   placeholder="John Smith"
                   value={formData.metadata.customer_name}
                   onChange={(e) => handleInputChange('metadata.customer_name', e.target.value)}
@@ -302,6 +353,7 @@ export default function SingleCall() {
                   <Select 
                     value={formData.metadata.campaign_type} 
                     onValueChange={(value) => handleInputChange('metadata.campaign_type', value)}
+                    data-testid="select-campaign-type"
                   >
                     <SelectTrigger className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white">
                       <SelectValue />
@@ -323,6 +375,7 @@ export default function SingleCall() {
                   <Select 
                     value={formData.metadata.priority} 
                     onValueChange={(value) => handleInputChange('metadata.priority', value)}
+                    data-testid="select-priority"
                   >
                     <SelectTrigger className="bg-[hsl(var(--lunar-glass))] border-white/20 text-white">
                       <SelectValue />
@@ -346,6 +399,7 @@ export default function SingleCall() {
               </Label>
               <Textarea
                 id="custom-message"
+                data-testid="textarea-custom-message"
                 placeholder="Optional custom message for the AI to use as introduction..."
                 value={formData.customMessage}
                 onChange={(e) => handleInputChange('customMessage', e.target.value)}
@@ -369,6 +423,7 @@ export default function SingleCall() {
               </div>
               <Switch
                 id="schedule-call"
+                data-testid="switch-schedule-call"
                 checked={formData.scheduleCall}
                 onCheckedChange={(checked) => setFormData(prev => ({ ...prev, scheduleCall: checked }))}
               />
@@ -381,6 +436,7 @@ export default function SingleCall() {
                 </Label>
                 <Input
                   id="schedule-time"
+                  data-testid="input-schedule-time"
                   type="datetime-local"
                   value={formData.scheduleTime}
                   onChange={(e) => handleInputChange('scheduleTime', e.target.value)}
@@ -447,23 +503,28 @@ export default function SingleCall() {
               onClick={initiateCall}
               disabled={isLoading || callInProgress}
               className="w-full flex items-center justify-center space-x-3"
+              data-testid="button-initiate-call"
             >
-              <Phone className="w-5 h-5" />
+              {formData.callType === "phone" ? (
+                <Phone className="w-5 h-5" />
+              ) : (
+                <Globe className="w-5 h-5" />
+              )}
               <span>
                 {isLoading 
-                  ? "Initiating Call..." 
+                  ? `Initiating ${formData.callType} call...` 
                   : callInProgress 
-                    ? "Call in Progress" 
+                    ? `${formData.callType} call in Progress` 
                     : formData.scheduleCall 
-                      ? "Schedule Call" 
-                      : "Start Call Now"
+                      ? `Schedule ${formData.callType} Call` 
+                      : `Start ${formData.callType} Call Now`
                 }
               </span>
             </CosmicButton>
             
             {!callInProgress && (
-              <p className="text-[hsl(var(--soft-gray))] text-center text-sm mt-3">
-                Click to initiate an AI-powered voice call
+              <p className="text-[hsl(var(--soft-gray))] text-center text-sm mt-3" data-testid="text-call-instruction">
+                Click to initiate an AI-powered {formData.callType} call
               </p>
             )}
           </GlassmorphicCard>
